@@ -2,6 +2,7 @@ import { useState, FormEvent } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import LRHeader from "../components/LRHeader";
+import { AxiosError } from 'axios';
 
 
 export default function LoginPage() {
@@ -19,20 +20,22 @@ export default function LoginPage() {
 
         setLoading(true);
         setError(null);
+        let response;
         try {
-            const response = await axios.post("http://localhost:8090/api/auth/login", { username, password });
+            response = await axios.post("http://localhost:8090/api/auth/login", { username, password });
             // check res
             if (response.status === 200) {
                 console.log("Login successful:", response.data);
                 const token = response.data.token;
                 localStorage.setItem("token", token);
                 navigate("/");
-            } else {
-                setError("Invalid username or password.");
             }
         } catch (error) {
-            console.error("Login failed:", error);
-            setError("Login failed. Please try again.");
+            if (error instanceof AxiosError && error.response?.data?.error) {
+                setError(error.response?.data?.error);
+            } else {
+                setError("Login failed. Please try again.");
+            }
         } finally {
             setLoading(false);
         }

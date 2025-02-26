@@ -2,6 +2,7 @@ import { useState, FormEvent } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import LRHeader from "../components/LRHeader";
+import { AxiosError } from 'axios';
 
 export default function RegisterPage() {
     const [email, setemail] = useState<string>("");
@@ -28,19 +29,19 @@ export default function RegisterPage() {
         }
 
 
-
+        let registerResponse;
+        let loginResponse;
         try {
-            const registerResponse = await axios.post("http://localhost:8090/api/auth/register", {
+            registerResponse = await axios.post("http://localhost:8090/api/auth/register", {
                 username,
                 password,
                 email,
             });
-
             // check res
-            if (registerResponse.status === 201) {
+            if (registerResponse.status === 200) {
                 console.log("Login successful:", registerResponse.data);
                 //auto login
-                const loginResponse = await axios.post("http://localhost:8090/api/auth/login", {
+                loginResponse = await axios.post("http://localhost:8090/api/auth/login", {
                     username,
                     password,
                 });
@@ -49,15 +50,14 @@ export default function RegisterPage() {
                     const token = loginResponse.data.token;
                     localStorage.setItem("token", token);
                     navigate("/");
-                } else {
-                    setError("Login after registration failed.");
                 }
-            } else {
-                setError("Registration failed. Please try again.");
             }
         } catch (error) {
-            console.error("Register failed:", error);
-            setError("An error occurred. Please try again.");
+            if (error instanceof AxiosError && error.response?.data?.error) {
+                setError(error.response?.data?.error);
+            } else {
+                setError("Register failed. Please try again.");
+            }
         } finally {
             setLoading(false);
         }
@@ -106,7 +106,7 @@ export default function RegisterPage() {
                         />
                     </div>
 
-                    <div>
+                    <div className="mt-4">
                         <label className="block text-gray-700">UserName</label>
                         <input
                             type="text"
