@@ -1,13 +1,13 @@
-package org.lei.biil_buddy;
+package org.lei.bill_buddy;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class BiilBuddyApplicationTests {
+class BillBuddyApplicationTests {
 
-    @Test
-    void contextLoads() {
-    }
+	@Test
+	void contextLoads() {
+	}
 
 }
