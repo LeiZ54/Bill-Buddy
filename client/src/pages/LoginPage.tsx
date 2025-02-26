@@ -1,6 +1,8 @@
 import { useState, FormEvent } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import LRHeader from "../components/LRHeader";
+
 
 export default function LoginPage() {
 
@@ -10,30 +12,21 @@ export default function LoginPage() {
     const [error, setError] = useState<string | null>(null);
     const navigate = useNavigate();
 
+    const [activeButton] = useState<string>("login");
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
 
-        console.log(username)
-        console.log(password)
-
-        if (!username || !password) {
-            alert("Please enter both username and password.");
-            return;
-        }
-
         setLoading(true);
         setError(null);
-
         try {
             const response = await axios.post("http://localhost:8090/api/auth/login", { username, password });
-
             // check res
             if (response.status === 200) {
                 console.log("Login successful:", response.data);
                 const token = response.data.token;
-                localStorage.setItem("authToken", token);
-                navigate("/home");
+                localStorage.setItem("token", token);
+                navigate("/");
             } else {
                 setError("Invalid username or password.");
             }
@@ -48,8 +41,9 @@ export default function LoginPage() {
 
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-white">
-            <div className="w-full max-w-md rounded-xl bg-white p-8 border-2 border-black">
+        <div className="flex flex-col min-h-screen items-center bg-white pt-32">
+            <LRHeader activeButton={activeButton} />
+            <div className="w-full max-w-xs sm:max-w-xs md:max-w-sm lg:max-w-md xl:max-w-lg rounded-xl bg-white p-8 border-2 border-black">
                 {/* Logo & title */}
                 <div className="text-center">
                     <h2 className="text-2xl font-bold text-gray-800">Login</h2>
@@ -61,7 +55,6 @@ export default function LoginPage() {
                         <label className="block text-gray-700">UserName</label>
                         <input
                             type="text"
-                            value={username}
                             onChange={(e) => setUsername(e.target.value)}
                             className="mt-1 w-full rounded border-gray-300 p-2 focus:border-green-500 focus:ring focus:ring-green-300 border-2 border-gray"
                             required
@@ -72,7 +65,6 @@ export default function LoginPage() {
                         <label className="block text-gray-700">Password</label>
                         <input
                             type="password"
-                            value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             className="mt-1 w-full rounded border-gray-300 p-2 focus:border-green-500 focus:ring focus:ring-green-300 border-2 border-gray"
                             required
