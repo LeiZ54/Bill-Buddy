@@ -107,7 +107,7 @@ export default function RegisterPage() {
                     </div>
 
                     <div className="mt-4">
-                        <label className="block text-gray-700">UserName</label>
+                        <label className="block text-gray-700">Username</label>
                         <input
                             type="text"
                             onChange={(e) => setUsername(e.target.value)}

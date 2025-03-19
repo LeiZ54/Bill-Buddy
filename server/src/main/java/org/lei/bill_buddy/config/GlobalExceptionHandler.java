@@ -1,12 +1,12 @@
 package org.lei.bill_buddy.config;
 
-import org.lei.bill_buddy.DTO.ErrorDTO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -43,7 +43,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({Exception.class})
     public ResponseEntity<?> handleExceptions(Exception e) {
         // Return a structured error message
-        return ResponseEntity.internalServerError().body(new ErrorDTO(e.getMessage()));
+        return ResponseEntity.internalServerError().body(Collections.singletonMap("error", e.getMessage()));
     }
 }
 

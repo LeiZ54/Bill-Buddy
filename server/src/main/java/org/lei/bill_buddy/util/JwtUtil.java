@@ -33,7 +33,7 @@ public class JwtUtil {
                 .compact();
     }
 
-    public String extractUsername(String token) {
+    public String getUsernameFromToken(String token) {
         return parseClaims(token).getSubject();
     }
 

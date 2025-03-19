@@ -5,6 +5,8 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class ErrorDTO {
-    private String error;
+public class UserLoggedInDTO {
+    private String username;
+    private String email;
+    private String token;
 }

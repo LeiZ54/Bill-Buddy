@@ -3,17 +3,16 @@ package org.lei.bill_buddy.model;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 
 @Entity
 @Getter
 @Setter
-@NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "users")
 public class User implements UserDetails {
@@ -33,21 +32,15 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private String provider;
 
-    public User(String username, String password, String email, String provider) {
-        this.username = username;
-        this.password = password;
-        this.email = email;
-        this.provider = provider;
-    }
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt;
 
-    @Override
-    public String getUsername() {
-        return username;
-    }
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
 
-    @Override
-    public String getPassword() {
-        return password;
+    public User() {
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
     }
 
     @Override
