@@ -75,7 +75,7 @@ public class GroupService {
         return groupRepository.findAllByCreatedByIdOrJoinedUserId(userId);
     }
 
-    public GroupMember addMemberToGroup(Long groupId, Long userId, String role) {
+    public void addMemberToGroup(Long groupId, Long userId) {
         Group group = getGroupById(groupId);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
@@ -88,9 +88,9 @@ public class GroupService {
         GroupMember gm = new GroupMember();
         gm.setGroup(group);
         gm.setUser(user);
-        gm.setRole((role != null && !role.isEmpty()) ? role : "member");
+        gm.setRole("member");
         gm.setJoinedAt(LocalDateTime.now());
-        return groupMemberRepository.save(gm);
+        groupMemberRepository.save(gm);
     }
 
     public void removeMemberFromGroup(Long groupId, Long userId) {
@@ -111,6 +111,10 @@ public class GroupService {
         return memberList.stream()
                 .map(GroupMember::getUser)
                 .collect(Collectors.toList());
+    }
+
+    public boolean isUserAdmin(Long userId, Long groupId) {
+        return groupMemberRepository.existsByUserIdAndGroupIdAndRole(userId, groupId, "admin");
     }
 }
 
