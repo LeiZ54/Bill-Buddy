@@ -36,6 +36,10 @@ public class UserService {
         return userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found!"));
     }
 
+    public User getUserByEmail(String email) {
+        return userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found!"));
+    }
+
     public User getCurrentUser() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         return getUserByUsername(username);

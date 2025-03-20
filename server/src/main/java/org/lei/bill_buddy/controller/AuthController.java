@@ -52,18 +52,12 @@ public class AuthController {
 
     @GetMapping("/check-username")
     public ResponseEntity<?> checkUsername(@RequestParam String username) {
-        if (userService.isUsernameTaken(username)) {
-            throw new RuntimeException("Username is taken, please try again.");
-        }
-        return ResponseEntity.ok(Collections.singletonMap("message", "Username is not taken."));
+        return ResponseEntity.ok(Collections.singletonMap("available", userService.isUsernameTaken(username)));
     }
 
     @GetMapping("/check-email")
     public ResponseEntity<?> checkEmail(@RequestParam String email) {
-        if (userService.isEmailTaken(email)) {
-            throw new RuntimeException("Email is taken, please try again.");
-        }
-        return ResponseEntity.ok(Collections.singletonMap("message", "Email is not taken."));
+        return ResponseEntity.ok(Collections.singletonMap("available", userService.isEmailTaken(email)));
     }
 }
 
