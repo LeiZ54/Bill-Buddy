@@ -1,10 +1,12 @@
 package org.lei.bill_buddy.controller;
 
 import jakarta.validation.Valid;
+import org.lei.bill_buddy.DTO.UserGoogleLoginRequest;
 import org.lei.bill_buddy.DTO.UserLoggedInDTO;
 import org.lei.bill_buddy.DTO.UserLoginRequest;
 import org.lei.bill_buddy.DTO.UserRegisterRequest;
 import org.lei.bill_buddy.model.User;
+import org.lei.bill_buddy.service.GoogleAuthService;
 import org.lei.bill_buddy.service.UserService;
 import org.lei.bill_buddy.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +30,9 @@ public class AuthController {
     private UserService userService;
 
     @Autowired
+    private GoogleAuthService googleAuthService;
+
+    @Autowired
     private JwtUtil jwtUtil;
 
     @PostMapping("/register")
@@ -36,28 +41,46 @@ public class AuthController {
                 request.getEmail(),
                 request.getPassword());
 
-        return ResponseEntity.ok(new UserLoggedInDTO(user.getUsername(), user.getEmail(), jwtUtil.generateToken(user.getUsername())));
+        return ResponseEntity.ok(new UserLoggedInDTO(user.getUsername(), user.getEmail(), jwtUtil.generateAuthToken(user.getEmail())));
     }
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody UserLoginRequest request) {
         UsernamePasswordAuthenticationToken authenticationToken =
-                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword());
+                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword());
         Authentication authentication = authenticationManager.authenticate(authenticationToken);
 
         UserDetails principal = (UserDetails) authentication.getPrincipal();
-        User loggedInUser = userService.getUserByUsername(principal.getUsername());
-        return ResponseEntity.ok(new UserLoggedInDTO(loggedInUser.getUsername(), loggedInUser.getEmail(), jwtUtil.generateToken(loggedInUser.getUsername())));
+        User loggedInUser = userService.getUserByEmail(principal.getUsername());
+        return ResponseEntity.ok(new UserLoggedInDTO(loggedInUser.getUsername(), loggedInUser.getEmail(), jwtUtil.generateAuthToken(loggedInUser.getEmail())));
     }
 
-    @GetMapping("/check-username")
-    public ResponseEntity<?> checkUsername(@RequestParam String username) {
-        return ResponseEntity.ok(Collections.singletonMap("available", userService.isUsernameTaken(username)));
+    @PostMapping("/google")
+    public ResponseEntity<?> authenticateWithGoogle(@RequestBody UserGoogleLoginRequest request) {
+        try {
+            var payload = googleAuthService.verifyGoogleToken(request.getGoogleId());
+
+            String email = payload.getEmail();
+            String name = (String) payload.get("name");
+            String pictureUrl = (String) payload.get("picture"); // 头像
+
+            User user = userService.getUserByEmail(email);
+            if (user == null) {
+                user = userService.registerUser(name, email, pictureUrl);
+            }
+
+            String jwtToken = jwtUtil.generateAuthToken(email);
+
+            return ResponseEntity.ok(new UserLoggedInDTO(user.getUsername(), user.getEmail(), jwtToken));
+
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Collections.singletonMap("error", "Google authentication failed"));
+        }
     }
 
     @GetMapping("/check-email")
     public ResponseEntity<?> checkEmail(@RequestParam String email) {
-        return ResponseEntity.ok(Collections.singletonMap("available", userService.isEmailTaken(email)));
+        return ResponseEntity.ok(Collections.singletonMap("available", userService.getUserByEmail(email) == null));
     }
 }
 

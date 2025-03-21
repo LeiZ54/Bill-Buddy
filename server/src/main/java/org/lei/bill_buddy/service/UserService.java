@@ -17,10 +17,7 @@ public class UserService {
     private PasswordEncoder passwordEncoder;
 
     public User registerUser(String username, String email, String rawPassword) {
-        if (isUsernameTaken(username)) {
-            throw new RuntimeException("Username already taken!");
-        }
-        if (isEmailTaken(email)) {
+        if (getUserByEmail(email) != null) {
             throw new RuntimeException("Email already taken!");
         }
 
@@ -33,23 +30,15 @@ public class UserService {
     }
 
     public User getUserByUsername(String username) {
-        return userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found!"));
+        return userRepository.findByUsername(username).orElse(null);
     }
 
     public User getUserByEmail(String email) {
-        return userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found!"));
+        return userRepository.findByEmail(email).orElse(null);
     }
 
     public User getCurrentUser() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         return getUserByUsername(username);
-    }
-
-    public boolean isUsernameTaken(String username) {
-        return userRepository.existsByUsername(username);
-    }
-
-    public boolean isEmailTaken(String email) {
-        return userRepository.existsByEmail(email);
     }
 }
