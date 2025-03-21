@@ -62,11 +62,10 @@ public class AuthController {
 
             String email = payload.getEmail();
             String name = (String) payload.get("name");
-            String pictureUrl = (String) payload.get("picture"); // 头像
 
             User user = userService.getUserByEmail(email);
             if (user == null) {
-                user = userService.registerUser(name, email, pictureUrl);
+                user = userService.registerUser(name, email, "");
             }
 
             String jwtToken = jwtUtil.generateAuthToken(email);
