@@ -1,0 +1,15 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\public",
+    "\\public\\bottomBar",
+    "\\src",
+    "\\src\\components",
+    "\\src\\pages",
+    "\\src\\services",
+    "\\src\\store",
+    "\\src\\styles"
+  ],
+  "SelectedNode": "\\src\\App.tsx",
+  "PreviewInSolutionExplorer": false
+}
