@@ -29,8 +29,14 @@ public class User implements UserDetails {
     @Column(nullable = false, unique = true)
     private String email;
 
+    @Column(name = "given_name")
+    private String givenName;
+
+    @Column(name = "family_name")
+    private String familyName;
+
     @Column(nullable = false)
-    private String provider;
+    private Boolean deleted;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
@@ -39,6 +45,7 @@ public class User implements UserDetails {
     private LocalDateTime updatedAt;
 
     public User() {
+        this.deleted = false;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
@@ -66,5 +73,10 @@ public class User implements UserDetails {
     @Override
     public boolean isEnabled() {
         return true;
+    }
+
+    @PreUpdate
+    public void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
     }
 }

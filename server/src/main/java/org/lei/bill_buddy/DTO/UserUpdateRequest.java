@@ -5,12 +5,9 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 @Data
-public class UserRegisterRequest {
+public class UserUpdateRequest {
     @NotBlank
     private String username;
-
-    @NotBlank
-    private String password;
 
     @NotBlank
     @Email

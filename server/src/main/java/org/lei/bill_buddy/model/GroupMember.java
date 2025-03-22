@@ -3,7 +3,6 @@ package org.lei.bill_buddy.model;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
@@ -11,7 +10,6 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @Setter
-@NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "group_members")
 public class GroupMember {
@@ -32,5 +30,14 @@ public class GroupMember {
 
     @Column(name = "joined_at", nullable = false)
     private LocalDateTime joinedAt;
+
+    @Column(nullable = false)
+    private Boolean deleted = false;
+
+    public GroupMember() {
+        this.deleted = false;
+        this.role = "member";
+        this.joinedAt = LocalDateTime.now();
+    }
 }
 

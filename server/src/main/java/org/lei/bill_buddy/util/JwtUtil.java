@@ -23,6 +23,9 @@ public class JwtUtil {
     @Value("#{${invitation.jwt.expiration}}")
     private long inviteTokenExpirationTime;
 
+    @Value("#{${reset-password.jwt.expiration}}")
+    private long resetPasswordTokenExpiration;
+
     private SecretKey secretKey;
 
     @PostConstruct
@@ -41,11 +44,15 @@ public class JwtUtil {
     }
 
     public String generateAuthToken(String email) {
-        return generateToken(email, Map.of(), jwtExpirationTime);
+        return generateToken("Authorization", Map.of("email", email), jwtExpirationTime);
     }
 
     public String generateInviteToken(String email, Long groupId) {
         return generateToken("Invitation", Map.of("email", email, "groupId", groupId), inviteTokenExpirationTime);
+    }
+
+    public String generateResetPasswordToken(String email) {
+        return generateToken("ResetPassword", Map.of("email", email), resetPasswordTokenExpiration);
     }
 
     private Claims parseClaims(String token) {
@@ -69,11 +76,6 @@ public class JwtUtil {
         }
     }
 
-    /**
-     * 解析邀请 Token，并提取 email 和 groupId
-     * @param token 邀请 Token
-     * @return Map<String, Object> { "email": email, "groupId": groupId }
-     */
     public Map<String, Object> getInviteTokenDetails(String token) {
         Claims claims = parseClaims(token);
         return Map.of(

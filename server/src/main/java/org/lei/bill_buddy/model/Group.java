@@ -24,6 +24,9 @@ public class Group {
     @JoinColumn(name = "created_by", nullable = false)
     private User createdBy;
 
+    @Column(nullable = false)
+    private Boolean deleted;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
@@ -31,7 +34,13 @@ public class Group {
     private LocalDateTime updatedAt;
 
     public Group() {
+        this.deleted = false;
         this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    public void onUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
 }

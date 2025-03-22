@@ -3,7 +3,6 @@ package org.lei.bill_buddy.model;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
@@ -12,7 +11,6 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @Setter
-@NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "expenses")
 public class Expense {
@@ -35,7 +33,10 @@ public class Expense {
     private String currency;
 
     @Column(length = 50)
-    private String category; // e.g. "Food", "Transport", "Rent"
+    private String category;
+
+    @Column(nullable = false)
+    private Boolean deleted;
 
     @Column
     private String description;
@@ -49,5 +50,15 @@ public class Expense {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    public Expense() {
+        this.deleted = false;
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    public void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
 }
 

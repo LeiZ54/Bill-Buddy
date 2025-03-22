@@ -1,16 +1,14 @@
 package org.lei.bill_buddy.controller;
 
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.JwtException;
 import jakarta.mail.MessagingException;
 import org.lei.bill_buddy.DTO.GroupCreateRequest;
 import org.lei.bill_buddy.DTO.GroupUpdateRequest;
 import org.lei.bill_buddy.model.Group;
 import org.lei.bill_buddy.model.User;
 import org.lei.bill_buddy.service.GroupService;
-import org.lei.bill_buddy.service.MailService;
 import org.lei.bill_buddy.service.UserService;
 import org.lei.bill_buddy.util.JwtUtil;
+import org.lei.bill_buddy.util.MailSenderUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -31,7 +29,7 @@ public class GroupController {
     private UserService userService;
 
     @Autowired
-    private MailService mailService;
+    private MailSenderUtil mailSenderUtil;
 
     @Autowired
     private JwtUtil jwtUtil;
@@ -82,7 +80,7 @@ public class GroupController {
         String token = jwtUtil.generateInviteToken(email, groupId);
         String inviteLink = clientUrl + "/accept-invitation?token=" + token;
 
-        mailService.sendInvitationEmail(group.getName(), email, inviteLink);
+        mailSenderUtil.sendInvitationEmail(group.getName(), email, inviteLink);
 
         return ResponseEntity.ok("Invitation sent to " + email);
     }
@@ -90,28 +88,22 @@ public class GroupController {
 
     @GetMapping("/invitations/accept")
     public ResponseEntity<?> acceptInvitation(@RequestParam String token) {
-        try {
-            if (!jwtUtil.validateToken(token)) {
-                return ResponseEntity.badRequest().body(Collections.singletonMap("error", "Invalid or expired invitation token."));
-            }
-
-            Map<String, Object> inviteData = jwtUtil.getInviteTokenDetails(token);
-            String email = (String) inviteData.get("email");
-            Long groupId = (Long) inviteData.get("groupId");
-
-            User user = userService.getUserByEmail(email);
-            if (user == null) {
-                return ResponseEntity.badRequest().body(Collections.singletonMap("error", "User not found. Please register first."));
-            }
-
-            groupService.addMemberToGroup(groupId, user.getId());
-
-            return ResponseEntity.ok("Invitation accepted. You've joined the group!");
-        } catch (ExpiredJwtException e) {
-            return ResponseEntity.badRequest().body(Collections.singletonMap("error", "Invitation link has expired."));
-        } catch (JwtException e) {
-            return ResponseEntity.badRequest().body(Collections.singletonMap("error", "Invalid invitation token."));
+        if (!jwtUtil.validateToken(token)) {
+            return ResponseEntity.badRequest().body(Collections.singletonMap("error", "Invalid or expired invitation token."));
         }
+
+        Map<String, Object> inviteData = jwtUtil.getInviteTokenDetails(token);
+        String email = (String) inviteData.get("email");
+        Long groupId = (Long) inviteData.get("groupId");
+
+        User user = userService.getUserByEmail(email);
+        if (user == null) {
+            return ResponseEntity.badRequest().body(Collections.singletonMap("error", "User not found. Please register first."));
+        }
+
+        groupService.addMemberToGroup(groupId, user.getId());
+
+        return ResponseEntity.ok("Invitation accepted. You've joined the group!");
     }
 
 
