@@ -8,6 +8,7 @@ import org.lei.bill_buddy.service.GoogleAuthService;
 import org.lei.bill_buddy.service.UserService;
 import org.lei.bill_buddy.util.JwtUtil;
 import org.lei.bill_buddy.util.MailSenderUtil;
+import org.lei.bill_buddy.util.VerificationCodeUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -15,10 +16,12 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -39,8 +42,11 @@ public class AuthController {
     @Autowired
     private JwtUtil jwtUtil;
 
-    @Value("${bill-buddy.client.url}")
-    private String clientUrl;
+    @Autowired
+    private VerificationCodeUtil verificationCodeUtil;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody UserRegisterRequest request) {
@@ -97,11 +103,29 @@ public class AuthController {
             throw new RuntimeException("User not found.");
         }
 
-        String token = jwtUtil.generateResetPasswordToken(email);
-        String resetLink = clientUrl + "/reset-password?token=" + token;
+        mailSenderUtil.sendVerificationCodeEmail(user.getUsername(), email, verificationCodeUtil.generateCode(email));
 
-        mailSenderUtil.sendPasswordResetEmail(user.getUsername(), email, resetLink);
-        return ResponseEntity.ok("Reset link sent to your email.");
+        return ResponseEntity.ok("Verification code sent to your email.");
+    }
+
+    @PostMapping("/verify-code")
+    public ResponseEntity<?> verifyCode(@RequestBody @Valid VerifyCodeRequest request) {
+        boolean valid = verificationCodeUtil.verifyCode(request.getEmail(), request.getCode());
+        if (!valid) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Invalid or expired code"));
+        }
+        String resetPasswordToken = jwtUtil.generateResetPasswordToken(request.getEmail());
+        return ResponseEntity.ok(Map.of("token", resetPasswordToken));
+    }
+
+    @PostMapping("/update-password")
+    public ResponseEntity<?> updatePassword(@RequestBody @Valid UserUpdatePasswordRequest request) {
+        User user = userService.getCurrentUser();
+        if (passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
+            String resetPasswordToken = jwtUtil.generateResetPasswordToken(user.getEmail());
+            return ResponseEntity.ok(Map.of("token", resetPasswordToken));
+        }
+        return ResponseEntity.badRequest().body(Map.of("error", "Password is incorrect."));
     }
 
     @PostMapping("/reset-password")

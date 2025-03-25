@@ -45,13 +45,13 @@ public class MailSenderUtil {
         sendEmail(toEmail, "You have been invited to join the group: " + groupName, htmlContent);
     }
 
-    public void sendPasswordResetEmail(String username, String toEmail, String resetLink) throws MessagingException, IOException {
-        String templatePath = "templates/reset-password-email.html";
+    public void sendVerificationCodeEmail(String username, String toEmail, String code) throws MessagingException, IOException {
+        String templatePath = "templates/verification-code-email.html";
         Resource resource = new ClassPathResource(templatePath);
         String htmlContent = new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
 
         htmlContent = htmlContent.replace("{{username}}", username);
-        htmlContent = htmlContent.replace("{{resetLink}}", resetLink);
+        htmlContent = htmlContent.replace("{{verificationCode}}", code);
         sendEmail(toEmail, "Reset Password Link", htmlContent);
     }
 }
