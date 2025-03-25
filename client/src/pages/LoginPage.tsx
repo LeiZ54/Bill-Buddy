@@ -129,7 +129,7 @@ export default function LoginPage() {
                     {apiError && <p className="text-red-500 text-sm mt-2">{apiError}</p>}
                     {/* forget */}
                     <div className="mt-4 text-center">
-                        <a href="#" className="text-sm text-green-500 hover:underline">
+                        <a href="/forget" className="text-sm text-green-500 hover:underline">
                             Forget your password?
                         </a>
                     </div>

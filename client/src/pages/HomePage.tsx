@@ -92,7 +92,7 @@ const HomePage = () => {
                                         ? iconConfig[tab.id as keyof typeof iconConfig].active
                                         : iconConfig[tab.id as keyof typeof iconConfig].inactive}
                                     alt={tab.label}
-                                    className="h-6 w-6 mb-1"
+                                    className={`mb-1 ${tab.id === 'add' ? 'h-10 w-10' : 'h-6 w-6'}`}
                                 />
                                 <span
                                     className={`text-xs ${activeTab === tab.id

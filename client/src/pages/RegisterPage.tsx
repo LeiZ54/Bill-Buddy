@@ -25,7 +25,7 @@ export default function RegisterPage() {
     const checkEmailAvailability = async (email: string) => {
         try {
             const response = await api.get(`/auth/check-email?email=${encodeURIComponent(email)}`);
-            if (response.data.available) {
+            if (!response.data.available) {
                 setErrors(prev => ({ ...prev, email: "This email has already been registered!" }));
             }
         } catch (error) {
@@ -129,7 +129,7 @@ export default function RegisterPage() {
             if (registerResponse.status === 200) {
                 //auto login
                 const loginResponse = await api.post("/auth/login", {
-                    username,
+                    email,
                     password,
                 });
                 localStorage.setItem("token", loginResponse.data.token);
