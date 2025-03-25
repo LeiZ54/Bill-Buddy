@@ -17,8 +17,12 @@ import java.nio.charset.StandardCharsets;
 public class MailSenderUtil {
 
     private final JavaMailSender mailSender;
+
     @Value("${spring.mail.username}")
     private String fromEmail;
+
+    @Value("#{${reset-password.code.expiration}}")
+    private long codeExpirationMillis;
 
     @Autowired
     public MailSenderUtil(JavaMailSender mailSender) {
@@ -52,6 +56,7 @@ public class MailSenderUtil {
 
         htmlContent = htmlContent.replace("{{username}}", username);
         htmlContent = htmlContent.replace("{{verificationCode}}", code);
+        htmlContent = htmlContent.replace("{{expirationTime}}", Long.toString(codeExpirationMillis / 1000 / 60));
         sendEmail(toEmail, "Reset Password Link", htmlContent);
     }
 }
