@@ -35,6 +35,11 @@ public class UserController {
         return ResponseEntity.ok(convertUserToUserDTO(updatedUser));
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<?> searchUsers(@RequestParam("keyword") String keyword) {
+        return ResponseEntity.ok(userService.searchUsers(keyword).stream().map(this::convertUserToUserDTO));
+    }
+
     private UserDTO convertUserToUserDTO(User user) {
         UserDTO dto = new UserDTO();
         dto.setId(user.getId());

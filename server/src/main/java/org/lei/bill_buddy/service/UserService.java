@@ -7,6 +7,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class UserService {
 
@@ -50,8 +52,8 @@ public class UserService {
         return userRepository.save(existingUser);
     }
 
-    public User getByUsername(String username) {
-        return userRepository.findByUsernameAndDeletedFalse(username).orElse(null);
+    public List<User> searchUsers(String keyword) {
+        return userRepository.findByUsernameContainingIgnoreCaseOrEmailContainingIgnoreCaseAndDeletedFalse(keyword, keyword);
     }
 
     public User getUserById(Long id) {
