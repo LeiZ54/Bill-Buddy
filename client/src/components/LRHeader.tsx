@@ -14,15 +14,15 @@ const LRHeader = ({ activeButton }: { activeButton: string }) => {
             <div className="flex gap-4">
                 <Link
                     to="/login"
-                    className={`px-2 py-1 rounded-xl ${activeButton === "login" ? "bg-green-600 text-white" : "border-green-600 text-green-600 hover:bg-green-100"}`}
+                    className={`px-2 py-1 rounded-xl ${activeButton === "login" ? "bg-green-500 text-white" : "border-green-600 text-green-600 hover:bg-green-100"}`}
                 >
                     Login
                 </Link>
                 <Link
                     to="/register"
-                    className={`px-2 py-1 rounded-xl ${activeButton === "register" ? "bg-green-600 text-white" : "border-green-600 text-green-600 hover:bg-green-100"}`}
+                    className={`px-2 py-1 rounded-xl ${activeButton === "register" ? "bg-green-500 text-white" : "border-green-600 text-green-600 hover:bg-green-100"}`}
                 >
-                    Register
+                    Sign Up
                 </Link>
             </div>
         </header>

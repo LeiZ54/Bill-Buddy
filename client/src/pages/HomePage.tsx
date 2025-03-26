@@ -41,7 +41,7 @@ const HomePage = () => {
         { id: 'account', label: 'Account', path: '/account' }
     ];
 
-    // ¸ù¾Ýµ±Ç°Â·¾¶³õÊ¼»¯Ñ¡ÖÐ×´Ì¬
+    // ï¿½ï¿½ï¿½Ýµï¿½Ç°Â·ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½Ñ¡ï¿½ï¿½×´Ì¬
     useEffect(() => {
         const currentTab = tabs.find(tab => location.pathname.startsWith(tab.path))?.id;
         if (currentTab) {
@@ -67,12 +67,12 @@ const HomePage = () => {
 
     return (
         <>
-            {/* ÄÚÈÝÇøÓòÊ¹ÓÃOutlet */}
+            {/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½Outlet */}
             <div className="fixed inset-x-0 top-0 bottom-16 overflow-y-auto p-4">
                 <Outlet />
             </div>
 
-            {/* µ¼º½À¸ */}
+            {/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ */}
             <div className="fixed inset-x-0 bottom-0 bg-white shadow-lg">
                 <nav className="relative h-16 border-t border-gray-200">
                     <div
@@ -85,24 +85,26 @@ const HomePage = () => {
                             <button
                                 key={tab.id}
                                 onClick={() => handleTabClick(tab.id as Tab, index, tab.path)}
-                                className="flex flex-1 flex-col items-center justify-center h-full"
+                                className={`flex flex-1 flex-col items-center justify-center h-full
+                                ${tab.id === 'add' ? 'scale-125 -mt-2' : ''}`}
                             >
                                 <img
                                     src={activeTab === tab.id
                                         ? iconConfig[tab.id as keyof typeof iconConfig].active
                                         : iconConfig[tab.id as keyof typeof iconConfig].inactive}
                                     alt={tab.label}
-                                    className={`mb-1 ${tab.id === 'add' ? 'h-10 w-10' : 'h-6 w-6'}`}
+                                    className={`${tab.id === 'add' ? 'h-14 w-14' : 'h-6 w-6'} mb-1`}
                                 />
                                 <span
                                     className={`text-xs ${activeTab === tab.id
-                                            ? 'text-green-500 font-medium'
-                                            : 'text-gray-500'
+                                        ? 'text-green-500 font-medium'
+                                        : 'text-gray-500'
                                         }`}
                                 >
                                     {tab.label}
                                 </span>
                             </button>
+
                         ))}
                     </div>
                 </nav>

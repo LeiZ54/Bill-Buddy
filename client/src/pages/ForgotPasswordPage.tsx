@@ -9,7 +9,7 @@ type FieldErrors = {
     code?: string;
 };
 
-export default function ForgetPasswordPage() {
+export default function ForgotPasswordPage() {
     const navigate = useNavigate();
     const [email, setEmail] = useState<string>("");
     const [code, setCode] = useState<string>("");
@@ -95,14 +95,17 @@ export default function ForgetPasswordPage() {
             <LRHeader activeButton={""} />
             <div className="w-full max-w-xs sm:max-w-xs md:max-w-sm lg:max-w-md xl:max-w-lg rounded-xl bg-white p-8 border-2 border-black">
                 <div className="text-center">
-                    <h2 className="text-2xl font-bold text-gray-800">Forget Password</h2>
+                    <h2 className="text-2xl font-bold text-gray-800">Forgot Password</h2>
                 </div>
+                <p className="text-sm text-gray-600 mt-2">
+                    We will send a six-digit verification code to the email you entered.
+                </p>
 
                 <form className="mt-6" onSubmit={handleSubmit} noValidate>
                     {/* email */}
                     <div>
                         <label className="block text-gray-700">email</label>
-                        <div className="flex gap-2">
+                        <div className="mt-1 flex flex-col gap-6">
                             <input
                                 type="text"
                                 value={email}
@@ -111,17 +114,19 @@ export default function ForgetPasswordPage() {
                                     setErrors(prev => ({ ...prev, email: "" }));
                                 }}
                                 onBlur={(e) => validateField("email", e.target.value)}
-                                className="mt-1 w-full rounded border-gray-300 p-2 focus:border-green-500 focus:ring focus:ring-green-300 border-2 border-gray"
+                                className="rounded border-gray-300 p-2 h-10 w-full focus:border-green-500 focus:ring focus:ring-green-300 border-2 border-gray"
                             />
                             <button
                                 type="button"
                                 onClick={handleSendCode}
                                 disabled={isSending || countdown > 0}
-                                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400 whitespace-nowrap"
+                                className="h-10 w-full bg-green-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400"
                             >
-                                {countdown > 0 ? `resent(${countdown})` : 'send code'}
+                                {countdown > 0 ? `Resend(${countdown})` : 'Send'}
                             </button>
                         </div>
+
+
                         {errors.email && (
                             <span className="text-red-500 text-sm">{errors.email}</span>
                         )}
@@ -130,33 +135,32 @@ export default function ForgetPasswordPage() {
                     {/* input code */}
                     {showVerification && (
                         <div className="mt-4">
-                            <label className="block text-gray-700">code</label>
-                            <input
-                                type="text"
-                                value={code}
-                                maxLength={6}
-                                onChange={(e) => {
-                                    setCode(e.target.value.replace(/\D/g, ''));
-                                    setErrors(prev => ({ ...prev, code: "" }));
-                                }}
-                                onBlur={(e) => validateField("code", e.target.value)}
-                                className="mt-1 w-full rounded border-gray-300 p-2 focus:border-green-500 focus:ring focus:ring-green-300 border-2 border-gray"
-                            />
+                            <label className="block text-gray-700 mb-1">Code</label>
+                            <div className="flex gap-4">
+                                <input
+                                    type="text"
+                                    value={code}
+                                    maxLength={6}
+                                    onChange={(e) => {
+                                        setCode(e.target.value.replace(/\D/g, ''));
+                                        setErrors(prev => ({ ...prev, code: "" }));
+                                    }}
+                                    onBlur={(e) => validateField("code", e.target.value)}
+                                    className="w-2/3 rounded border-gray-300 p-2 h-10 focus:border-green-500 focus:ring focus:ring-green-300 border-2 border-gray"
+                                />
+                                <button
+                                    type="submit"
+                                    className="w-1/3 h-10 bg-green-500 text-white rounded hover:bg-green-600"
+                                >
+                                    Submit
+                                </button>
+                            </div>
                             {errors.code && (
                                 <span className="text-red-500 text-sm">{errors.code}</span>
                             )}
                         </div>
                     )}
 
-                    {/* submit */}
-                    {showVerification && (
-                        <button
-                            type="submit"
-                            className="w-full mt-6 bg-green-500 text-white py-2 rounded hover:bg-green-600"
-                        >
-                            Submit
-                        </button>
-                    )}
                 </form>
             </div>
         </div>

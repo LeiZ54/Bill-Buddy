@@ -18,6 +18,8 @@ export default function RegisterPage() {
     const [username, setUsername] = useState<string>("");
     const [password, setPassword] = useState<string>("");
     const [rePassword, setRePassword] = useState<string>("");
+    const [givenName, setGivenName] = useState<string>("");
+    const [familyName, setFamilyName] = useState<string>("");
     const [loading, setLoading] = useState<boolean>(false);
     const [errors, setErrors] = useState<FieldErrors>({});
     const navigate = useNavigate();
@@ -51,24 +53,24 @@ export default function RegisterPage() {
                 break;
             case 'username':
                 if (!value) {
-                    newErrors.username = "UserName cannot be empty!";
+                    newErrors.username = "Username cannot be empty!";
                 } else if (value.length < 4) {
-                    newErrors.username = "The UserName must be at least 4 characters!";
+                    newErrors.username = "The Username must be at least 4 characters!";
                 } else if (!/^[A-Za-z0-9]+$/.test(value)) {
-                    newErrors.username = "The UserName can only contain letters and numbers!";
+                    newErrors.username = "The Username can only contain letters and numbers!";
                 }
                 break;
             case 'password':
                 if (!value) {
                     newErrors.password = "Password cannot be empty!";
-                }else if (value.length < 6) {
+                } else if (value.length < 6) {
                     newErrors.password = "Password must be at least 6 characters!";
                 }
                 break;
             case 'rePassword':
                 if (!value) {
                     newErrors.rePassword = "RePassword cannot be empty!";
-                }else if (value !== password) {
+                } else if (value !== password) {
                     newErrors.rePassword = "RePassword inconsistency!";
                 }
                 break;
@@ -124,6 +126,8 @@ export default function RegisterPage() {
                 username,
                 password,
                 email,
+                givenName,
+                familyName
             });
             // check res
             if (registerResponse.status === 200) {
@@ -163,67 +167,13 @@ export default function RegisterPage() {
             <div className="w-full max-w-xs sm:max-w-xs md:max-w-sm lg:max-w-md xl:max-w-lg rounded-xl bg-white p-8 border-2 border-black">
                 {/* Logo & title */}
                 <div className="text-center">
-                    <h2 className="text-2xl font-bold text-gray-800">Register</h2>
+                    <h2 className="text-2xl font-bold text-gray-800">Sign Up</h2>
                 </div>
 
                 {/* login form */}
                 <form className="mt-6" onSubmit={handleSubmit}>
-                    <div>
-                        <label className="block text-gray-700">Email Address</label>
-                        <input
-                            type="email"
-                            onChange={(e) => {
-                                setEmail(e.target.value);
-                                setErrors(prev => ({ ...prev, email: "" }));
-                            }}
-                            onBlur={(e) => {
-                                validateField("email", e.target.value);
-                            }}
-                            className="mt-1 w-full rounded border-gray-300 p-2 focus:border-green-500 focus:ring focus:ring-green-300 border-2 border-gray"
-                        />
-                        {errors.email && (
-                            <span className="text-red-500 text-sm block mt-1">{errors.email}</span>
-                        )}
-                    </div>
-
-                    <div className="mt-4">
-                        <label className="block text-gray-700">Password</label>
-                        <input
-                            type="password"
-                            onChange={(e) => {
-                                setPassword(e.target.value);
-                                setErrors(prev => ({ ...prev, password: "" }));
-                            }}
-                            onBlur={(e) => {
-                                validateField("password", e.target.value);
-                            }}
-                            className="mt-1 w-full rounded border-gray-300 p-2 focus:border-green-500 focus:ring focus:ring-green-300 border-2 border-gray"
-                        />
-                        {errors.password && (
-                            <span className="text-red-500 text-sm block mt-1">{errors.password}</span>
-                        )}
-                    </div>
-
-                    <div className="mt-4">
-                        <label className="block text-gray-700">Confirm Password</label>
-                        <input
-                            type="password"
-                            onChange={(e) => {
-                                setRePassword(e.target.value);
-                                setErrors(prev => ({ ...prev, rePassword: "" }));
-                            }}
-                            onBlur={(e) => {
-                                validateField("rePassword", e.target.value);
-                            }}
-                            className="mt-1 w-full rounded border-gray-300 p-2 focus:border-green-500 focus:ring focus:ring-green-300 border-2 border-gray"
-                        />
-                        {errors.rePassword && (
-                            <span className="text-red-500 text-sm block mt-1">{errors.rePassword}</span>
-                        )}
-                    </div>
-
-                    <div className="mt-4">
-                        <label className="block text-gray-700">Username</label>
+                    <div className="mt-2">
+                        <label className="block text-sm font-bold text-gray-700">Username <span className="text-red-500">*</span> </label>
                         <input
                             type="text"
                             onChange={(e) => {
@@ -240,13 +190,98 @@ export default function RegisterPage() {
                         )}
                     </div>
 
+                    <div className="mt-2">
+                        <label className="block text-sm font-bold text-gray-700">Email Address <span className="text-red-500">*</span> </label>
+                        <input
+                            type="email"
+                            onChange={(e) => {
+                                setEmail(e.target.value);
+                                setErrors(prev => ({ ...prev, email: "" }));
+                            }}
+                            onBlur={(e) => {
+                                validateField("email", e.target.value);
+                            }}
+                            className="mt-1 w-full rounded border-gray-300 p-2 focus:border-green-500 focus:ring focus:ring-green-300 border-2 border-gray"
+                        />
+                        {errors.email && (
+                            <span className="text-red-500 text-sm block mt-1">{errors.email}</span>
+                        )}
+                    </div>
+
+                    <div className="mt-2">
+                        <label className="block text-sm font-bold text-gray-700">Password <span className="text-red-500">*</span> </label>
+                        <input
+                            type="password"
+                            onChange={(e) => {
+                                setPassword(e.target.value);
+                                setErrors(prev => ({ ...prev, password: "" }));
+                            }}
+                            onBlur={(e) => {
+                                validateField("password", e.target.value);
+                            }}
+                            className="mt-1 w-full rounded border-gray-300 p-2 focus:border-green-500 focus:ring focus:ring-green-300 border-2 border-gray"
+                        />
+                        {errors.password && (
+                            <span className="text-red-500 text-sm block mt-1">{errors.password}</span>
+                        )}
+                    </div>
+
+                    <div className="mt-2">
+                        <label className="block text-sm font-bold text-gray-700">Confirm Password <span className="text-red-500">*</span> </label>
+                        <input
+                            type="password"
+                            onChange={(e) => {
+                                setRePassword(e.target.value);
+                                setErrors(prev => ({ ...prev, rePassword: "" }));
+                            }}
+                            onBlur={(e) => {
+                                validateField("rePassword", e.target.value);
+                            }}
+                            className="mt-1 w-full rounded border-gray-300 p-2 focus:border-green-500 focus:ring focus:ring-green-300 border-2 border-gray"
+                        />
+                        {errors.rePassword && (
+                            <span className="text-red-500 text-sm block mt-1">{errors.rePassword}</span>
+                        )}
+                    </div>
+
+                    {/* Given Name & Family Name */}
+                    <div className="mt-2">
+                        <div className="flex gap-4">
+                            {/* Given Name */}
+                            <div className="w-1/2">
+                                <label className="block text-sm font-bold text-gray-700">Given Name</label>
+                                <input
+                                    type="text"
+                                    onChange={(e) => {
+                                        setGivenName(e.target.value);
+                                        setErrors(prev => ({ ...prev, givenName: "" }));
+                                    }}
+                                    className="mt-1 w-full rounded border-gray-300 p-2 focus:border-green-500 focus:ring focus:ring-green-300 border-2 border-gray"
+                                />
+                            </div>
+
+                            {/* Family Name */}
+                            <div className="w-1/2">
+                                <label className="block text-sm font-bold text-gray-700">Family Name</label>
+                                <input
+                                    type="text"
+                                    onChange={(e) => {
+                                        setFamilyName(e.target.value);
+                                        setErrors(prev => ({ ...prev, familyName: "" }));
+                                    }}
+                                    className="mt-1 w-full rounded border-gray-300 p-2 focus:border-green-500 focus:ring focus:ring-green-300 border-2 border-gray"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
                     {/* register buttom */}
                     <button
                         type="submit"
                         className={`mt-6 w-full rounded bg-green-500 py-2 text-white hover:bg-green-600 transition ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
                         disabled={loading}
                     >
-                        {loading ? "Registering..." : "Register"}
+                        {loading ? "Loading..." : "Sign Up"}
                     </button>
                     {/* API error */}
                     {errors.api && <p className="text-red-500 text-sm mt-2">{errors.api}</p>}

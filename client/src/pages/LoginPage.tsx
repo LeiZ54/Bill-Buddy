@@ -26,7 +26,7 @@ export default function LoginPage() {
 
          
         if (name === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-            newErrors.email = "Invalid email format!";
+            newErrors.email = "Please enter correct email!";
          }
 
         setErrors(newErrors);
@@ -35,9 +35,8 @@ export default function LoginPage() {
 
     const validateForm = () => {
         const newErrors: { email?: string; password?: string } = {};
-        if (!email.trim()) newErrors.email = "Email cannot be empty!";
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) newErrors.email = "Invalid email format!";
-        if (!password.trim()) newErrors.password = "Password cannot be empty!";
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) newErrors.email = "Please enter correct email!";
+        if (!password.trim()) newErrors.password = "Please enter your password!";
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -81,7 +80,7 @@ export default function LoginPage() {
                 {/* login form */}
                 <form className="mt-6" onSubmit={handleSubmit} noValidate>
                     <div>
-                        <label className="block text-gray-700">Email</label>
+                        <label className="block text-sm font-bold text-gray-700">Email</label>
                         <input
                             type="text"
                             onChange={(e) => {
@@ -99,7 +98,7 @@ export default function LoginPage() {
                     </div>
 
                     <div className="mt-4">
-                        <label className="block text-gray-700">Password</label>
+                        <label className="block text-sm font-bold text-gray-700">Password</label>
                         <input
                             type="password"
                             onChange={(e) => {
@@ -126,11 +125,11 @@ export default function LoginPage() {
                         {loading ? "Logging in..." : "Login"}
                     </button>
                     {/* show api error */}
-                    {apiError && <p className="text-red-500 text-sm mt-2">{apiError}</p>}
+                    {apiError && <p className="text-red-500 text-sm mt-4">{apiError}</p>}
                     {/* forget */}
                     <div className="mt-4 text-center">
                         <a href="/forget" className="text-sm text-green-500 hover:underline">
-                            Forget your password?
+                            Forgot your password?
                         </a>
                     </div>
                     <div className="mt-4 text-center">
