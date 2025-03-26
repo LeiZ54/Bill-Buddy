@@ -32,9 +32,6 @@ public class Expense {
     @Column(nullable = false, length = 10)
     private String currency;
 
-    @Column(length = 50)
-    private String category;
-
     @Column(nullable = false)
     private Boolean deleted;
 

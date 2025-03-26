@@ -51,11 +51,15 @@ public class UserService {
     }
 
     public User getByUsername(String username) {
-        return userRepository.findByUsername(username).orElse(null);
+        return userRepository.findByUsernameAndDeletedFalse(username).orElse(null);
+    }
+
+    public User getUserById(Long id) {
+        return userRepository.findByIdAndDeletedFalse(id).orElse(null);
     }
 
     public User getUserByEmail(String email) {
-        return userRepository.findByEmail(email).orElse(null);
+        return userRepository.findByEmailAndDeletedFalse(email).orElse(null);
     }
 
     public User getCurrentUser() {

@@ -2,9 +2,12 @@ package org.lei.bill_buddy.controller;
 
 import jakarta.mail.MessagingException;
 import org.lei.bill_buddy.DTO.GroupCreateRequest;
+import org.lei.bill_buddy.DTO.GroupDTO;
 import org.lei.bill_buddy.DTO.GroupUpdateRequest;
+import org.lei.bill_buddy.model.ExpenseShare;
 import org.lei.bill_buddy.model.Group;
 import org.lei.bill_buddy.model.User;
+import org.lei.bill_buddy.service.ExpenseService;
 import org.lei.bill_buddy.service.GroupService;
 import org.lei.bill_buddy.service.UserService;
 import org.lei.bill_buddy.util.JwtUtil;
@@ -15,9 +18,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/groups")
@@ -27,6 +33,9 @@ public class GroupController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private ExpenseService expenseService;
 
     @Autowired
     private MailSenderUtil mailSenderUtil;
@@ -53,7 +62,7 @@ public class GroupController {
     public ResponseEntity<?> updateGroup(
             @PathVariable Long groupId,
             @RequestBody GroupUpdateRequest request) {
-        if (!groupService.isUserAdmin(userService.getCurrentUser().getId(), groupId)) {
+        if (groupService.isMemberAdmin(userService.getCurrentUser().getId(), groupId)) {
             throw new RuntimeException("You do not have permission to update this group.");
         }
         Group updated = groupService.updateGroup(groupId, request.getNewName());
@@ -62,7 +71,7 @@ public class GroupController {
 
     @DeleteMapping("/{groupId}")
     public ResponseEntity<?> deleteGroup(@PathVariable Long groupId) {
-        if (!groupService.isUserAdmin(userService.getCurrentUser().getId(), groupId)) {
+        if (groupService.isMemberAdmin(userService.getCurrentUser().getId(), groupId)) {
             throw new RuntimeException("You do not have permission to delete this group.");
         }
         groupService.deleteGroup(groupId);
@@ -86,7 +95,7 @@ public class GroupController {
     }
 
 
-    @GetMapping("/invitations/accept")
+    @PostMapping("/invitations/accept")
     public ResponseEntity<?> acceptInvitation(@RequestParam String token) {
         if (!jwtUtil.validateToken(token)) {
             return ResponseEntity.badRequest().body(Collections.singletonMap("error", "Invalid or expired invitation token."));
@@ -122,9 +131,43 @@ public class GroupController {
     }
 
     @GetMapping("/my")
-    public ResponseEntity<?> getGroupsByUser() {
+    public ResponseEntity<?> getMyGroups() {
         User user = userService.getCurrentUser();
         List<Group> groupList = groupService.getGroupsByUserId(user.getId());
-        return ResponseEntity.ok(groupList);
+        return ResponseEntity.ok(groupList.stream()
+                .map(this::convertGroupToGroupDTO)
+                .collect(Collectors.toList()));
     }
+
+    public GroupDTO convertGroupToGroupDTO(Group group) {
+        Map<String, BigDecimal> owesCurrentUser = new HashMap<>();
+        Map<String, BigDecimal> currentUserOwes = new HashMap<>();
+        Long currentUserId = userService.getCurrentUser().getId();
+
+        for (ExpenseShare share : expenseService.getExpenseSharesByGroupId(group.getId())) {
+            if (share.getExpense().getPayer().getId().equals(currentUserId) &&
+                    !share.getUser().getId().equals(currentUserId)) {
+                owesCurrentUser.merge(
+                        share.getUser().getUsername(),
+                        share.getShareAmount(),
+                        BigDecimal::add
+                );
+            } else if (share.getUser().getId().equals(currentUserId) &&
+                    !share.getExpense().getPayer().getId().equals(currentUserId)) {
+                currentUserOwes.merge(
+                        share.getExpense().getPayer().getUsername(),
+                        share.getShareAmount(),
+                        BigDecimal::add
+                );
+            }
+        }
+
+        GroupDTO dto = new GroupDTO();
+        dto.setGroupId(group.getId());
+        dto.setGroupName(group.getName());
+        dto.setOwesCurrentUser(owesCurrentUser);
+        dto.setCurrentUserOwes(currentUserOwes);
+        return dto;
+    }
+
 }

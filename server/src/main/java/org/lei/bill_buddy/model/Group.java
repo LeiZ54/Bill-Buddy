@@ -22,7 +22,7 @@ public class Group {
 
     @ManyToOne
     @JoinColumn(name = "created_by", nullable = false)
-    private User createdBy;
+    private User creator;
 
     @Column(nullable = false)
     private Boolean deleted;
