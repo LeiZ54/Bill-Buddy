@@ -10,7 +10,6 @@ import org.lei.bill_buddy.util.JwtUtil;
 import org.lei.bill_buddy.util.MailSenderUtil;
 import org.lei.bill_buddy.util.VerificationCodeUtil;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -85,6 +84,7 @@ public class AuthController {
         if (user == null) {
             user = new User();
             user.setUsername(name);
+            user.setPassword("");
             user.setEmail(email);
             user.setGivenName(givenName);
             user.setFamilyName(familyName);
