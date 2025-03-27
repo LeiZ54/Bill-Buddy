@@ -1,7 +1,6 @@
 package org.lei.bill_buddy.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -11,7 +10,6 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @Setter
-@AllArgsConstructor
 @Table(name = "expenses")
 public class Expense {
     @Id
@@ -33,7 +31,7 @@ public class Expense {
     private String currency;
 
     @Column(nullable = false)
-    private Boolean deleted;
+    private Boolean deleted = false;
 
     @Column
     private String description;
@@ -42,16 +40,10 @@ public class Expense {
     private LocalDateTime expenseDate;
 
     @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
+    private LocalDateTime createdAt = LocalDateTime.now();
 
     @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
-
-    public Expense() {
-        this.deleted = false;
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
-    }
+    private LocalDateTime updatedAt = LocalDateTime.now();
 
     @PreUpdate
     public void onUpdate() {

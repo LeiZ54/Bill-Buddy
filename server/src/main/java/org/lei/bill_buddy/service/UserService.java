@@ -1,5 +1,6 @@
 package org.lei.bill_buddy.service;
 
+import org.lei.bill_buddy.DTO.UserDTO;
 import org.lei.bill_buddy.model.User;
 import org.lei.bill_buddy.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,6 +57,10 @@ public class UserService {
         return userRepository.findByUsernameContainingIgnoreCaseOrEmailContainingIgnoreCaseAndDeletedFalse(keyword, keyword);
     }
 
+    public List<User> getUsersByIds(List<Long> ids) {
+        return userRepository.findByIdInAndDeletedFalse(ids);
+    }
+
     public User getUserById(Long id) {
         return userRepository.findByIdAndDeletedFalse(id).orElse(null);
     }
@@ -67,5 +72,15 @@ public class UserService {
     public User getCurrentUser() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         return getUserByEmail(username);
+    }
+
+    public UserDTO convertUserToUserDTO(User user) {
+        UserDTO dto = new UserDTO();
+        dto.setId(user.getId());
+        dto.setUsername(user.getUsername());
+        dto.setEmail(user.getEmail());
+        dto.setGivenName(user.getGivenName());
+        dto.setFamilyName(user.getFamilyName());
+        return dto;
     }
 }

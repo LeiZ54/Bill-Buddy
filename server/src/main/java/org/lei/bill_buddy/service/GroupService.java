@@ -84,8 +84,7 @@ public class GroupService {
             throw new RuntimeException("User not found with id: " + userId);
         }
 
-        boolean exists = groupMemberRepository.existsByGroupAndUserAndDeletedFalse(group, user);
-        if (exists) {
+        if (isMemberOfGroup(groupId, userId)) {
             throw new RuntimeException("User already in this group");
         }
 
@@ -131,6 +130,10 @@ public class GroupService {
                 .orElseThrow(() -> new RuntimeException("User is not a member of the group"));
         gm.setRole(role);
         groupMemberRepository.save(gm);
+    }
+
+    public boolean isMemberOfGroup(Long groupId, Long userId) {
+        return groupMemberRepository.existsByGroupIdAndUserIdAndDeletedFalse(groupId, userId);
     }
 
     public boolean isMemberAdmin(Long userId, Long groupId) {

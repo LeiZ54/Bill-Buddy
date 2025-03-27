@@ -1,6 +1,5 @@
 package org.lei.bill_buddy.controller;
 
-import org.lei.bill_buddy.DTO.UserDTO;
 import org.lei.bill_buddy.DTO.UserUpdateRequest;
 import org.lei.bill_buddy.model.User;
 import org.lei.bill_buddy.service.UserService;
@@ -32,21 +31,11 @@ public class UserController {
         user.setGivenName(request.getGivenName());
         user.setFamilyName(request.getFamilyName());
         User updatedUser = userService.updateUser(id, user);
-        return ResponseEntity.ok(convertUserToUserDTO(updatedUser));
+        return ResponseEntity.ok(userService.convertUserToUserDTO(updatedUser));
     }
 
     @GetMapping("/search")
     public ResponseEntity<?> searchUsers(@RequestParam("keyword") String keyword) {
-        return ResponseEntity.ok(userService.searchUsers(keyword).stream().map(this::convertUserToUserDTO));
-    }
-
-    private UserDTO convertUserToUserDTO(User user) {
-        UserDTO dto = new UserDTO();
-        dto.setId(user.getId());
-        dto.setUsername(user.getUsername());
-        dto.setEmail(user.getEmail());
-        dto.setGivenName(user.getGivenName());
-        dto.setFamilyName(user.getFamilyName());
-        return dto;
+        return ResponseEntity.ok(userService.searchUsers(keyword).stream().map(u -> userService.convertUserToUserDTO(u)));
     }
 }

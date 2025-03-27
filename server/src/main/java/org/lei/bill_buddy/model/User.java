@@ -1,7 +1,6 @@
 package org.lei.bill_buddy.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
@@ -13,7 +12,6 @@ import java.util.Collection;
 @Entity
 @Getter
 @Setter
-@AllArgsConstructor
 @Table(name = "users")
 public class User implements UserDetails {
     @Id
@@ -36,19 +34,13 @@ public class User implements UserDetails {
     private String familyName;
 
     @Column(nullable = false)
-    private Boolean deleted;
+    private Boolean deleted = false;
 
     @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
+    private LocalDateTime createdAt = LocalDateTime.now();
 
     @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
-
-    public User() {
-        this.deleted = false;
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
-    }
+    private LocalDateTime updatedAt = LocalDateTime.now();
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

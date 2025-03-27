@@ -1,7 +1,6 @@
 package org.lei.bill_buddy.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -10,7 +9,6 @@ import java.math.BigDecimal;
 @Entity
 @Getter
 @Setter
-@AllArgsConstructor
 @Table(name = "expense_shares")
 public class ExpenseShare {
     @Id
@@ -26,13 +24,9 @@ public class ExpenseShare {
     private User user;
 
     @Column(nullable = false)
-    private Boolean deleted;
+    private Boolean deleted = false;
 
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal shareAmount;
-
-    public ExpenseShare(){
-        this.deleted = false;
-    }
 }
 

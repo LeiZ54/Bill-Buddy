@@ -142,5 +142,10 @@ public class AuthController {
     public ResponseEntity<?> checkEmail(@RequestParam String email) {
         return ResponseEntity.ok(Collections.singletonMap("available", userService.getUserByEmail(email) == null));
     }
+
+    @GetMapping("/check-token")
+    public ResponseEntity<?> checkToken(@RequestParam String token) {
+        return ResponseEntity.ok(jwtUtil.validateToken(token));
+    }
 }
 

@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 
 import org.lei.bill_buddy.model.*;
@@ -14,6 +15,7 @@ import org.lei.bill_buddy.repository.*;
 import jakarta.transaction.Transactional;
 
 import java.math.BigDecimal;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -40,7 +42,11 @@ public class ExpenseService {
         if (payer == null) {
             throw new RuntimeException("User not found");
         }
-
+        participantIds.forEach(id -> {
+            if (!groupService.isMemberOfGroup(groupId, id)) {
+                throw new RuntimeException("User with id " + id + " is not a member of this group");
+            }
+        });
         Expense expense = new Expense();
         expense.setGroup(group);
         expense.setPayer(payer);
@@ -120,29 +126,30 @@ public class ExpenseService {
 
     private void distributeShares(
             Expense expense,
-            List<Long> participants,
+            List<Long> participantIds,
             List<BigDecimal> shares,
             BigDecimal totalAmount
     ) {
-        if (shares == null || shares.size() != participants.size()) {
+        Map<Long, User> participants = new HashMap<>();
+        userService.getUsersByIds(participantIds).forEach(user -> {
+            participants.put(user.getId(), user);
+        });
+
+        if (shares == null || shares.size() != participantIds.size()) {
             BigDecimal share = totalAmount.divide(BigDecimal.valueOf(participants.size()), 2, RoundingMode.HALF_UP);
-            for (Long uid : participants) {
-                createExpenseShare(expense, uid, share);
-            }
+            participants.forEach((id, u) -> {
+                createExpenseShare(expense, u, share);
+            });
         } else {
             totalAmount = BigDecimal.valueOf(0);
-            for (int i = 0; i < participants.size(); i++) {
-                createExpenseShare(expense, participants.get(i), shares.get(i));
+            for (int i = 0; i < participantIds.size(); i++) {
+                createExpenseShare(expense, participants.get(participantIds.get(i)), shares.get(i));
                 totalAmount = totalAmount.add(shares.get(i));
             }
         }
     }
 
-    private void createExpenseShare(Expense expense, Long userId, BigDecimal shareAmount) {
-        User user = userService.getUserById(userId);
-        if (user == null) {
-            throw new RuntimeException("User not found");
-        }
+    private void createExpenseShare(Expense expense, User user, BigDecimal shareAmount) {
         ExpenseShare share = new ExpenseShare();
         share.setExpense(expense);
         share.setUser(user);

@@ -140,25 +140,35 @@ public class GroupController {
     }
 
     public GroupDTO convertGroupToGroupDTO(Group group) {
-        Map<String, BigDecimal> owesCurrentUser = new HashMap<>();
-        Map<String, BigDecimal> currentUserOwes = new HashMap<>();
+        Map<Long, BigDecimal> balances = new HashMap<>();
+        Map<Long, String> userIdToUsername = new HashMap<>();
         Long currentUserId = userService.getCurrentUser().getId();
 
         for (ExpenseShare share : expenseService.getExpenseSharesByGroupId(group.getId())) {
-            if (share.getExpense().getPayer().getId().equals(currentUserId) &&
-                    !share.getUser().getId().equals(currentUserId)) {
-                owesCurrentUser.merge(
-                        share.getUser().getUsername(),
-                        share.getShareAmount(),
-                        BigDecimal::add
-                );
-            } else if (share.getUser().getId().equals(currentUserId) &&
-                    !share.getExpense().getPayer().getId().equals(currentUserId)) {
-                currentUserOwes.merge(
-                        share.getExpense().getPayer().getUsername(),
-                        share.getShareAmount(),
-                        BigDecimal::add
-                );
+            Long payerId = share.getExpense().getPayer().getId();
+            Long userId = share.getUser().getId();
+            BigDecimal amount = share.getShareAmount();
+
+            if (payerId.equals(currentUserId) && !userId.equals(currentUserId)) {
+                balances.merge(userId, amount, BigDecimal::add);
+                userIdToUsername.putIfAbsent(userId, share.getUser().getUsername());
+            } else if (userId.equals(currentUserId) && !payerId.equals(currentUserId)) {
+                balances.merge(payerId, amount.negate(), BigDecimal::add);
+                userIdToUsername.putIfAbsent(payerId, share.getExpense().getPayer().getUsername());
+            }
+        }
+
+        Map<String, BigDecimal> owesCurrentUser = new HashMap<>();
+        Map<String, BigDecimal> currentUserOwes = new HashMap<>();
+
+        for (Map.Entry<Long, BigDecimal> entry : balances.entrySet()) {
+            String username = userIdToUsername.get(entry.getKey());
+            BigDecimal balance = entry.getValue();
+
+            if (balance.compareTo(BigDecimal.ZERO) > 0) {
+                owesCurrentUser.put(username, balance);
+            } else if (balance.compareTo(BigDecimal.ZERO) < 0) {
+                currentUserOwes.put(username, balance.abs());
             }
         }
 
