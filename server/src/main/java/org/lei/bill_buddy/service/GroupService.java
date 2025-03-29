@@ -1,5 +1,7 @@
 package org.lei.bill_buddy.service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 import org.lei.bill_buddy.model.Group;
 import org.lei.bill_buddy.model.GroupMember;
@@ -73,8 +75,8 @@ public class GroupService {
     }
 
     @Transactional(readOnly = true)
-    public List<Group> getGroupsByUserId(Long userId) {
-        return groupRepository.findAllByCreatorIdOrJoinedUserId(userId);
+    public Page<Group> getGroupsByUserId(Long userId, Pageable pageable) {
+        return groupRepository.findAllByCreatorIdOrJoinedUserId(userId, pageable);
     }
 
     public void addMemberToGroup(Long groupId, Long userId) {

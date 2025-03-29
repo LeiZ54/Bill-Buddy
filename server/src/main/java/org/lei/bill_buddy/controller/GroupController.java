@@ -14,6 +14,9 @@ import org.lei.bill_buddy.util.JwtUtil;
 import org.lei.bill_buddy.util.MailSenderUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,7 +26,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/groups")
@@ -131,12 +133,15 @@ public class GroupController {
     }
 
     @GetMapping("/my")
-    public ResponseEntity<?> getMyGroups() {
+    public ResponseEntity<?> getMyGroups(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
         User user = userService.getCurrentUser();
-        List<Group> groupList = groupService.getGroupsByUserId(user.getId());
-        return ResponseEntity.ok(groupList.stream()
-                .map(this::convertGroupToGroupDTO)
-                .collect(Collectors.toList()));
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Group> groupPage = groupService.getGroupsByUserId(user.getId(), pageable);
+
+        return ResponseEntity.ok(groupPage.map(this::convertGroupToGroupDTO));
     }
 
     public GroupDTO convertGroupToGroupDTO(Group group) {

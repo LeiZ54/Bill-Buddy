@@ -7,6 +7,8 @@ import org.lei.bill_buddy.model.User;
 import org.lei.bill_buddy.repository.FriendRepository;
 import org.lei.bill_buddy.repository.FriendRequestRepository;
 import org.lei.bill_buddy.util.MailSenderUtil;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -94,8 +96,9 @@ public class FriendService {
 
     }
 
-    public List<Friend> getFriendsByUserId(Long userId) {
-        return friendRepository.findAllByUserIdAndDeletedFalse(userId);
+    @Transactional(readOnly = true)
+    public Page<Friend> getFriendsByUserId(Long userId, Pageable pageable) {
+        return friendRepository.findAllByUserIdAndDeletedFalse(userId, pageable);
     }
 
     public FriendRequest getFriendRequestByRequestId(Long requestId) {
