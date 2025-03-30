@@ -41,7 +41,6 @@ const HomePage = () => {
         { id: 'account', label: 'Account', path: '/account' }
     ];
 
-    // ���ݵ�ǰ·����ʼ��ѡ��״̬
     useEffect(() => {
         const currentTab = tabs.find(tab => location.pathname.startsWith(tab.path))?.id;
         if (currentTab) {
@@ -67,12 +66,11 @@ const HomePage = () => {
 
     return (
         <>
-            {/* ��������ʹ��Outlet */}
+            {/* Outlet */}
             <div className="fixed inset-x-0 top-0 bottom-16 overflow-y-auto p-4">
                 <Outlet />
             </div>
 
-            {/* ������ */}
             <div className="fixed inset-x-0 bottom-0 bg-white shadow-lg">
                 <nav className="relative h-16 border-t border-gray-200">
                     <div

@@ -56,8 +56,7 @@ export default function ForgotPasswordPage() {
 
         try {
             setIsSending(true);
-            const res = await api.post(`/auth/forgot-password?email=${email}`);
-            console.log(res);
+            await api.post(`/auth/forgot-password?email=${email}`);
             setShowVerification(true);
             setCountdown(60);
         } catch (error) {

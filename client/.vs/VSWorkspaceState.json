@@ -2,7 +2,6 @@
   "ExpandedNodes": [
     "",
     "\\public",
-    "\\public\\bottomBar",
     "\\src",
     "\\src\\components",
     "\\src\\pages",
@@ -10,6 +9,6 @@
     "\\src\\store",
     "\\src\\styles"
   ],
-  "SelectedNode": "\\src\\pages\\RegisterPage.tsx",
+  "SelectedNode": "\\src\\main.tsx",
   "PreviewInSolutionExplorer": false
 }

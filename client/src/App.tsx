@@ -8,6 +8,8 @@ import FriendsPage from "./pages/FriendsPage";
 import GroupsPage from "./pages/GroupsPage";
 import HistoryPage from "./pages/HistoryPage";
 import AccountPage from "./pages/AccountPage";
+import GroupDetailPage from "./pages/GroupDetailPage";
+import GroupSettingPage from "./pages/GroupSettingPage";
 import AddPage from "./pages/AddPage";
 
 function App() {
@@ -20,6 +22,8 @@ function App() {
                   <Route path="groups" element={<GroupsPage />} />
                   <Route path="history" element={<HistoryPage />} />
                   <Route path="account" element={<AccountPage />} />
+                  <Route path="groupDetail" element={<GroupDetailPage />} />
+                  <Route path="groupSetting" element={<GroupSettingPage />} />
               </Route>
               <Route path="/add" element={<AddPage />} />
               <Route path="/login" element={<LoginPage />} />
