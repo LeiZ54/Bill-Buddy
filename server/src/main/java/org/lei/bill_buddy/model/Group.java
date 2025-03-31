@@ -22,6 +22,12 @@ public class Group {
     @JoinColumn(name = "created_by", nullable = false)
     private User creator;
 
+    @Column
+    private String type;
+
+    @Column
+    private Boolean monthly = false;
+
     @Column(nullable = false)
     private Boolean deleted = false;
 

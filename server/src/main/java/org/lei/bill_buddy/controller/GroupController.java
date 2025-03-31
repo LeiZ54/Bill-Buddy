@@ -50,14 +50,18 @@ public class GroupController {
 
     @PostMapping
     public ResponseEntity<?> createGroup(@RequestBody GroupCreateRequest request) {
-        Group newGroup = groupService.createGroup(request.getGroupName(), userService.getCurrentUser().getId());
+        Group newGroup = groupService.createGroup(
+                request.getGroupName(),
+                request.getType(),
+                request.getMonthly(),
+                userService.getCurrentUser().getId());
         return ResponseEntity.ok(newGroup);
     }
 
     @GetMapping("/{groupId}")
     public ResponseEntity<?> getGroup(@PathVariable Long groupId) {
         Group group = groupService.getGroupById(groupId);
-        return ResponseEntity.ok(group);
+        return ResponseEntity.ok(convertGroupToGroupDTO(group));
     }
 
     @PutMapping("/{groupId}")
@@ -67,7 +71,11 @@ public class GroupController {
         if (groupService.isMemberAdmin(userService.getCurrentUser().getId(), groupId)) {
             throw new RuntimeException("You do not have permission to update this group.");
         }
-        Group updated = groupService.updateGroup(groupId, request.getNewName());
+        Group updated = groupService.updateGroup(
+                groupId,
+                request.getNewName(),
+                request.getNewType(),
+                request.getMonthly());
         return ResponseEntity.ok(updated);
     }
 
@@ -129,7 +137,7 @@ public class GroupController {
     @GetMapping("/{groupId}/members")
     public ResponseEntity<?> getMembersOfGroup(@PathVariable Long groupId) {
         List<User> userList = groupService.getMembersOfGroup(groupId);
-        return ResponseEntity.ok(userList);
+        return ResponseEntity.ok(userList.stream().map(user -> userService.convertUserToUserDTO(user)));
     }
 
     @GetMapping("/my")

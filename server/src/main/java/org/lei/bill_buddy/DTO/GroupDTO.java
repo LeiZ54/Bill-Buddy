@@ -9,6 +9,8 @@ import java.util.Map;
 public class GroupDTO {
     private Long groupId;
     private String groupName;
+    private String type;
+    private Boolean monthly;
     private Map<String, BigDecimal> owesCurrentUser;
     private Map<String, BigDecimal> currentUserOwes;
 }

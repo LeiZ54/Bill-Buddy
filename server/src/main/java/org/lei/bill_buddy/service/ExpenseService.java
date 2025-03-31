@@ -1,11 +1,14 @@
 package org.lei.bill_buddy.service;
 
 import lombok.RequiredArgsConstructor;
+import org.lei.bill_buddy.DTO.ExpenseDTO;
 import org.lei.bill_buddy.model.Expense;
 import org.springframework.stereotype.Service;
 
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.YearMonth;
 import java.util.HashMap;
 import java.util.List;
 
@@ -112,6 +115,19 @@ public class ExpenseService {
         return expense;
     }
 
+    public List<Expense> getExpensesByGroupIdAndMonth(Long groupId, String month) {
+        LocalDateTime start, end;
+        if (month != null) {
+            YearMonth ym = YearMonth.parse(month);
+            start = ym.atDay(1).atStartOfDay();
+            end = ym.atEndOfMonth().atTime(LocalTime.MAX);
+            return expenseRepository.findByGroupIdAndExpenseDateBetweenAndDeletedFalse(groupId, start, end);
+        } else {
+            return expenseRepository.findByGroupIdAndDeletedFalse(groupId);
+        }
+    }
+
+
     public List<ExpenseShare> getExpenseSharesByGroupId(Long groupId) {
         List<Expense> expenses = expenseRepository.findByGroupIdAndDeletedFalse(groupId);
         return expenses.stream()
@@ -148,6 +164,24 @@ public class ExpenseService {
             }
         }
     }
+
+    public ExpenseDTO convertExpenseToExpenseDTO(Expense expense) {
+        Map<String, BigDecimal> shares = new HashMap<>();
+        expenseShareRepository.findByExpenseIdAndDeletedFalse(expense.getId())
+                .forEach(s -> {
+                    shares.put(s.getUser().getUsername(), s.getShareAmount());
+                });
+        ExpenseDTO expenseDTO = new ExpenseDTO();
+        expenseDTO.setId(expense.getId());
+        expenseDTO.setAmount(expense.getAmount());
+        expenseDTO.setDescription(expense.getDescription());
+        expenseDTO.setCurrency(expense.getCurrency());
+        expenseDTO.setPayer(userService.convertUserToUserDTO(expense.getPayer()));
+        expenseDTO.setShares(shares);
+        expenseDTO.setExpenseDate(expense.getExpenseDate());
+        return expenseDTO;
+    }
+
 
     private void createExpenseShare(Expense expense, User user, BigDecimal shareAmount) {
         ExpenseShare share = new ExpenseShare();

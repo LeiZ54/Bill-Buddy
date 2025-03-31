@@ -12,6 +12,8 @@ import org.lei.bill_buddy.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.stream.Collectors;
+
 @RestController
 @RequestMapping("/api/expenses")
 @RequiredArgsConstructor
@@ -68,6 +70,21 @@ public class ExpenseController {
         );
 
         return ResponseEntity.ok("Expense with id " + expense.getId() + " updated");
+    }
+
+    @GetMapping("/group/{groupId}")
+    public ResponseEntity<?> getExpensesByGroupId(
+            @PathVariable Long groupId,
+            @RequestParam(required = false) String month
+    ) {
+        if (!groupService.isMemberOfGroup(groupId, userService.getCurrentUser().getId())) {
+            throw new RuntimeException("You do not have permission to view the expenses.");
+        }
+        return ResponseEntity.ok(expenseService
+                .getExpensesByGroupIdAndMonth(groupId, month)
+                .stream()
+                .map(expenseService::convertExpenseToExpenseDTO)
+                .collect(Collectors.toList()));
     }
 
     private boolean hasPermission(Long expenseId) {

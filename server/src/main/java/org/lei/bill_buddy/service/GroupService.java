@@ -1,5 +1,6 @@
 package org.lei.bill_buddy.service;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
@@ -8,7 +9,6 @@ import org.lei.bill_buddy.model.GroupMember;
 import org.lei.bill_buddy.model.User;
 import org.lei.bill_buddy.repository.GroupMemberRepository;
 import org.lei.bill_buddy.repository.GroupRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -17,21 +17,13 @@ import java.util.stream.Collectors;
 
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class GroupService {
     private final GroupRepository groupRepository;
     private final GroupMemberRepository groupMemberRepository;
     private final UserService userService;
 
-    @Autowired
-    public GroupService(GroupRepository groupRepository,
-                        GroupMemberRepository groupMemberRepository,
-                        UserService userService) {
-        this.groupRepository = groupRepository;
-        this.groupMemberRepository = groupMemberRepository;
-        this.userService = userService;
-    }
-
-    public Group createGroup(String groupName, Long creatorId) {
+    public Group createGroup(String groupName, String type, Boolean monthly, Long creatorId) {
         User creator = userService.getUserById(creatorId);
         if (creator == null) {
             throw new RuntimeException("User not found with id: " + creatorId);
@@ -40,6 +32,8 @@ public class GroupService {
         Group group = new Group();
         group.setName(groupName);
         group.setCreator(creator);
+        group.setType(type);
+        group.setMonthly(monthly);
         Group savedGroup = groupRepository.save(group);
 
         GroupMember gm = new GroupMember();
@@ -58,10 +52,16 @@ public class GroupService {
                 .orElseThrow(() -> new RuntimeException("Group not found with id: " + groupId));
     }
 
-    public Group updateGroup(Long groupId, String newName) {
+    public Group updateGroup(Long groupId, String newName, String newType, Boolean monthly) {
         Group group = getGroupById(groupId);
         if (newName != null && !newName.isEmpty()) {
             group.setName(newName);
+        }
+        if (newType != null && !newType.isEmpty()) {
+            group.setType(newType);
+        }
+        if (monthly != null) {
+            group.setMonthly(monthly);
         }
         group.setUpdatedAt(LocalDateTime.now());
         return groupRepository.save(group);
