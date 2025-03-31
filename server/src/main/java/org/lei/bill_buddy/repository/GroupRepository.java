@@ -8,23 +8,36 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface GroupRepository extends JpaRepository<Group, Long> {
     Optional<Group> findByIdAndDeletedFalse(Long id);
 
-    @Query("""
-                SELECT g FROM Group g
-                JOIN GroupMember gm ON gm.group = g
-                LEFT JOIN Expense e ON e.group = g AND e.deleted = false
-                WHERE (gm.user.id = :userId OR g.creator.id = :userId)
-                  AND g.deleted = false
-                GROUP BY g
-                ORDER BY MAX(e.createdAt) DESC NULLS LAST
-            """)
-    Page<Group> findAllByCreatorIdOrJoinedUserId(
+    @Query(
+            value = """
+        SELECT g.* FROM groups_table g
+        JOIN group_members gm ON gm.group_id = g.id AND gm.deleted = false
+        LEFT JOIN (
+            SELECT group_id, MAX(created_at) AS latest_expense_time
+            FROM expenses
+            WHERE deleted = false
+            GROUP BY group_id
+        ) e ON g.id = e.group_id
+        WHERE (gm.user_id = :userId OR g.created_by = :userId)
+          AND g.deleted = false
+        GROUP BY g.id
+        ORDER BY GREATEST(IFNULL(e.latest_expense_time, '1970-01-01'), g.created_at) DESC
+        """,
+            countQuery = """
+        SELECT COUNT(DISTINCT g.id) FROM groups_table g
+        JOIN group_members gm ON gm.group_id = g.id AND gm.deleted = false
+        WHERE (gm.user_id = :userId OR g.created_by = :userId)
+          AND g.deleted = false
+        """,
+            nativeQuery = true
+    )
+    Page<Group> findAllSortedByLatestActivity(
             @Param("userId") Long userId,
             Pageable pageable
     );

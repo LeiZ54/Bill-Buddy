@@ -48,7 +48,7 @@ public class GroupService {
 
     @Transactional(readOnly = true)
     public Group getGroupById(Long groupId) {
-        return groupRepository.findById(groupId)
+        return groupRepository.findByIdAndDeletedFalse(groupId)
                 .orElseThrow(() -> new RuntimeException("Group not found with id: " + groupId));
     }
 
@@ -76,7 +76,7 @@ public class GroupService {
 
     @Transactional(readOnly = true)
     public Page<Group> getGroupsByUserId(Long userId, Pageable pageable) {
-        return groupRepository.findAllByCreatorIdOrJoinedUserId(userId, pageable);
+        return groupRepository.findAllSortedByLatestActivity(userId, pageable);
     }
 
     public void addMemberToGroup(Long groupId, Long userId) {

@@ -55,7 +55,7 @@ public class GroupController {
                 request.getType(),
                 request.getMonthly(),
                 userService.getCurrentUser().getId());
-        return ResponseEntity.ok(newGroup);
+        return ResponseEntity.ok(convertGroupToGroupDTO(newGroup));
     }
 
     @GetMapping("/{groupId}")
