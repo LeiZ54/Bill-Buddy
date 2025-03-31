@@ -5,10 +5,8 @@
     "\\src",
     "\\src\\components",
     "\\src\\pages",
-    "\\src\\services",
-    "\\src\\store",
-    "\\src\\styles"
+    "\\src\\services"
   ],
-  "SelectedNode": "\\src\\main.tsx",
+  "SelectedNode": "\\src\\pages\\GroupsPage.tsx",
   "PreviewInSolutionExplorer": false
 }

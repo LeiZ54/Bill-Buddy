@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import api from "../services/axiosConfig";
 import TopActionBar from "../components/TopActionBar";
+import CreateGroupModal from "../components/CreateGroupModal";
 import { useNavigate } from 'react-router-dom';
 
 interface Group {
@@ -28,7 +29,6 @@ export default function GroupsPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [showCreateModal, setShowCreateModal] = useState(false);
-    const [groupName, setGroupName] = useState('');
     const [page, setPage] = useState(0);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [hasMore, setHasMore] = useState(true);
@@ -86,7 +86,7 @@ export default function GroupsPage() {
 
     // get new page
     useEffect(() => {
-        const scrollContainer = document.querySelector('.fixed.overflow-y-auto'); // 匹配 HomePage 的样式类
+        const scrollContainer = document.querySelector('.fixed.overflow-y-auto'); 
 
         const handleScroll = () => {
             if (!scrollContainer) return;
@@ -117,7 +117,7 @@ export default function GroupsPage() {
 
     if (loading) return <LoadingSpinner />;
 
-    const handleCreateGroup = async () => {
+    const handleCreateGroup = async (groupName: string) => {
         try {
             if (!groupName.trim()) {
                 setError('Group name can not be empty!');
@@ -130,7 +130,6 @@ export default function GroupsPage() {
             setGroups([]);
             getData(0);
             setShowCreateModal(false);
-            setGroupName('');
         } catch (err) {
             setError('Failed to create group');
         }
@@ -138,27 +137,33 @@ export default function GroupsPage() {
 
     return (
         <div className="">
-            <div className="mx-auto max-w-md space-y-6">
+            <div className="mx-auto max-w-md">
+                {/* creat group */}
+                <CreateGroupModal
+                    mode="create"
+                    open={showCreateModal}
+                    onClose={() => {
+                        setShowCreateModal(false);
+                        setError("");
+                    }}
+                    onSubmit={handleCreateGroup}
+                    error={error}
+                />
+
                 {/* topbar */}
                 <TopActionBar
                     onCreateGroup={() => setShowCreateModal(true)}
                 />
 
-                {/* creat group */}
-                <CreateGroupModal
-                    open={showCreateModal}
-                    onClose={() => setShowCreateModal(false)}
-                    groupName={groupName}
-                    setGroupName={setGroupName}
-                    onSubmit={handleCreateGroup}
-                    error={error}
-                />
                 {/* group list */}
-                {error ? (
+                {error == "Failed to create group" ? (
                     <div className="text-center p-4">
                         <span className="text-red-500 text-xl block">{error}</span>
                         <button
-                            onClick={() => getData(0)}
+                            onClick={() => {
+                                getData(0);
+                                setError("");
+                            }}
                             className="mt-2 text-blue-600 hover:underline"
                         >
                             Retry
@@ -189,68 +194,19 @@ export default function GroupsPage() {
                 )}
             </div>
         </div>
-
-
-
     );
 }
 
-const CreateGroupModal = ({
-    open,
-    onClose,
-    groupName,
-    setGroupName,
-    onSubmit,
-    error
-}: {
-    open: boolean;
-    onClose: () => void;
-    groupName: string;
-    setGroupName: (name: string) => void;
-    onSubmit: () => void;
-    error: string;
-}) => {
-    if (!open) return null;
-
-    return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-20">
-            <div className="bg-white rounded-lg p-6 w-full max-w-md">
-                <h3 className="text-lg font-semibold mb-4">Create New Group</h3>
-                <input
-                    type="text"
-                    placeholder="Group name"
-                    className="w-full p-2 border rounded mb-4"
-                    value={groupName}
-                    onChange={(e) => setGroupName(e.target.value)}
-                />
-                <div className="flex justify-end space-x-3">
-                    {error && (
-                        <span className="px-4 py-2 text-red-500 text-sm block mt-1">{error}</span>
-                    )}
-                    <button
-                        onClick={onClose}
-                        className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded"
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        onClick={onSubmit}
-                        className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-                    >
-                        Create
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
-};
 
 const GroupSection = ({ id, name, items, netBalance }: GroupData) => {
     const navigate = useNavigate();
     return (
         <section className="flex justify-between relative mb-6 group-section cursor-pointer hover:bg-gray-50 transition-colors p-2"
             onClick={() => navigate('/groupDetail', {
-                state: { groupId: id }
+                state: {
+                    groupId: id,
+                    groupName: name
+                }
             })}
         >
             {/* left */}

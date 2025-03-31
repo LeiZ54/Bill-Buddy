@@ -4,10 +4,10 @@ import { useLocation, useNavigate } from 'react-router-dom';
 const GroupDetailPage = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const { groupId } = location.state || {};
+    const { groupId, groupName } = location.state || {};
 
     return (
-        <div>
+        <div  className="mx-auto max-w-md space-y-6">
             {/* top bar */}
             <div className="flex items-center justify-between">
                 {/* left */}
@@ -15,29 +15,19 @@ const GroupDetailPage = () => {
                     onClick={() => navigate('/groups')}
                     className="p-2 hover:bg-gray-100 rounded-full"
                 >
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-6 w-6 text-gray-600"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                    >
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M15 19l-7-7 7-7"
-                        />
-                    </svg>
+                    <img src="/group/back.png" className="w-6 h-6 rounded-full" />
                 </button>
 
                 {/* mid */}
-                <h1 className="text-lg font-medium">Group {groupId}</h1>
+                <h1 className="text-lg font-medium">{groupName}</h1>
 
                 {/* right */}
                 <button
                     onClick={() => navigate('/groupSetting', {
-                        state: { groupId }
+                        state: {
+                            groupId,
+                            groupName
+                        }
                     })}
                     className="p-2 hover:bg-gray-100 rounded-full"
                 >

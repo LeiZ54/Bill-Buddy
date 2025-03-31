@@ -3,9 +3,8 @@ import auth from "../services/auth";
 const AccountPage = () => {
 
     const handleLogout = () => {
-        localStorage.removeItem('token');
-        sessionStorage.removeItem('token');
-
+        localStorage.removeItem("token");
+        localStorage.removeItem("token_exp");
         window.location.replace('/');
     };
 
