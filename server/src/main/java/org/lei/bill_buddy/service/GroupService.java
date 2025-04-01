@@ -138,14 +138,6 @@ public class GroupService {
     public boolean isMemberAdmin(Long userId, Long groupId) {
         return groupMemberRepository.existsByUserIdAndGroupIdAndRoleAndDeletedFalse(userId, groupId, "admin");
     }
-
-    public GroupDTO convertGroupToGroupDTO(Group group) {
-        GroupDTO groupDTO = new GroupDTO();
-        groupDTO.setGroupId(group.getId());
-        groupDTO.setGroupName(group.getName());
-        groupDTO.setType(group.getType());
-        return groupDTO;
-    }
 }
 
 

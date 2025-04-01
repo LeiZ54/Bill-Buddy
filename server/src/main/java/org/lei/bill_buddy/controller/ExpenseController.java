@@ -9,6 +9,7 @@ import org.lei.bill_buddy.model.User;
 import org.lei.bill_buddy.service.ExpenseService;
 import org.lei.bill_buddy.service.GroupService;
 import org.lei.bill_buddy.service.UserService;
+import org.lei.bill_buddy.util.DtoConvertorUtil;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,6 +23,7 @@ public class ExpenseController {
     private final ExpenseService expenseService;
     private final UserService userService;
     private final GroupService groupService;
+    private final DtoConvertorUtil dtoConvertor;
 
     @PostMapping
     public ResponseEntity<?> createExpense(
@@ -83,7 +85,7 @@ public class ExpenseController {
         return ResponseEntity.ok(expenseService
                 .getExpensesByGroupIdAndMonth(groupId, month)
                 .stream()
-                .map(expenseService::convertExpenseToExpenseDTO)
+                .map(dtoConvertor::convertExpenseToExpenseDTO)
                 .collect(Collectors.toList()));
     }
 

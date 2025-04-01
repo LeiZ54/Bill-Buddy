@@ -2,6 +2,7 @@ package org.lei.bill_buddy.controller;
 
 import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.lei.bill_buddy.DTO.GroupCreateRequest;
 import org.lei.bill_buddy.DTO.GroupDetailsDTO;
 import org.lei.bill_buddy.DTO.GroupUpdateRequest;
@@ -11,9 +12,9 @@ import org.lei.bill_buddy.model.User;
 import org.lei.bill_buddy.service.ExpenseService;
 import org.lei.bill_buddy.service.GroupService;
 import org.lei.bill_buddy.service.UserService;
+import org.lei.bill_buddy.util.DtoConvertorUtil;
 import org.lei.bill_buddy.util.JwtUtil;
 import org.lei.bill_buddy.util.MailSenderUtil;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -30,21 +31,14 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/groups")
+@RequiredArgsConstructor
 public class GroupController {
-    @Autowired
-    private GroupService groupService;
-
-    @Autowired
-    private UserService userService;
-
-    @Autowired
-    private ExpenseService expenseService;
-
-    @Autowired
-    private MailSenderUtil mailSenderUtil;
-
-    @Autowired
-    private JwtUtil jwtUtil;
+    private final GroupService groupService;
+    private final UserService userService;
+    private final ExpenseService expenseService;
+    private final MailSenderUtil mailSenderUtil;
+    private final JwtUtil jwtUtil;
+    private final DtoConvertorUtil dtoConvertor;
 
     @Value("${bill-buddy.client.url}")
     private String clientUrl;
@@ -52,13 +46,13 @@ public class GroupController {
     @PostMapping
     public ResponseEntity<?> createGroup(@Valid @RequestBody GroupCreateRequest request) {
         Group newGroup = groupService.createGroup(request.getGroupName(), request.getType(), userService.getCurrentUser().getId());
-        return ResponseEntity.ok(groupService.convertGroupToGroupDTO(newGroup));
+        return ResponseEntity.ok(dtoConvertor.convertGroupToGroupDTO(newGroup));
     }
 
     @GetMapping("/{groupId}")
     public ResponseEntity<?> getGroup(@PathVariable Long groupId) {
         Group group = groupService.getGroupById(groupId);
-        return ResponseEntity.ok(groupService.convertGroupToGroupDTO(group));
+        return ResponseEntity.ok(dtoConvertor.convertGroupToGroupDTO(group));
     }
 
     @PutMapping("/{groupId}")
@@ -67,7 +61,7 @@ public class GroupController {
             throw new RuntimeException("You do not have permission to update this group.");
         }
         Group updated = groupService.updateGroup(groupId, request.getNewName(), request.getNewType());
-        return ResponseEntity.ok(groupService.convertGroupToGroupDTO(updated));
+        return ResponseEntity.ok(dtoConvertor.convertGroupToGroupDTO(updated));
     }
 
     @DeleteMapping("/{groupId}")
@@ -135,7 +129,7 @@ public class GroupController {
             throw new RuntimeException("You do not have permission to view members of this group.");
         }
         List<User> userList = groupService.getMembersOfGroup(groupId);
-        return ResponseEntity.ok(userList.stream().map(user -> userService.convertUserToUserDTO(user)));
+        return ResponseEntity.ok(userList.stream().map(dtoConvertor::convertUserToUserDTO));
     }
 
     @GetMapping("/detail")
@@ -145,7 +139,7 @@ public class GroupController {
         Pageable pageable = PageRequest.of(page, size);
         Page<Group> groupPage = groupService.getGroupsByUserId(user.getId(), pageable);
 
-        return ResponseEntity.ok(groupPage.map(this::convertGroupToGroupDetailsDTO));
+        return ResponseEntity.ok(groupPage.map(dtoConvertor::convertGroupToGroupDetailsDTO));
     }
 
     @GetMapping
@@ -155,48 +149,7 @@ public class GroupController {
         Pageable pageable = PageRequest.of(page, size);
         Page<Group> groupPage = groupService.getGroupsByUserId(user.getId(), pageable);
 
-        return ResponseEntity.ok(groupPage.map(groupService::convertGroupToGroupDTO));
-    }
-
-    public GroupDetailsDTO convertGroupToGroupDetailsDTO(Group group) {
-        Map<Long, BigDecimal> balances = new HashMap<>();
-        Map<Long, String> userIdToUsername = new HashMap<>();
-        Long currentUserId = userService.getCurrentUser().getId();
-
-        for (ExpenseShare share : expenseService.getExpenseSharesByGroupId(group.getId())) {
-            Long payerId = share.getExpense().getPayer().getId();
-            Long userId = share.getUser().getId();
-            BigDecimal amount = share.getShareAmount();
-
-            if (payerId.equals(currentUserId) && !userId.equals(currentUserId)) {
-                balances.merge(userId, amount, BigDecimal::add);
-                userIdToUsername.putIfAbsent(userId, share.getUser().getUsername());
-            } else if (userId.equals(currentUserId) && !payerId.equals(currentUserId)) {
-                balances.merge(payerId, amount.negate(), BigDecimal::add);
-                userIdToUsername.putIfAbsent(payerId, share.getExpense().getPayer().getUsername());
-            }
-        }
-
-        Map<String, BigDecimal> owesCurrentUser = new HashMap<>();
-        Map<String, BigDecimal> currentUserOwes = new HashMap<>();
-
-        for (Map.Entry<Long, BigDecimal> entry : balances.entrySet()) {
-            String username = userIdToUsername.get(entry.getKey());
-            BigDecimal balance = entry.getValue();
-
-            if (balance.compareTo(BigDecimal.ZERO) > 0) {
-                owesCurrentUser.put(username, balance);
-            } else if (balance.compareTo(BigDecimal.ZERO) < 0) {
-                currentUserOwes.put(username, balance.abs());
-            }
-        }
-
-        GroupDetailsDTO dto = new GroupDetailsDTO();
-        dto.setGroupId(group.getId());
-        dto.setGroupName(group.getName());
-        dto.setOwesCurrentUser(owesCurrentUser);
-        dto.setCurrentUserOwes(currentUserOwes);
-        return dto;
+        return ResponseEntity.ok(groupPage.map(dtoConvertor::convertGroupToGroupDTO));
     }
 
     private String generateInvitationLink(Group group) {

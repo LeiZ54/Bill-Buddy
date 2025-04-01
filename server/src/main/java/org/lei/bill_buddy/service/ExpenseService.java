@@ -1,8 +1,6 @@
 package org.lei.bill_buddy.service;
 
 import lombok.RequiredArgsConstructor;
-import org.lei.bill_buddy.DTO.ExpenseDTO;
-import org.lei.bill_buddy.DTO.HistoryDTO;
 import org.lei.bill_buddy.model.Expense;
 import org.springframework.stereotype.Service;
 
@@ -180,23 +178,9 @@ public class ExpenseService {
         }
     }
 
-    public ExpenseDTO convertExpenseToExpenseDTO(Expense expense) {
-        Map<String, BigDecimal> shares = new HashMap<>();
-        expenseShareRepository.findByExpenseIdAndDeletedFalse(expense.getId())
-                .forEach(s -> {
-                    shares.put(s.getUser().getUsername(), s.getShareAmount());
-                });
-        ExpenseDTO expenseDTO = new ExpenseDTO();
-        expenseDTO.setId(expense.getId());
-        expenseDTO.setAmount(expense.getAmount());
-        expenseDTO.setDescription(expense.getDescription());
-        expenseDTO.setCurrency(expense.getCurrency());
-        expenseDTO.setPayer(userService.convertUserToUserDTO(expense.getPayer()));
-        expenseDTO.setShares(shares);
-        expenseDTO.setExpenseDate(expense.getExpenseDate());
-        return expenseDTO;
+    public List<ExpenseShare> getExpenseSharesByExpenseId(Long expenseId) {
+        return expenseShareRepository.findByExpenseIdAndDeletedFalse(expenseId);
     }
-
 
     private void createExpenseShare(Expense expense, User user, BigDecimal shareAmount) {
         ExpenseShare share = new ExpenseShare();

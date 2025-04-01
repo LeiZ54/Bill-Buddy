@@ -7,6 +7,7 @@ import org.lei.bill_buddy.model.Friend;
 import org.lei.bill_buddy.model.FriendRequest;
 import org.lei.bill_buddy.service.FriendService;
 import org.lei.bill_buddy.service.UserService;
+import org.lei.bill_buddy.util.DtoConvertorUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -22,6 +23,7 @@ import java.util.stream.Collectors;
 public class FriendController {
     private final FriendService friendService;
     private final UserService userService;
+    private final DtoConvertorUtil dtoConvertor;
 
     @PostMapping("/request/{receiverId}")
     public ResponseEntity<?> sendRequest(@PathVariable Long receiverId) {
@@ -54,7 +56,7 @@ public class FriendController {
 
     private FriendsListDTO formatFriendsListDTO(Page<Friend> friends) {
         FriendsListDTO friendsListDTO = new FriendsListDTO();
-        friendsListDTO.setFriends(friends.map(f -> userService.convertUserToUserDTO(f.getFriend())));
+        friendsListDTO.setFriends(friends.map(f -> dtoConvertor.convertUserToUserDTO(f.getFriend())));
         friendsListDTO.setPendingRequests(friendService.getFriendRequestsByReceiverIdAndStatus(
                         userService.getCurrentUser().getId(),
                         "pending")
@@ -65,7 +67,7 @@ public class FriendController {
     private FriendRequestDTO convertFriendRequestToDTO(FriendRequest friendRequest) {
         FriendRequestDTO friendRequestDTO = new FriendRequestDTO();
         friendRequestDTO.setFriendRequestId(friendRequest.getId());
-        friendRequestDTO.setSender(userService.convertUserToUserDTO(friendRequest.getSender()));
+        friendRequestDTO.setSender(dtoConvertor.convertUserToUserDTO(friendRequest.getSender()));
         friendRequestDTO.setRequestTime(friendRequest.getCreatedAt());
         return friendRequestDTO;
     }

@@ -2,14 +2,15 @@ package org.lei.bill_buddy.controller;
 
 import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.lei.bill_buddy.DTO.*;
 import org.lei.bill_buddy.model.User;
 import org.lei.bill_buddy.service.GoogleAuthService;
 import org.lei.bill_buddy.service.UserService;
+import org.lei.bill_buddy.util.DtoConvertorUtil;
 import org.lei.bill_buddy.util.JwtUtil;
 import org.lei.bill_buddy.util.MailSenderUtil;
 import org.lei.bill_buddy.util.VerificationCodeUtil;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -24,28 +25,16 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
+@RequiredArgsConstructor
 public class AuthController {
 
-    @Autowired
-    private AuthenticationManager authenticationManager;
-
-    @Autowired
-    private UserService userService;
-
-    @Autowired
-    private GoogleAuthService googleAuthService;
-
-    @Autowired
-    private MailSenderUtil mailSenderUtil;
-
-    @Autowired
-    private JwtUtil jwtUtil;
-
-    @Autowired
-    private VerificationCodeUtil verificationCodeUtil;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
+    private final UserService userService;
+    private final GoogleAuthService googleAuthService;
+    private final MailSenderUtil mailSenderUtil;
+    private final JwtUtil jwtUtil;
+    private final VerificationCodeUtil verificationCodeUtil;
+    private final PasswordEncoder passwordEncoder;
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody @Valid UserRegisterRequest request) {

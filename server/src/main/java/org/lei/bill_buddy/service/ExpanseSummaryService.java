@@ -9,5 +9,6 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class ExpanseSummaryService {
     private final UserService userService;
+    private final ExpenseService expenseService;
     private final HistoryService historyService;
 }
