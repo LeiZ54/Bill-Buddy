@@ -1,6 +1,8 @@
 package org.lei.bill_buddy.service;
 
 import lombok.RequiredArgsConstructor;
+import org.lei.bill_buddy.DTO.GroupDTO;
+import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,7 +25,7 @@ public class GroupService {
     private final GroupMemberRepository groupMemberRepository;
     private final UserService userService;
 
-    public Group createGroup(String groupName, String type, Boolean monthly, Long creatorId) {
+    public Group createGroup(String groupName, String type, Long creatorId) {
         User creator = userService.getUserById(creatorId);
         if (creator == null) {
             throw new RuntimeException("User not found with id: " + creatorId);
@@ -33,7 +35,6 @@ public class GroupService {
         group.setName(groupName);
         group.setCreator(creator);
         group.setType(type);
-        group.setMonthly(monthly);
         Group savedGroup = groupRepository.save(group);
 
         GroupMember gm = new GroupMember();
@@ -52,16 +53,13 @@ public class GroupService {
                 .orElseThrow(() -> new RuntimeException("Group not found with id: " + groupId));
     }
 
-    public Group updateGroup(Long groupId, String newName, String newType, Boolean monthly) {
+    public Group updateGroup(Long groupId, String newName, String newType) {
         Group group = getGroupById(groupId);
         if (newName != null && !newName.isEmpty()) {
             group.setName(newName);
         }
         if (newType != null && !newType.isEmpty()) {
             group.setType(newType);
-        }
-        if (monthly != null) {
-            group.setMonthly(monthly);
         }
         group.setUpdatedAt(LocalDateTime.now());
         return groupRepository.save(group);
@@ -140,6 +138,14 @@ public class GroupService {
 
     public boolean isMemberAdmin(Long userId, Long groupId) {
         return groupMemberRepository.existsByUserIdAndGroupIdAndRoleAndDeletedFalse(userId, groupId, "admin");
+    }
+
+    public GroupDTO convertGroupToGroupDTO(Group group) {
+        GroupDTO groupDTO = new GroupDTO();
+        groupDTO.setGroupId(group.getId());
+        groupDTO.setGroupName(group.getName());
+        groupDTO.setType(group.getType());
+        return groupDTO;
     }
 }
 

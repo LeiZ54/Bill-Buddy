@@ -25,9 +25,6 @@ public class Group {
     @Column
     private String type;
 
-    @Column
-    private Boolean monthly = false;
-
     @Column(nullable = false)
     private Boolean deleted = false;
 

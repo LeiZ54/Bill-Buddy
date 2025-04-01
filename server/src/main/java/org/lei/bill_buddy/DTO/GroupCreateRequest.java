@@ -6,5 +6,4 @@ import lombok.Data;
 public class GroupCreateRequest {
     private String groupName;
     private String type;
-    private Boolean monthly;
 }

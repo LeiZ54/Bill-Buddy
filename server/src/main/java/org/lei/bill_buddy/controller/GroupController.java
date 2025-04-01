@@ -2,7 +2,7 @@ package org.lei.bill_buddy.controller;
 
 import jakarta.mail.MessagingException;
 import org.lei.bill_buddy.DTO.GroupCreateRequest;
-import org.lei.bill_buddy.DTO.GroupDTO;
+import org.lei.bill_buddy.DTO.GroupDetailsDTO;
 import org.lei.bill_buddy.DTO.GroupUpdateRequest;
 import org.lei.bill_buddy.model.ExpenseShare;
 import org.lei.bill_buddy.model.Group;
@@ -53,35 +53,33 @@ public class GroupController {
         Group newGroup = groupService.createGroup(
                 request.getGroupName(),
                 request.getType(),
-                request.getMonthly(),
                 userService.getCurrentUser().getId());
-        return ResponseEntity.ok(convertGroupToGroupDTO(newGroup));
+        return ResponseEntity.ok(groupService.convertGroupToGroupDTO(newGroup));
     }
 
     @GetMapping("/{groupId}")
     public ResponseEntity<?> getGroup(@PathVariable Long groupId) {
         Group group = groupService.getGroupById(groupId);
-        return ResponseEntity.ok(convertGroupToGroupDTO(group));
+        return ResponseEntity.ok(groupService.convertGroupToGroupDTO(group));
     }
 
     @PutMapping("/{groupId}")
     public ResponseEntity<?> updateGroup(
             @PathVariable Long groupId,
             @RequestBody GroupUpdateRequest request) {
-        if (groupService.isMemberAdmin(userService.getCurrentUser().getId(), groupId)) {
+        if (!groupService.isMemberAdmin(userService.getCurrentUser().getId(), groupId)) {
             throw new RuntimeException("You do not have permission to update this group.");
         }
         Group updated = groupService.updateGroup(
                 groupId,
                 request.getNewName(),
-                request.getNewType(),
-                request.getMonthly());
-        return ResponseEntity.ok(updated);
+                request.getNewType());
+        return ResponseEntity.ok(groupService.convertGroupToGroupDTO(updated));
     }
 
     @DeleteMapping("/{groupId}")
     public ResponseEntity<?> deleteGroup(@PathVariable Long groupId) {
-        if (groupService.isMemberAdmin(userService.getCurrentUser().getId(), groupId)) {
+        if (!groupService.isMemberAdmin(userService.getCurrentUser().getId(), groupId)) {
             throw new RuntimeException("You do not have permission to delete this group.");
         }
         groupService.deleteGroup(groupId);
@@ -149,10 +147,10 @@ public class GroupController {
         Pageable pageable = PageRequest.of(page, size);
         Page<Group> groupPage = groupService.getGroupsByUserId(user.getId(), pageable);
 
-        return ResponseEntity.ok(groupPage.map(this::convertGroupToGroupDTO));
+        return ResponseEntity.ok(groupPage.map(this::convertGroupToGroupDetailsDTO));
     }
 
-    public GroupDTO convertGroupToGroupDTO(Group group) {
+    public GroupDetailsDTO convertGroupToGroupDetailsDTO(Group group) {
         Map<Long, BigDecimal> balances = new HashMap<>();
         Map<Long, String> userIdToUsername = new HashMap<>();
         Long currentUserId = userService.getCurrentUser().getId();
@@ -185,7 +183,7 @@ public class GroupController {
             }
         }
 
-        GroupDTO dto = new GroupDTO();
+        GroupDetailsDTO dto = new GroupDetailsDTO();
         dto.setGroupId(group.getId());
         dto.setGroupName(group.getName());
         dto.setOwesCurrentUser(owesCurrentUser);
