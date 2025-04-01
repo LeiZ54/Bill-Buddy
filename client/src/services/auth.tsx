@@ -5,14 +5,33 @@ const auth = <P extends object>(WrappedComponent: React.ComponentType<P>) => {
     const WithAuth: React.FC<P> = (props) => {
         const navigate = useNavigate();
 
-        useEffect(() => {
+        const checkAuth = () => {
             const token = localStorage.getItem("token");
-            if (!token) {
+            const storedExp = localStorage.getItem("token_exp");
+
+            if (!token || !storedExp) {
                 navigate("/login");
+                return false;
             }
+
+            const expTime = parseInt(storedExp, 10);
+            const currentTime = Math.floor(Date.now() / 1000);
+
+            if (currentTime > expTime) {
+                localStorage.removeItem("token");
+                localStorage.removeItem("token_exp");
+                navigate("/login");
+                return false;
+            }
+
+            return true;
+        };
+
+        useEffect(() => {
+            checkAuth();
         }, [navigate]);
 
-        return <WrappedComponent {...props} />;
+        return checkAuth() ? <WrappedComponent {...props} /> : null;
     };
 
     return WithAuth;
