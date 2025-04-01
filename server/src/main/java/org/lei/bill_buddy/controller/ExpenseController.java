@@ -28,7 +28,7 @@ public class ExpenseController {
     @PostMapping
     public ResponseEntity<?> createExpense(
             @Valid @RequestBody ExpenseCreateRequest request) {
-        if (!groupService.isMemberOfGroup(request.getGroupId(), userService.getCurrentUser().getId())) {
+        if (!groupService.isMemberOfGroup(userService.getCurrentUser().getId(), request.getGroupId())) {
             throw new RuntimeException("You do not have permission to add expense");
         }
         Expense expense = expenseService.createExpense(request.getGroupId(),

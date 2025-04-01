@@ -33,10 +33,6 @@ public class Expense {
     @Column(nullable = false)
     private Boolean deleted = false;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "history_id")
-    private History history;
-
     @Column(nullable = false)
     private String description;
 

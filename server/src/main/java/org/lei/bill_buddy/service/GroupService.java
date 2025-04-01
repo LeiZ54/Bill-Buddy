@@ -1,7 +1,6 @@
 package org.lei.bill_buddy.service;
 
 import lombok.RequiredArgsConstructor;
-import org.lei.bill_buddy.DTO.GroupDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
@@ -111,11 +110,15 @@ public class GroupService {
 
     @Transactional(readOnly = true)
     public List<User> getMembersOfGroup(Long groupId) {
-        Group group = getGroupById(groupId);
-        List<GroupMember> memberList = groupMemberRepository.findAllByGroupAndDeletedFalse(group);
+        List<GroupMember> memberList = groupMemberRepository.findAllByGroupIdAndDeletedFalse(groupId);
         return memberList.stream()
                 .map(GroupMember::getUser)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<Long> getMemberIdsByGroupId(Long groupId) {
+        return groupMemberRepository.findUserIdsByGroupIdAndDeletedFalse(groupId);
     }
 
     @Transactional

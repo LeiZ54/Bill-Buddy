@@ -1,15 +1,19 @@
 package org.lei.bill_buddy.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
 import lombok.RequiredArgsConstructor;
+import org.lei.bill_buddy.DTO.ExpenseSummaryDTO;
 import org.lei.bill_buddy.model.Expense;
+import org.lei.bill_buddy.util.DtoConvertorUtil;
 import org.springframework.stereotype.Service;
 
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.YearMonth;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 import org.lei.bill_buddy.model.*;
 import org.lei.bill_buddy.repository.*;
@@ -17,7 +21,6 @@ import org.lei.bill_buddy.repository.*;
 import jakarta.transaction.Transactional;
 
 import java.math.BigDecimal;
-import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +30,12 @@ public class ExpenseService {
     private final GroupService groupService;
     private final UserService userService;
     private final HistoryService historyService;
+    private final Gson gson;
+
+    @Transactional
+    public List<Expense> getExpensesByGroupId(Long groupId) {
+        return expenseRepository.findByGroupIdAndDeletedFalse(groupId);
+    }
 
     @Transactional
     public Expense createExpense(Long groupId,
@@ -46,7 +55,7 @@ public class ExpenseService {
             throw new RuntimeException("User not found");
         }
         participantIds.forEach(id -> {
-            if (!groupService.isMemberOfGroup(groupId, id)) {
+            if (!groupService.isMemberOfGroup(id, groupId)) {
                 throw new RuntimeException("User with id " + id + " is not a member of this group");
             }
         });
@@ -121,11 +130,30 @@ public class ExpenseService {
         if (group == null) {
             throw new RuntimeException("Group not found");
         }
-        History history = new History();
-        history.setGroup(group);
-        history.setCreatedBy(userService.getCurrentUser());
-        History historyRecord = historyService.createHistory(history);
-        expenseRepository.finishAndSoftDeleteByGroupId(groupId, historyRecord.getId());
+        List<Long> expenseIds = expenseRepository.findIdsByGroupIdAndDeletedFalse(groupId);
+        List<Long> memberIds = groupService.getMemberIdsByGroupId(groupId);
+        List<Expense> expenses = getExpensesByExpenseIdS(expenseIds);
+        List<History> histories = new ArrayList<>();
+        String expensesIdsString = gson.toJson(expenseIds);
+        String memberIdsString = gson.toJson(memberIds);
+        for (User member : userService.getUsersByIds(memberIds)) {
+            ExpenseSummaryDTO summary = getExpenseSummary(member.getId(), expenses);
+            History history = new History();
+            history.setGroup(group);
+            history.setCreatedBy(userService.getCurrentUser());
+            history.setUser(member);
+            history.setUserLentJson(gson.toJson(summary.getOwesCurrentUser()));
+            history.setUserPaidJson(gson.toJson(summary.getCurrentUserOwes()));
+            history.setExpenseIds(expensesIdsString);
+            history.setMemberIds(memberIdsString);
+            histories.add(history);
+        }
+        historyService.createHistories(histories);
+        expenseRepository.softDeleteByGroupId(groupId);
+    }
+
+    public List<Expense> getExpensesByExpenseIdS(List<Long> expenseIds) {
+        return expenseRepository.findAllById(expenseIds);
     }
 
     public List<Expense> getExpensesByGroupIdAndMonth(Long groupId, String month) {
@@ -181,6 +209,48 @@ public class ExpenseService {
     public List<ExpenseShare> getExpenseSharesByExpenseId(Long expenseId) {
         return expenseShareRepository.findByExpenseIdAndDeletedFalse(expenseId);
     }
+
+    public ExpenseSummaryDTO getExpenseSummary(Long currentUserId, List<Expense> expenses) {
+        Map<Long, BigDecimal> balances = new HashMap<>();
+        Set<Long> userIds = new HashSet<>();
+        List<ExpenseShare> shares = expenses.stream()
+                .flatMap(e -> getExpenseSharesByExpenseId(e.getId()).stream())
+                .toList();
+
+        for (ExpenseShare share : shares) {
+            Long payerId = share.getExpense().getPayer().getId();
+            Long userId = share.getUser().getId();
+            userIds.add(payerId);
+            userIds.add(userId);
+            BigDecimal amount = share.getShareAmount();
+
+            if (payerId.equals(currentUserId) && !userId.equals(currentUserId)) {
+                balances.merge(userId, amount, BigDecimal::add);
+            } else if (userId.equals(currentUserId) && !payerId.equals(currentUserId)) {
+                balances.merge(payerId, amount.negate(), BigDecimal::add);
+            }
+        }
+
+        Map<Long, BigDecimal> owesCurrentUser = new HashMap<>();
+        Map<Long, BigDecimal> currentUserOwes = new HashMap<>();
+
+        for (Map.Entry<Long, BigDecimal> entry : balances.entrySet()) {
+            BigDecimal balance = entry.getValue();
+
+            if (balance.compareTo(BigDecimal.ZERO) > 0) {
+                owesCurrentUser.put(entry.getKey(), balance);
+            } else if (balance.compareTo(BigDecimal.ZERO) < 0) {
+                currentUserOwes.put(entry.getKey(), balance.abs());
+            }
+        }
+
+        ExpenseSummaryDTO summary = new ExpenseSummaryDTO();
+        summary.setOwesCurrentUser(owesCurrentUser);
+        summary.setCurrentUserOwes(currentUserOwes);
+        summary.setUserIds(userIds.stream().toList());
+        return summary;
+    }
+
 
     private void createExpenseShare(Expense expense, User user, BigDecimal shareAmount) {
         ExpenseShare share = new ExpenseShare();

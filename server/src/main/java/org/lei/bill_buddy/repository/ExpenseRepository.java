@@ -16,11 +16,12 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
 
     List<Expense> findByGroupIdAndExpenseDateBetweenAndDeletedFalse(Long groupId, LocalDateTime start, LocalDateTime end);
 
+    @Query("SELECT e.id FROM Expense e WHERE e.group.id = :groupId AND e.deleted = false")
+    List<Long> findIdsByGroupIdAndDeletedFalse(@Param("groupId") Long groupId);
+
+    List<Expense> findAllById(Iterable<Long> ids);
+
     @Modifying
     @Query("UPDATE Expense e SET e.deleted = true WHERE e.group.id = :groupId AND e.deleted = false")
     void softDeleteByGroupId(@Param("groupId") Long groupId);
-
-    @Modifying
-    @Query("UPDATE Expense e SET e.deleted = true, e.history.id = :historyId WHERE e.group.id = :groupId AND e.deleted = false")
-    void finishAndSoftDeleteByGroupId(@Param("groupId") Long groupId, @Param("historyId") Long historyId);
 }

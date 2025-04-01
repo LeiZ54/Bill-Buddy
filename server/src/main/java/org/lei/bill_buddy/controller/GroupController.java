@@ -1,5 +1,6 @@
 package org.lei.bill_buddy.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -109,7 +110,7 @@ public class GroupController {
     }
 
     @PostMapping("/check-out/{groupId}")
-    public ResponseEntity<?> checkOutGroup(@PathVariable Long groupId) {
+    public ResponseEntity<?> checkOutGroup(@PathVariable Long groupId) throws JsonProcessingException {
         if (!groupService.isMemberAdmin(userService.getCurrentUser().getId(), groupId)) {
             throw new RuntimeException("You do not have permission to check out this group.");
         }

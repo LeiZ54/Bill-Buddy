@@ -15,7 +15,10 @@ import java.util.Optional;
 @Repository
 public interface GroupMemberRepository extends JpaRepository<GroupMember, Long> {
 
-    List<GroupMember> findAllByGroupAndDeletedFalse(Group group);
+    List<GroupMember> findAllByGroupIdAndDeletedFalse(Long groupId);
+
+    @Query("SELECT gm.user.id FROM GroupMember gm WHERE gm.group.id = :groupId AND gm.deleted = false")
+    List<Long> findUserIdsByGroupIdAndDeletedFalse(@Param("groupId") Long groupId);
 
     Optional<GroupMember> findByGroupAndUserAndDeletedFalse(Group group, User user);
 

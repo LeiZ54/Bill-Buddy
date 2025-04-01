@@ -1,22 +1,20 @@
 package org.lei.bill_buddy.util;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import lombok.RequiredArgsConstructor;
-import org.lei.bill_buddy.DTO.ExpenseDTO;
-import org.lei.bill_buddy.DTO.GroupDTO;
-import org.lei.bill_buddy.DTO.GroupDetailsDTO;
-import org.lei.bill_buddy.DTO.UserDTO;
+import org.lei.bill_buddy.DTO.*;
 import org.lei.bill_buddy.model.Expense;
-import org.lei.bill_buddy.model.ExpenseShare;
 import org.lei.bill_buddy.model.Group;
+import org.lei.bill_buddy.model.History;
 import org.lei.bill_buddy.model.User;
 import org.lei.bill_buddy.service.ExpenseService;
-import org.lei.bill_buddy.service.GroupService;
-import org.lei.bill_buddy.service.HistoryService;
 import org.lei.bill_buddy.service.UserService;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Component
@@ -24,8 +22,7 @@ import java.util.Map;
 public class DtoConvertorUtil {
     private final UserService userService;
     private final ExpenseService expenseService;
-    private final HistoryService historyService;
-    private final GroupService groupService;
+    private final Gson gson;
 
     public UserDTO convertUserToUserDTO(User user) {
         UserDTO dto = new UserDTO();
@@ -63,43 +60,45 @@ public class DtoConvertorUtil {
     }
 
     public GroupDetailsDTO convertGroupToGroupDetailsDTO(Group group) {
-        Map<Long, BigDecimal> balances = new HashMap<>();
-        Map<Long, String> userIdToUsername = new HashMap<>();
-        Long currentUserId = userService.getCurrentUser().getId();
-
-        for (ExpenseShare share : expenseService.getExpenseSharesByGroupId(group.getId())) {
-            Long payerId = share.getExpense().getPayer().getId();
-            Long userId = share.getUser().getId();
-            BigDecimal amount = share.getShareAmount();
-
-            if (payerId.equals(currentUserId) && !userId.equals(currentUserId)) {
-                balances.merge(userId, amount, BigDecimal::add);
-                userIdToUsername.putIfAbsent(userId, share.getUser().getUsername());
-            } else if (userId.equals(currentUserId) && !payerId.equals(currentUserId)) {
-                balances.merge(payerId, amount.negate(), BigDecimal::add);
-                userIdToUsername.putIfAbsent(payerId, share.getExpense().getPayer().getUsername());
-            }
-        }
-
-        Map<String, BigDecimal> owesCurrentUser = new HashMap<>();
-        Map<String, BigDecimal> currentUserOwes = new HashMap<>();
-
-        for (Map.Entry<Long, BigDecimal> entry : balances.entrySet()) {
-            String username = userIdToUsername.get(entry.getKey());
-            BigDecimal balance = entry.getValue();
-
-            if (balance.compareTo(BigDecimal.ZERO) > 0) {
-                owesCurrentUser.put(username, balance);
-            } else if (balance.compareTo(BigDecimal.ZERO) < 0) {
-                currentUserOwes.put(username, balance.abs());
-            }
-        }
-
+        ExpenseSummaryDTO expenseSummary =
+                expenseService.getExpenseSummary(userService.getCurrentUser().getId(), expenseService.getExpensesByGroupId(group.getId()));
         GroupDetailsDTO dto = new GroupDetailsDTO();
         dto.setGroupId(group.getId());
         dto.setGroupName(group.getName());
-        dto.setOwesCurrentUser(owesCurrentUser);
-        dto.setCurrentUserOwes(currentUserOwes);
+        dto.setOwesCurrentUser(formatExpenseSummary(expenseSummary.getUserIds(), expenseSummary.getOwesCurrentUser()));
+        dto.setCurrentUserOwes(formatExpenseSummary(expenseSummary.getUserIds(), expenseSummary.getCurrentUserOwes()));
         return dto;
     }
+
+    public HistoryDTO convertHistoryToHistoryDTO(History history) {
+        HistoryDTO dto = new HistoryDTO();
+        dto.setId(history.getId());
+        dto.setGroup(convertGroupToGroupDTO(history.getGroup()));
+        Map<Long, BigDecimal> currentUserLent = gson.fromJson(history.getUserLentJson(), new TypeToken<Map<Long, BigDecimal>>() {
+        }.getType());
+        Map<Long, BigDecimal> currentUserPaid = gson.fromJson(history.getUserPaidJson(), new TypeToken<Map<Long, BigDecimal>>() {
+        }.getType());
+        List<Long> userIds = gson.fromJson(history.getMemberIds(), new TypeToken<List<Long>>() {
+        }.getType());
+        dto.setCurrentUserLent(formatExpenseSummary(userIds, currentUserLent));
+        dto.setCurrentUserPaid(formatExpenseSummary(userIds, currentUserPaid));
+        List<Expense> expenses = expenseService.getExpensesByExpenseIdS(gson.fromJson(history.getExpenseIds(), new TypeToken<List<Long>>() {
+        }.getType()));
+        dto.setExpenses(expenses.stream().map(this::convertExpenseToExpenseDTO).toList());
+        dto.setGenerateTime(history.getCreatedAt());
+        return dto;
+    }
+
+    private Map<String, BigDecimal> formatExpenseSummary(List<Long> userIds, Map<Long, BigDecimal> expenseSummary) {
+        Map<Long, String> usernameMap = new HashMap<>();
+        Map<String, BigDecimal> formated = new HashMap<>();
+        for (User usersById : userService.getUsersByIds(userIds)) {
+            usernameMap.put(usersById.getId(), usersById.getUsername());
+        }
+        expenseSummary.forEach((k, v) -> {
+            formated.put(usernameMap.get(k), v);
+        });
+        return formated;
+    }
+
 }
