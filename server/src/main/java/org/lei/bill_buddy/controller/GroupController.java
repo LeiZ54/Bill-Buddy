@@ -113,6 +113,14 @@ public class GroupController {
         return ResponseEntity.ok("Invitation accepted. You've joined the group!");
     }
 
+    @PostMapping("/check-out/{groupId}")
+    public ResponseEntity<?> checkOutGroup(@PathVariable Long groupId) {
+        if (!groupService.isMemberAdmin(userService.getCurrentUser().getId(), groupId)) {
+            throw new RuntimeException("You do not have permission to check out this group.");
+        }
+        expenseService.checkOutExpenseByGroupId(groupId);
+        return ResponseEntity.ok("All expenses in this group were checked out");
+    }
 
     @DeleteMapping("/{groupId}/members/{userId}")
     public ResponseEntity<?> removeMemberFromGroup(@PathVariable Long groupId, @PathVariable Long userId) {
@@ -122,6 +130,9 @@ public class GroupController {
 
     @GetMapping("/{groupId}/members")
     public ResponseEntity<?> getMembersOfGroup(@PathVariable Long groupId) {
+        if (!groupService.isMemberOfGroup(userService.getCurrentUser().getId(), groupId)) {
+            throw new RuntimeException("You do not have permission to view members of this group.");
+        }
         List<User> userList = groupService.getMembersOfGroup(groupId);
         return ResponseEntity.ok(userList.stream().map(user -> userService.convertUserToUserDTO(user)));
     }

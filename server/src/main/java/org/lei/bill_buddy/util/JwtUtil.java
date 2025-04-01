@@ -79,7 +79,6 @@ public class JwtUtil {
     public Map<String, Object> getInviteTokenDetails(String token) {
         Claims claims = parseClaims(token);
         return Map.of(
-                "email", claims.get("email", String.class),
                 "groupId", claims.get("groupId", Long.class)
         );
     }

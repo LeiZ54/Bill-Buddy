@@ -16,11 +16,11 @@ public class Expense {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "group_id", nullable = false)
     private Group group;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "payer_id", nullable = false)
     private User payer;
 
@@ -33,7 +33,11 @@ public class Expense {
     @Column(nullable = false)
     private Boolean deleted = false;
 
-    @Column
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "history_id")
+    private History history;
+
+    @Column(nullable = false)
     private String description;
 
     @Column(name = "expense_date", nullable = false)

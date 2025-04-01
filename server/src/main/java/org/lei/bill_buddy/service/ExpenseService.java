@@ -2,6 +2,7 @@ package org.lei.bill_buddy.service;
 
 import lombok.RequiredArgsConstructor;
 import org.lei.bill_buddy.DTO.ExpenseDTO;
+import org.lei.bill_buddy.DTO.HistoryDTO;
 import org.lei.bill_buddy.model.Expense;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +28,7 @@ public class ExpenseService {
     private final ExpenseShareRepository expenseShareRepository;
     private final GroupService groupService;
     private final UserService userService;
+    private final HistoryService historyService;
 
     @Transactional
     public Expense createExpense(Long groupId,
@@ -113,6 +115,19 @@ public class ExpenseService {
         }
 
         return expense;
+    }
+
+    @Transactional
+    public void checkOutExpenseByGroupId(Long groupId) {
+        Group group = groupService.getGroupById(groupId);
+        if (group == null) {
+            throw new RuntimeException("Group not found");
+        }
+        History history = new History();
+        history.setGroup(group);
+        history.setCreatedBy(userService.getCurrentUser());
+        History historyRecord = historyService.createHistory(history);
+        expenseRepository.finishAndSoftDeleteByGroupId(groupId, historyRecord.getId());
     }
 
     public List<Expense> getExpensesByGroupIdAndMonth(Long groupId, String month) {
