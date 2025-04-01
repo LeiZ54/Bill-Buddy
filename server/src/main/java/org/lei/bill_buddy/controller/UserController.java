@@ -1,5 +1,6 @@
 package org.lei.bill_buddy.controller;
 
+import jakarta.validation.Valid;
 import org.lei.bill_buddy.DTO.UserUpdateRequest;
 import org.lei.bill_buddy.model.User;
 import org.lei.bill_buddy.service.UserService;
@@ -21,7 +22,7 @@ public class UserController {
     private String clientUrl;
 
     @PostMapping("/{id}")
-    public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody UserUpdateRequest request) {
+    public ResponseEntity<?> updateUser(@PathVariable Long id, @Valid @RequestBody UserUpdateRequest request) {
         if (!Objects.equals(id, userService.getCurrentUser().getId())) {
             throw new RuntimeException("You do not have permission to update this user.");
         }

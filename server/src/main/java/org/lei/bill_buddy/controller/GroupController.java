@@ -1,6 +1,7 @@
 package org.lei.bill_buddy.controller;
 
 import jakarta.mail.MessagingException;
+import jakarta.validation.Valid;
 import org.lei.bill_buddy.DTO.GroupCreateRequest;
 import org.lei.bill_buddy.DTO.GroupDetailsDTO;
 import org.lei.bill_buddy.DTO.GroupUpdateRequest;
@@ -49,7 +50,7 @@ public class GroupController {
     private String clientUrl;
 
     @PostMapping
-    public ResponseEntity<?> createGroup(@RequestBody GroupCreateRequest request) {
+    public ResponseEntity<?> createGroup(@Valid @RequestBody GroupCreateRequest request) {
         Group newGroup = groupService.createGroup(request.getGroupName(), request.getType(), userService.getCurrentUser().getId());
         return ResponseEntity.ok(groupService.convertGroupToGroupDTO(newGroup));
     }
@@ -61,7 +62,7 @@ public class GroupController {
     }
 
     @PutMapping("/{groupId}")
-    public ResponseEntity<?> updateGroup(@PathVariable Long groupId, @RequestBody GroupUpdateRequest request) {
+    public ResponseEntity<?> updateGroup(@PathVariable Long groupId, @Valid @RequestBody GroupUpdateRequest request) {
         if (!groupService.isMemberAdmin(userService.getCurrentUser().getId(), groupId)) {
             throw new RuntimeException("You do not have permission to update this group.");
         }

@@ -19,7 +19,7 @@ public interface GroupMemberRepository extends JpaRepository<GroupMember, Long> 
 
     Optional<GroupMember> findByGroupAndUserAndDeletedFalse(Group group, User user);
 
-    boolean existsByGroupIdAndUserIdAndDeletedFalse(Long groupId, Long userId);
+    boolean existsByUserIdAndGroupIdAndDeletedFalse(Long userId, Long groupId);
 
     @Modifying
     @Query("UPDATE GroupMember gm SET gm.deleted = true WHERE gm.group = :group")

@@ -2,7 +2,6 @@ package org.lei.bill_buddy.service;
 
 import lombok.RequiredArgsConstructor;
 import org.lei.bill_buddy.DTO.GroupDTO;
-import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
@@ -132,8 +131,8 @@ public class GroupService {
         groupMemberRepository.save(gm);
     }
 
-    public boolean isMemberOfGroup(Long groupId, Long userId) {
-        return groupMemberRepository.existsByGroupIdAndUserIdAndDeletedFalse(groupId, userId);
+    public boolean isMemberOfGroup(Long userId, Long groupId) {
+        return groupMemberRepository.existsByUserIdAndGroupIdAndDeletedFalse(userId, groupId);
     }
 
     public boolean isMemberAdmin(Long userId, Long groupId) {

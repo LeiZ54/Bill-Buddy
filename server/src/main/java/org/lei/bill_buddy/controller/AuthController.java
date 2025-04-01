@@ -48,7 +48,7 @@ public class AuthController {
     private PasswordEncoder passwordEncoder;
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@Valid @RequestBody UserRegisterRequest request) {
+    public ResponseEntity<?> register(@RequestBody @Valid UserRegisterRequest request) {
         User user = new User();
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
@@ -61,7 +61,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody UserLoginRequest request) {
+    public ResponseEntity<?> login(@RequestBody @Valid UserLoginRequest request) {
         UsernamePasswordAuthenticationToken authenticationToken =
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword());
         Authentication authentication = authenticationManager.authenticate(authenticationToken);
@@ -72,7 +72,7 @@ public class AuthController {
     }
 
     @PostMapping("/google")
-    public ResponseEntity<?> authenticateWithGoogle(@RequestBody UserGoogleLoginRequest request) throws Exception {
+    public ResponseEntity<?> authenticateWithGoogle(@RequestBody @Valid UserGoogleLoginRequest request) throws Exception {
         var payload = googleAuthService.verifyGoogleToken(request.getGoogleId());
 
         String email = payload.getEmail();
@@ -129,7 +129,7 @@ public class AuthController {
     }
 
     @PostMapping("/reset-password")
-    public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequest request) {
+    public ResponseEntity<?> resetPassword(@RequestBody @Valid ResetPasswordRequest request) {
         String email = jwtUtil.getEmailFromToken(request.getToken());
         User user = userService.getUserByEmail(email);
         user.setPassword(request.getNewPassword());
