@@ -47,8 +47,8 @@ public class JwtUtil {
         return generateToken("Authorization", Map.of("email", email), jwtExpirationTime);
     }
 
-    public String generateInviteToken(String email, Long groupId) {
-        return generateToken("Invitation", Map.of("email", email, "groupId", groupId), inviteTokenExpirationTime);
+    public String generateInviteToken(Long groupId, String groupName) {
+        return generateToken("Invitation", Map.of("groupId", groupId, "groupName", groupName), inviteTokenExpirationTime);
     }
 
     public String generateResetPasswordToken(String email) {

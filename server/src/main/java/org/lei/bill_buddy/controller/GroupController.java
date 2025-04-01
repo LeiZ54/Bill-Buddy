@@ -50,10 +50,7 @@ public class GroupController {
 
     @PostMapping
     public ResponseEntity<?> createGroup(@RequestBody GroupCreateRequest request) {
-        Group newGroup = groupService.createGroup(
-                request.getGroupName(),
-                request.getType(),
-                userService.getCurrentUser().getId());
+        Group newGroup = groupService.createGroup(request.getGroupName(), request.getType(), userService.getCurrentUser().getId());
         return ResponseEntity.ok(groupService.convertGroupToGroupDTO(newGroup));
     }
 
@@ -64,16 +61,11 @@ public class GroupController {
     }
 
     @PutMapping("/{groupId}")
-    public ResponseEntity<?> updateGroup(
-            @PathVariable Long groupId,
-            @RequestBody GroupUpdateRequest request) {
+    public ResponseEntity<?> updateGroup(@PathVariable Long groupId, @RequestBody GroupUpdateRequest request) {
         if (!groupService.isMemberAdmin(userService.getCurrentUser().getId(), groupId)) {
             throw new RuntimeException("You do not have permission to update this group.");
         }
-        Group updated = groupService.updateGroup(
-                groupId,
-                request.getNewName(),
-                request.getNewType());
+        Group updated = groupService.updateGroup(groupId, request.getNewName(), request.getNewType());
         return ResponseEntity.ok(groupService.convertGroupToGroupDTO(updated));
     }
 
@@ -86,17 +78,19 @@ public class GroupController {
         return ResponseEntity.ok(Collections.singletonMap("message", "Group deleted"));
     }
 
-    @PostMapping("/{groupId}/invite")
-    public ResponseEntity<?> inviteMemberByEmail(
-            @PathVariable Long groupId,
-            @RequestParam String email
-    ) throws MessagingException, IOException {
+    @GetMapping("/{groupId}/invitation-link")
+    public ResponseEntity<?> inviteMemberByEmail(@PathVariable Long groupId) {
 
         Group group = groupService.getGroupById(groupId);
+        String inviteLink = generateInvitationLink(group);
+        return ResponseEntity.ok(Map.of("inviteLink", inviteLink));
+    }
 
-        String token = jwtUtil.generateInviteToken(email, groupId);
-        String inviteLink = clientUrl + "/accept-invitation?token=" + token;
+    @PostMapping("/{groupId}/invite")
+    public ResponseEntity<?> invitationLink(@PathVariable Long groupId, @RequestParam String email) throws MessagingException, IOException {
 
+        Group group = groupService.getGroupById(groupId);
+        String inviteLink = generateInvitationLink(group);
         mailSenderUtil.sendInvitationEmail(group.getName(), email, inviteLink);
 
         return ResponseEntity.ok("Invitation sent to " + email);
@@ -110,13 +104,9 @@ public class GroupController {
         }
 
         Map<String, Object> inviteData = jwtUtil.getInviteTokenDetails(token);
-        String email = (String) inviteData.get("email");
         Long groupId = (Long) inviteData.get("groupId");
 
-        User user = userService.getUserByEmail(email);
-        if (user == null) {
-            return ResponseEntity.badRequest().body(Collections.singletonMap("error", "User not found. Please register first."));
-        }
+        User user = userService.getCurrentUser();
 
         groupService.addMemberToGroup(groupId, user.getId());
 
@@ -125,9 +115,7 @@ public class GroupController {
 
 
     @DeleteMapping("/{groupId}/members/{userId}")
-    public ResponseEntity<?> removeMemberFromGroup(
-            @PathVariable Long groupId,
-            @PathVariable Long userId) {
+    public ResponseEntity<?> removeMemberFromGroup(@PathVariable Long groupId, @PathVariable Long userId) {
         groupService.removeMemberFromGroup(groupId, userId);
         return ResponseEntity.ok(Collections.singletonMap("message", "Member removed from group."));
     }
@@ -138,16 +126,24 @@ public class GroupController {
         return ResponseEntity.ok(userList.stream().map(user -> userService.convertUserToUserDTO(user)));
     }
 
-    @GetMapping("/my")
-    public ResponseEntity<?> getMyGroups(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+    @GetMapping("/detail")
+    public ResponseEntity<?> getDetailedGroups(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
 
         User user = userService.getCurrentUser();
         Pageable pageable = PageRequest.of(page, size);
         Page<Group> groupPage = groupService.getGroupsByUserId(user.getId(), pageable);
 
         return ResponseEntity.ok(groupPage.map(this::convertGroupToGroupDetailsDTO));
+    }
+
+    @GetMapping
+    public ResponseEntity<?> getGroups(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
+
+        User user = userService.getCurrentUser();
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Group> groupPage = groupService.getGroupsByUserId(user.getId(), pageable);
+
+        return ResponseEntity.ok(groupPage.map(groupService::convertGroupToGroupDTO));
     }
 
     public GroupDetailsDTO convertGroupToGroupDetailsDTO(Group group) {
@@ -191,4 +187,7 @@ public class GroupController {
         return dto;
     }
 
+    private String generateInvitationLink(Group group) {
+        return clientUrl + "/inviteLink?token=" + jwtUtil.generateInviteToken(group.getId(), group.getName());
+    }
 }
