@@ -65,6 +65,7 @@ public class DtoConvertorUtil {
         GroupDetailsDTO dto = new GroupDetailsDTO();
         dto.setGroupId(group.getId());
         dto.setGroupName(group.getName());
+        dto.setType(group.getType());
         dto.setOwesCurrentUser(formatExpenseSummary(expenseSummary.getUserIds(), expenseSummary.getOwesCurrentUser()));
         dto.setCurrentUserOwes(formatExpenseSummary(expenseSummary.getUserIds(), expenseSummary.getCurrentUserOwes()));
         return dto;
