@@ -97,7 +97,7 @@ export default function GroupsPage() {
 
     useEffect(() => {
         getData(0);
-    }, [getData]);
+    }, [getData, showInviteAcceptModal]);
 
     // get new page
     useEffect(() => {
@@ -226,11 +226,13 @@ const GroupSection = ({ id, name, type, items, netBalance }: GroupData) => {
     return (
         <section className="flex justify-between relative mb-6 group-section cursor-pointer hover:bg-gray-50 transition-colors p-2"
             onClick={() => {
-                navigate('/groupDetail');
                 sessionStorage.setItem("groupId", id.toString());
                 sessionStorage.setItem("groupPage", "detail");
                 sessionStorage.setItem("groupType", type);
                 sessionStorage.setItem("groupName", name);
+                sessionStorage.setItem("groupItems", JSON.stringify(items));
+                sessionStorage.setItem("groupNetBalance", netBalance.toString());
+                navigate('/groupDetail');
             }}
         >
             {/* left */}

@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from "../services/axiosConfig";
 import { parseJWT } from "../services/jwt";
-import { useNavigate } from 'react-router-dom';
 
 interface JwtPayload {
     groupId: number;
@@ -19,7 +18,6 @@ const InviteAcceptModal = ({
     onClose: () => void;
     inviteJWT: string;
     }) => {
-    const navigate = useNavigate();
     const [error, setError] = useState('');
     const [groupInfo, setGroupInfo] = useState<JwtPayload | null>(null);
     const [loading, setLoading] = useState(true);
@@ -53,7 +51,6 @@ const InviteAcceptModal = ({
             setLoading(true);
             await api.post(`/groups/invitations/accept?token=${encodeURIComponent(inviteJWT)}`);
             onClose();
-            navigate('groups');
         } catch (err) {
             setError('Failed to accept invitation!');
         } finally {

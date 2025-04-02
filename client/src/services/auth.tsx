@@ -24,6 +24,7 @@ export const auth = <P extends object>(WrappedComponent: React.ComponentType<P>)
                 if (!isValid) {
                     localStorage.removeItem("token");
                     localStorage.removeItem("token_exp");
+                    sessionStorage.clear();
                     navigate("/login", { replace: true });
                 }
                 setIsAuthenticated(isValid);

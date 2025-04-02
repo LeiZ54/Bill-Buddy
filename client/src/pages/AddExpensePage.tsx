@@ -14,9 +14,9 @@ const AddExpensePage = () => {
     const [amount, setAmount] = useState('');
     const [date, setDate] = useState<Date | null>(new Date());
     const [splitMethod, setSplitMethod] = useState<'equally' | 'unequally'>('equally');
-    const groupId = sessionStorage.getItem("groupId") || sessionStorage.getItem("addExpenseGroupId") || '';
-    const groupName = sessionStorage.getItem("groupName") || sessionStorage.getItem("addExpenseGroupName") || '';
-    const groupType = sessionStorage.getItem("groupType") || sessionStorage.getItem("addExpenseGroupType") || 'other';
+    const groupId = sessionStorage.getItem("addExpenseGroupId") || sessionStorage.getItem("groupId") || '';
+    const groupName = sessionStorage.getItem("addExpenseGroupName") || sessionStorage.getItem("groupName") || '';
+    const groupType = sessionStorage.getItem("addExpenseGroupType") || sessionStorage.getItem("groupType") || 'other';
     const groupImage = getUrlByType(groupType);
     const [selectedMembers, setSelectedMembers] = useState<number[]>([]);
     const [amountsByMember, setAmountsByMember] = useState<Record<number, string>>({});

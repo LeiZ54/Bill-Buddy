@@ -18,6 +18,8 @@ export const parseJWT = (token: string) => {
 type AuthResponse = {
     data: {
         token: string;
+        username: string;
+        email: string;
     };
 };
 
@@ -26,4 +28,6 @@ export const saveJWT = (response: AuthResponse) => {
     const payload = parseJWT(token);
     localStorage.setItem("token", token);
     localStorage.setItem("token_exp", payload.exp.toString());
+    localStorage.setItem("userName", response.data.username);
+    localStorage.setItem("email", response.data.email);
 };

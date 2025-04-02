@@ -3,6 +3,7 @@ import api from "../services/axiosConfig";
 import LRHeader from "../components/LRHeader";
 import { AxiosError } from 'axios';
 import { useNavigate } from "react-router-dom";
+import { saveJWT } from "../services/jwt";
 
 type FieldErrors = {
     email?: string;
@@ -79,6 +80,8 @@ export default function ForgotPasswordPage() {
         try {
             const respond = await api.post('/auth/verify-code', { email, code });
             const jwt = respond.data.token;
+            saveJWT(respond);
+
             navigate('/reset', { state: { email, jwt } });
         } catch (error) {
             if (error instanceof AxiosError) {

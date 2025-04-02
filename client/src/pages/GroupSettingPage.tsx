@@ -12,6 +12,7 @@ const GroupSettingPage = () => {
     const navigate = useNavigate();
     const groupId = Number(sessionStorage.getItem("groupId"));
     const [groupName, setGroupName] = useState('');
+    const [groupType, setGroupType] = useState('');
     const [url, setUrl] = useState('/group/other.png');
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
@@ -21,6 +22,7 @@ const GroupSettingPage = () => {
 
     useEffect(() => {
         setGroupName(sessionStorage.getItem("groupName") || '');
+        setGroupType(sessionStorage.getItem("groupType") || 'other');
         setUrl(getUrlByType(sessionStorage.getItem("groupType") || 'other'));
     }, []);
 
@@ -37,6 +39,7 @@ const GroupSettingPage = () => {
             sessionStorage.setItem("groupName", groupNewName);
             sessionStorage.setItem("groupType", groupNewType);
             setGroupName(groupNewName);
+            setGroupType(groupNewType);
             setUrl(getUrlByType(groupNewType));
             // reflash
             setShowCreateModal(false);
@@ -118,7 +121,10 @@ const GroupSettingPage = () => {
                         <h2 className="font-medium">Group type & name</h2>
                         <div className="flex justify-between items-center p-3">
                             <div className="flex">
-                                <img src={url} alt="Logo" className="w-10 h-10 rounded-full" />
+                                <div className="flex-l text-center">
+                                    <img src={url} alt="Logo" className="w-10 h-10 rounded-full" />
+                                    <p className="text-sm text-gray-500 capitalize">{groupType}</p>
+                                </div>
                                 <span className="ml-4 text-2xl leading-10">{groupName}</span>
                             </div>
                             <button className="text-green-500 text-2xl leading-10" onClick={() => { setShowCreateModal(true) } }>Edit</button>

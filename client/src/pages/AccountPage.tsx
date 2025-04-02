@@ -5,6 +5,9 @@ const AccountPage = () => {
     const handleLogout = () => {
         localStorage.removeItem("token");
         localStorage.removeItem("token_exp");
+        localStorage.removeItem("userName");
+        localStorage.removeItem("email");
+        sessionStorage.clear();
         navigate('/');
     };
 

@@ -1,5 +1,6 @@
 import { useState, FormEvent } from "react";
 import api from "../services/axiosConfig";
+import {auth} from "../services/auth";
 import LRHeader from "../components/LRHeader";
 import { AxiosError } from 'axios';
 import { useLocation, useNavigate } from "react-router-dom";
@@ -10,7 +11,7 @@ type FieldErrors = {
     api?: string;
 };
 
-export default function ResetPasswordPage() {
+function ResetPasswordPage() {
     const navigate = useNavigate();
     const location = useLocation();
     const email = location.state?.email || "";
@@ -56,6 +57,10 @@ export default function ResetPasswordPage() {
                 newPassword: password,
                 token: jwt,
             });
+            localStorage.removeItem("token");
+            localStorage.removeItem("token_exp");
+            localStorage.removeItem("userName");
+            localStorage.removeItem("email");
             navigate('/login');
         } catch (error) {
             if (error instanceof AxiosError) {
@@ -137,3 +142,5 @@ export default function ResetPasswordPage() {
         </div>
     );
 }
+
+export default auth(ResetPasswordPage);

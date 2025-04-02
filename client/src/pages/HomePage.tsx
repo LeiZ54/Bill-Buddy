@@ -73,6 +73,11 @@ const HomePage = () => {
                         setActiveTab(tab);
                         updateIndicator(index);
                         break;
+                    case 'expense':
+                        navigate('/expenseDetail');
+                        setActiveTab(tab);
+                        updateIndicator(index);
+                        break;
                     default:
                         navigate('/groups');
                         setActiveTab(tab);
@@ -81,8 +86,8 @@ const HomePage = () => {
                 }
                 break;
             case 'add':
-                const groupId = sessionStorage.getItem("groupPage");
-                if (groupId) {
+                const groupId = sessionStorage.getItem("groupId");
+                if (activeTab === 'groups' && groupId) {
                     navigate('/addExpense');
                 } else {
                     navigate('/chooseGroup');

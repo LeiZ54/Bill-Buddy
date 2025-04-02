@@ -9,6 +9,7 @@ import GroupsPage from "./pages/GroupsPage";
 import HistoryPage from "./pages/HistoryPage";
 import AccountPage from "./pages/AccountPage";
 import GroupDetailPage from "./pages/GroupDetailPage";
+import ExpenseDetailPage from "./pages/ExpenseDetailPage";
 import GroupSettingPage from "./pages/GroupSettingPage";
 import AddExpensePage from "./pages/AddExpensePage";
 import ChooseGroup from "./pages/ChooseGroup";
@@ -23,6 +24,7 @@ function App() {
                   <Route path="friends" element={<FriendsPage />} />
                   <Route path="groups" element={<GroupsPage />} />
                   <Route path="groupDetail" element={<GroupDetailPage />} />
+                  <Route path="expenseDetail" element={<ExpenseDetailPage />} />
                   <Route path="groupSetting" element={<GroupSettingPage />} />
                   <Route path="history" element={<HistoryPage />} />
                   <Route path="account" element={<AccountPage />} />

@@ -1,14 +1,160 @@
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Topbar from "../components/Topbar";
+import { getUrlByType } from "../services/util";
+import api from "../services/axiosConfig";
+
+interface Expense {
+    id: number;
+    description: string;
+    amount: number;
+    payer: {
+        username: string;
+    };
+    shares: Record<string, number>;
+    expenseDate: string;
+}
+
+interface ExpenseItem {
+    person: string;
+    amount: number;
+    type: 'owe' | 'get';
+}
+
+const ExpenseList = () => {
+    const [expenses, setExpenses] = useState<Expense[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+    const groupId = Number(sessionStorage.getItem("groupId"));
+    const currentUser = localStorage.getItem("userName") || '';
+    const navigate = useNavigate();
+    useEffect(() => {
+        const fetchExpenses = async () => {
+            try {
+                const response = await api.get(`/expenses/group/${groupId}`);
+                setExpenses(response.data);
+            } catch (err) {
+                setError('Failed to load expenses');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchExpenses();
+    }, [groupId]);
+
+    const formatDate = (dateString: string) => {
+        const date = new Date(dateString);
+        const month = date.toLocaleString('en-US', { month: 'short' });
+        const day = date.getDate().toString().padStart(2, '0');
+        return { month, day };
+    };
+
+    const getExpenseStatus = (expense: Expense) => {
+        const isPayer = expense.payer.username === currentUser;
+        const userShare = expense.shares[currentUser] || 0;
+        const othersTotal = Object.entries(expense.shares)
+            .filter(([username]) => username !== currentUser)
+            .reduce((sum, [_, amount]) => sum + amount, 0);
+
+        if (isPayer) {
+            return {
+                type: 'lent',
+                amount: othersTotal
+            };
+        }
+
+        if (userShare > 0) {
+            return {
+                type: 'borrowed',
+                amount: userShare
+            };
+        }
+
+        return {
+            type: 'not-involved',
+            amount: 0
+        };
+    };
+
+    if (loading) return <LoadingSpinner />;
+    if (error) return <div className="p-4 text-center text-red-500">{error}</div>;
+
+    return (
+        <div className="space-y-4">
+            {expenses.length === 0 ? (
+                // 如果 expenses 为空，显示提示信息
+                <div className="text-center text-gray-500 text-lg py-4">
+                    This group does not have any expenses
+                </div>
+            ) : (
+                expenses.map(expense => {
+                    const { month, day } = formatDate(expense.expenseDate);
+                    const status = getExpenseStatus(expense);
+
+                    return (
+                        <div key={expense.id}
+                            className="cursor-pointer hover:bg-gray-50"
+                            onClick={() => {
+                                sessionStorage.setItem("currentExpense", JSON.stringify(expense));
+                                sessionStorage.setItem("groupPage", "expense");
+                                navigate('/expenseDetail');
+                            }}
+                        >
+                            <div className="flex items-center justify-between p-2">
+                                {/* Date Section */}
+                                <div className="flex items-center gap-4">
+                                    <div className="text-center">
+                                        <div className="text-sm text-gray-500 uppercase">{month}</div>
+                                        <div className="text-xl font-medium text-gray-700">{day}</div>
+                                    </div>
+
+                                    {/* Expense Details */}
+                                    <div className="flex-1">
+                                        <div className="text-xl font-medium">{expense.description}</div>
+                                        <div className="text-sm text-gray-500">
+                                            {expense.payer.username} paid US${expense.amount.toFixed(2)}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Status Section */}
+                                <div className="text-right min-w-[120px]">
+                                    {status.type === 'lent' && (
+                                        <div className="text-green-600">
+                                            <div>You lent</div>
+                                            <div>US${status.amount.toFixed(2)}</div>
+                                        </div>
+                                    )}
+                                    {status.type === 'borrowed' && (
+                                        <div className="text-red-600">
+                                            <div>You borrowed</div>
+                                            <div>US${status.amount.toFixed(2)}</div>
+                                        </div>
+                                    )}
+                                    {status.type === 'not-involved' && (
+                                        <div className="text-gray-400">Not involved</div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    );
+                })
+            )}
+        </div>
+    );
+};
 
 const GroupDetailPage = () => {
     const navigate = useNavigate();
-    const groupId = Number(sessionStorage.getItem("groupId"));
     const groupName = sessionStorage.getItem("groupName");
-
+    const groupType = sessionStorage.getItem("groupType");
+    const groupImage = getUrlByType(groupType || 'other');
+    const items = JSON.parse(sessionStorage.getItem("groupItems") || "[]");
+    const netBalance = parseFloat(sessionStorage.getItem("groupNetBalance") || "0.00");
+    const expenseItems = items as ExpenseItem[];
     return (
-        <div  className="mx-auto max-w-md space-y-6">
-            {/* top bar */}
+        <div className="mx-auto max-w-md space-y-6">
             <Topbar
                 leftIcon="/group/back.png"
                 leftOnClick={() => {
@@ -17,8 +163,10 @@ const GroupDetailPage = () => {
                     sessionStorage.removeItem("groupPage");
                     sessionStorage.removeItem("groupType");
                     sessionStorage.removeItem("groupName");
+                    sessionStorage.removeItem("groupItems");
+                    sessionStorage.removeItem("groupNetBalance");
                 }}
-                title={groupName||''}
+                title={groupName || ''}
                 rightIcon="/group/set_button.png"
                 rightOnClick={() => {
                     navigate('/groupSetting');
@@ -26,12 +174,43 @@ const GroupDetailPage = () => {
                 }}
             />
 
-            {/* content */}
-            <div className="p-4">
-                <div>Group Detail Content Here</div>
+            {/* Group Header */}
+            <div className="flex items-center px-4 gap-3">
+                <img src={groupImage} alt="Group" className="w-12 h-12 rounded-full" />
+                <div>
+                    <h1 className="text-xl font-bold">{groupName}</h1>
+                    <p className="text-sm text-gray-500 capitalize">{groupType}</p>
+                </div>
             </div>
+            <div className="text-center">
+                <p className="text-xl text-green-500">
+                    {netBalance >= 0 ? 'you are owed' : 'you owe'} US${Math.abs(netBalance).toFixed(2)}
+                </p>
+                <ul>
+                    {expenseItems.map((item, index) => (
+                        <li key={index}>
+                            <span className="text-gray-600">
+                                {item.type === 'get'
+                                    ? `${item.person} owes you `
+                                    : `you owe ${item.person} `}
+                            </span>
+                            <span className={`font-medium ${item.type === 'get' ? 'text-green-600' : 'text-red-600'}`}>
+                                US${item.amount.toFixed(2)}
+                            </span>
+                        </li>
+                    ))}
+                </ul>
+            </div>
+
+            {/* Expense List */}
+            <ExpenseList />
         </div>
     );
 };
+const LoadingSpinner = () => (
+    <div className="flex justify-center items-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+    </div>
+);
 
 export default GroupDetailPage;
