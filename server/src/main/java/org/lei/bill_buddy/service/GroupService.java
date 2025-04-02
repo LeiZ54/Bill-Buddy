@@ -82,7 +82,7 @@ public class GroupService {
             throw new RuntimeException("User not found with id: " + userId);
         }
 
-        if (isMemberOfGroup(groupId, userId)) {
+        if (isMemberOfGroup(userId, groupId)) {
             throw new RuntimeException("User already in this group");
         }
 

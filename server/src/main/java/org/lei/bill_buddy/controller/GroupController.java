@@ -109,6 +109,16 @@ public class GroupController {
         return ResponseEntity.ok("Invitation accepted. You've joined the group!");
     }
 
+    @GetMapping("/invitations/check")
+    public ResponseEntity<?> checkInvitation(@RequestParam String token) {
+        if (!jwtUtil.validateToken(token)) {
+            throw new RuntimeException("Invalid or expired invitation token.");
+        }
+        Map<String, Object> inviteData = jwtUtil.getInviteTokenDetails(token);
+        Long groupId = (Long) inviteData.get("groupId");
+        return ResponseEntity.ok(Map.of("joined", groupService.isMemberOfGroup(userService.getCurrentUser().getId(), groupId)));
+    }
+
     @PostMapping("/check-out/{groupId}")
     public ResponseEntity<?> checkOutGroup(@PathVariable Long groupId) throws JsonProcessingException {
         if (!groupService.isMemberAdmin(userService.getCurrentUser().getId(), groupId)) {

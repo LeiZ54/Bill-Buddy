@@ -79,7 +79,7 @@ public class ExpenseController {
             @PathVariable Long groupId,
             @RequestParam(required = false) String month
     ) {
-        if (!groupService.isMemberOfGroup(groupId, userService.getCurrentUser().getId())) {
+        if (!groupService.isMemberOfGroup(userService.getCurrentUser().getId(), groupId)) {
             throw new RuntimeException("You do not have permission to view the expenses.");
         }
         return ResponseEntity.ok(expenseService
