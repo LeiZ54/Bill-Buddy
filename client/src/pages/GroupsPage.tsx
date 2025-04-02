@@ -1,12 +1,15 @@
 import { useEffect, useState, useCallback } from 'react';
 import api from "../services/axiosConfig";
-import TopActionBar from "../components/TopActionBar";
+import { getUrlByType } from "../services/util";
 import CreateGroupModal from "../components/CreateGroupModal";
+import InviteAcceptModal from "../components/InviteAcceptModal";
+import Topbar from "../components/Topbar";
 import { useNavigate } from 'react-router-dom';
 
 interface Group {
     groupId: number;
     groupName: string;
+    type: string;
     owesCurrentUser: Record<string, number>;
     currentUserOwes: Record<string, number>;
 }
@@ -20,6 +23,7 @@ interface ExpenseItem {
 interface GroupData {
     id: number;
     name: string;
+    type: string;
     items: ExpenseItem[];
     netBalance: number;
 }
@@ -29,10 +33,20 @@ export default function GroupsPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [showCreateModal, setShowCreateModal] = useState(false);
+    const [showInviteAcceptModal, setShowInviteAcceptModal] = useState(false);
     const [page, setPage] = useState(0);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [hasMore, setHasMore] = useState(true);
+    const [inviteJWT, setInviteJWT] = useState('');
 
+
+    useEffect(() => {
+        const storedJWT = sessionStorage.getItem('inviteJWT');
+        if (storedJWT) {
+            setInviteJWT(storedJWT);
+            setShowInviteAcceptModal(true);
+        }
+    }, []);
 
     const transformGroups = useCallback((data: Group[]): GroupData[] => {
         return data.map(group => {
@@ -43,6 +57,7 @@ export default function GroupsPage() {
             return {
                 id: group.groupId,
                 name: group.groupName,
+                type: group.type,
                 netBalance,
                 items: [
                     ...Object.entries(group.owesCurrentUser).map(([person, amount]) => ({
@@ -61,7 +76,7 @@ export default function GroupsPage() {
     }, []);
     const getData = useCallback(async (pageNumber: number, isLoadMore = false) => {
         try {
-            const response = await api.get(`/groups/my?page=${pageNumber}&size=10`);
+            const response = await api.get(`/groups/detail?page=${pageNumber}&size=10`);
             const result = response.data;
 
             const transformedData = transformGroups(result.content);
@@ -72,7 +87,7 @@ export default function GroupsPage() {
 
             setHasMore(!result.last);
         } catch (err) {
-            setError('Failed to get data');
+            setError('Failed to get data!');
         } finally {
             setLoading(false);
             setIsLoadingMore(false);
@@ -117,21 +132,24 @@ export default function GroupsPage() {
 
     if (loading) return <LoadingSpinner />;
 
-    const handleCreateGroup = async (groupName: string) => {
+    const handleCreateGroup = async (groupName: string, groupType: string) => {
         try {
             if (!groupName.trim()) {
                 setError('Group name can not be empty!');
                 return;
+            } else if (!groupType.trim()) {
+                setError('Please select group type!');
             }
 
-            await api.post('/groups', { groupName });
+            await api.post('/groups', { groupName, type: groupType });
             // reflash
             setPage(0);
             setGroups([]);
             getData(0);
+            setError('');
             setShowCreateModal(false);
         } catch (err) {
-            setError('Failed to create group');
+            setError('Failed to create group!');
         }
     };
 
@@ -149,30 +167,34 @@ export default function GroupsPage() {
                     onSubmit={handleCreateGroup}
                     error={error}
                 />
+                <InviteAcceptModal
+                    open={showInviteAcceptModal}
+                    onClose={() => {
+                        setShowInviteAcceptModal(false);
+                        sessionStorage.removeItem('inviteJWT');
+                        setInviteJWT("");
+                    }}
+                    inviteJWT={inviteJWT}
 
-                {/* topbar */}
-                <TopActionBar
-                    onCreateGroup={() => setShowCreateModal(true)}
                 />
 
+                <Topbar
+                    leftIcon="/group/search_button.png"
+                    rightText="Create group"
+                    rightOnClick={() => setShowCreateModal(true)}
+                />
+
+
+
                 {/* group list */}
-                {error == "Failed to create group" ? (
+                {error == "Failed to get data!" ? (
                     <div className="text-center p-4">
                         <span className="text-red-500 text-xl block">{error}</span>
-                        <button
-                            onClick={() => {
-                                getData(0);
-                                setError("");
-                            }}
-                            className="mt-2 text-blue-600 hover:underline"
-                        >
-                            Retry
-                        </button>
                     </div>
                 ) : groups.length === 0 ? (
                     <div className="text-center p-4">You do not have any group</div>
                 ) : (
-                    <>
+                    <div className="pt-8">
                         {groups.map((group) => (
                             <GroupSection key={group.id} {...group} />
                         ))}
@@ -190,7 +212,7 @@ export default function GroupsPage() {
                                 No more groups to load
                             </div>
                         )}
-                    </>
+                    </div>
                 )}
             </div>
         </div>
@@ -198,22 +220,24 @@ export default function GroupsPage() {
 }
 
 
-const GroupSection = ({ id, name, items, netBalance }: GroupData) => {
+const GroupSection = ({ id, name, type, items, netBalance }: GroupData) => {
     const navigate = useNavigate();
+    let url = getUrlByType(type);
     return (
         <section className="flex justify-between relative mb-6 group-section cursor-pointer hover:bg-gray-50 transition-colors p-2"
-            onClick={() => navigate('/groupDetail', {
-                state: {
-                    groupId: id,
-                    groupName: name
-                }
-            })}
+            onClick={() => {
+                navigate('/groupDetail');
+                sessionStorage.setItem("groupId", id.toString());
+                sessionStorage.setItem("groupPage", "detail");
+                sessionStorage.setItem("groupType", type);
+                sessionStorage.setItem("groupName", name);
+            }}
         >
             {/* left */}
             <div className="relative z-10">
                 <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
                     {/* img */}
-                    <img src="/logo.png" alt="Logo" className="w-10 h-10 rounded-full" />
+                    <img src={url} alt="type" className="w-10 h-10 rounded-full" />
                 </div>
             </div>
 

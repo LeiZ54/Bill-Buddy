@@ -1,8 +1,9 @@
 import { useState, FormEvent } from "react";
 import api from "../services/axiosConfig";
-import { useNavigate } from "react-router-dom";
 import LRHeader from "../components/LRHeader";
 import { AxiosError } from 'axios';
+import { saveJWT } from "../services/jwt";
+import { useNavigate } from 'react-router-dom';
 
 type FieldErrors = {
     email?: string;
@@ -112,22 +113,6 @@ export default function RegisterPage() {
         return Object.keys(newErrors).length === 0;
     };
 
-    const parseJWT = (token: string) => {
-        try {
-            const base64Url = token.split('.')[1];
-            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-            const jsonPayload = decodeURIComponent(
-                atob(base64)
-                    .split('')
-                    .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-                    .join('')
-            );
-            return JSON.parse(jsonPayload);
-        } catch (error) {
-            return null;
-        }
-    };
-
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
         setErrors({});
@@ -151,10 +136,8 @@ export default function RegisterPage() {
                     email,
                     password,
                 });
-                localStorage.setItem("token", loginResponse.data.token);
-                const payload = parseJWT(loginResponse.data.token);
-                localStorage.setItem("token_exp", payload.exp.toString());
-                navigate("/");
+                saveJWT(loginResponse);
+                navigate('/');
             }
         } catch (error) {
             if (error instanceof AxiosError) {

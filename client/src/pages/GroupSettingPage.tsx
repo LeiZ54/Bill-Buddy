@@ -1,33 +1,48 @@
-import auth from "../services/auth";
 import api from "../services/axiosConfig";
-import { useLocation, useNavigate  } from 'react-router-dom';
+import { getUrlByType } from "../services/util";
+import { useNavigate  } from 'react-router-dom';
 import CreateGroupModal from "../components/CreateGroupModal";
 import EmailInviteModal from "../components/EmailInviteModal";
+import LinkInviteModal from "../components/LinkInviteModal";
 import GroupMemberList from "../components/GroupMemberList";
-
-import { useState } from 'react';
+import Topbar from "../components/Topbar";
+import { useState, useEffect } from 'react';
 
 const GroupSettingPage = () => {
     const navigate = useNavigate();
-    const location = useLocation();
-    const { groupId, groupName } = location.state || {};
+    const groupId = Number(sessionStorage.getItem("groupId"));
+    const [groupName, setGroupName] = useState('');
+    const [url, setUrl] = useState('/group/other.png');
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showEmailInviteModal, setShowEmailInviteModal] = useState(false);
+    const [showLinkInviteModal, setShowLinkInviteModal] = useState(false);
 
-    const handleCreateGroup = async (groupName: string) => {
+    useEffect(() => {
+        setGroupName(sessionStorage.getItem("groupName") || '');
+        setUrl(getUrlByType(sessionStorage.getItem("groupType") || 'other'));
+    }, []);
+
+    const handleUpdateGroup = async (groupNewName: string, groupNewType: string) => {
         try {
-            if (!groupName.trim()) {
+            if (!groupNewName.trim()) {
                 setError('Group name can not be empty!');
                 return;
+            } else if (!groupNewType.trim()) {
+                setError('Please select group type!');
             }
 
-            //await api.post('/groups', { groupName });
+            await api.put(`/groups/${groupId}`, { newName: groupNewName, newType: groupNewType});
+            sessionStorage.setItem("groupName", groupNewName);
+            sessionStorage.setItem("groupType", groupNewType);
+            setGroupName(groupNewName);
+            setUrl(getUrlByType(groupNewType));
             // reflash
             setShowCreateModal(false);
+            setError('');
         } catch (err) {
-            setError('Failed to create group');
+            setError('Failed to update group');
         }
     };
 
@@ -61,7 +76,7 @@ const GroupSettingPage = () => {
                     setShowCreateModal(false);
                     setError("");
                 }}
-                onSubmit={handleCreateGroup}
+                onSubmit={handleUpdateGroup}
                 error={error}
             />
             {/* email invite */}
@@ -77,32 +92,36 @@ const GroupSettingPage = () => {
                 success={success}
             />
 
+            {/* link invite */}
+            <LinkInviteModal
+                open={showLinkInviteModal}
+                onClose={() => {
+                    setShowLinkInviteModal(false);
+                }}
+            />
+
             <div className="mx-auto max-w-md space-y-6">
                 {/* top bar */}
-                <div className="flex items-center justify-between">
-                    <button
-                        onClick={() => navigate('/groupDetail', {
-                            state: {
-                                groupId,
-                                groupName
-                            }
-                        })}
-                        className="p-2 hover:bg-gray-100 rounded-full"
-                    >
-                        <img src="/group/back.png" className="w-6 h-6 rounded-full" />
-                    </button>
-                    <h1 className="text-lg font-medium">Group settings</h1>
-                    <div className="w-6 h-6" ></div>
-                </div>
+                <Topbar
+                    leftIcon="/group/back.png"
+                    leftOnClick={() => {
+                        navigate('/groupDetail');
+                        sessionStorage.setItem("groupPage", "detail");
+                    }}
+                    title="Group settings"
+                />
 
                 {/* content */}
                 <div className="px-4 space-y-8">
                     {/* group name */}
                     <div className="space-y-4">
-                        <h2 className="font-medium">Group name</h2>
+                        <h2 className="font-medium">Group type & name</h2>
                         <div className="flex justify-between items-center p-3">
-                            <span>{groupName}</span>
-                            <button className="text-green-500" onClick={() => { setShowCreateModal(true) } }>Edit</button>
+                            <div className="flex">
+                                <img src={url} alt="Logo" className="w-10 h-10 rounded-full" />
+                                <span className="ml-4 text-2xl leading-10">{groupName}</span>
+                            </div>
+                            <button className="text-green-500 text-2xl leading-10" onClick={() => { setShowCreateModal(true) } }>Edit</button>
                         </div>
                         <div className="w-full h-px bg-gray-300"></div>
                     </div>
@@ -114,7 +133,9 @@ const GroupSettingPage = () => {
                             <img src="/group/AddFriends.png" className="w-6 h-6 mr-4" />
                             <span>Add friends to group</span>
                         </div>
-                        <div className="flex relative cursor-pointer hover:bg-gray-50 transition-colors p-2">
+                        <div className="flex relative cursor-pointer hover:bg-gray-50 transition-colors p-2"
+                            onClick={() => setShowLinkInviteModal(true)}
+                        >
                             <img src="/group/Link.png" className="w-6 h-6 mr-4" />
                             <span>Invite via link</span>
                         </div>
@@ -127,9 +148,7 @@ const GroupSettingPage = () => {
 
                         {/* member list */}
                         <div className="space-y-4">
-                            {groupId && (
-                                <GroupMemberList groupId={groupId} />
-                            )}
+                            <GroupMemberList />
                         </div>
                         <div className="w-full h-px bg-gray-300"></div>
                     </div>
@@ -152,4 +171,4 @@ const GroupSettingPage = () => {
     );
 };
 
-export default auth(GroupSettingPage);
+export default GroupSettingPage;

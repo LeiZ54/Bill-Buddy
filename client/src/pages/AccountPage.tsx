@@ -1,11 +1,11 @@
-import auth from "../services/auth";
+import { useNavigate } from 'react-router-dom';
 
 const AccountPage = () => {
-
+    const navigate = useNavigate();
     const handleLogout = () => {
         localStorage.removeItem("token");
         localStorage.removeItem("token_exp");
-        window.location.replace('/');
+        navigate('/');
     };
 
     return (
@@ -16,4 +16,4 @@ const AccountPage = () => {
     );
 };
 
-export default auth(AccountPage);
+export default AccountPage;

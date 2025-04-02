@@ -1,40 +1,40 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-const auth = <P extends object>(WrappedComponent: React.ComponentType<P>) => {
+export const checkAuth = () => {
+    const token = localStorage.getItem("token");
+    const storedExp = localStorage.getItem("token_exp");
+
+    if (!token || !storedExp) return false;
+
+    const expTime = parseInt(storedExp, 10);
+    return Math.floor(Date.now() / 1000) < expTime;
+};
+
+
+export const auth = <P extends object>(WrappedComponent: React.ComponentType<P>) => {
     const WithAuth: React.FC<P> = (props) => {
         const navigate = useNavigate();
+        const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-        const checkAuth = () => {
-            const token = localStorage.getItem("token");
-            const storedExp = localStorage.getItem("token_exp");
-
-            if (!token || !storedExp) {
-                navigate("/login");
-                return false;
-            }
-
-            const expTime = parseInt(storedExp, 10);
-            const currentTime = Math.floor(Date.now() / 1000);
-
-            if (currentTime > expTime) {
-                localStorage.removeItem("token");
-                localStorage.removeItem("token_exp");
-                navigate("/login");
-                return false;
-            }
-
-            return true;
-        };
 
         useEffect(() => {
-            checkAuth();
+            const verifyAuth = () => {
+                const isValid = checkAuth();
+                if (!isValid) {
+                    localStorage.removeItem("token");
+                    localStorage.removeItem("token_exp");
+                    navigate("/login", { replace: true });
+                }
+                setIsAuthenticated(isValid);
+            };
+            verifyAuth();
         }, [navigate]);
-
-        return checkAuth() ? <WrappedComponent {...props} /> : null;
+        if (isAuthenticated === false) {
+            return null;
+        }
+        return <WrappedComponent {...props} />;
     };
 
     return WithAuth;
 };
-
-export default auth;

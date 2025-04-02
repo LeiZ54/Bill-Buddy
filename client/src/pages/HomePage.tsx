@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
-import auth from "../services/auth";
+import { auth } from "../services/auth";
 
 type Tab = 'friends' | 'groups' | 'add' | 'history' | 'account';
 
@@ -59,9 +59,40 @@ const HomePage = () => {
     };
 
     const handleTabClick = (tab: Tab, index: number, path: string) => {
-        navigate(path);
-        setActiveTab(tab);
-        updateIndicator(index);
+        switch (tab) {
+            case 'groups':
+                const groupPage = sessionStorage.getItem("groupPage");
+                switch (groupPage) {
+                    case 'detail':
+                        navigate('/groupDetail');
+                        setActiveTab(tab);
+                        updateIndicator(index);
+                        break;
+                    case 'setting':
+                        navigate('/groupSetting');
+                        setActiveTab(tab);
+                        updateIndicator(index);
+                        break;
+                    default:
+                        navigate('/groups');
+                        setActiveTab(tab);
+                        updateIndicator(index);
+                        break;
+                }
+                break;
+            case 'add':
+                const groupId = sessionStorage.getItem("groupPage");
+                if (groupId) {
+                    navigate('/addExpense');
+                } else {
+                    navigate('/chooseGroup');
+                }
+                break;
+            default:
+                navigate(path);
+                setActiveTab(tab);
+                updateIndicator(index);
+        }
     };
 
     return (

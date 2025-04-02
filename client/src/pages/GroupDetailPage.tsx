@@ -1,39 +1,30 @@
-import auth from "../services/auth";
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import Topbar from "../components/Topbar";
 
 const GroupDetailPage = () => {
     const navigate = useNavigate();
-    const location = useLocation();
-    const { groupId, groupName } = location.state || {};
+    const groupId = Number(sessionStorage.getItem("groupId"));
+    const groupName = sessionStorage.getItem("groupName");
 
     return (
         <div  className="mx-auto max-w-md space-y-6">
             {/* top bar */}
-            <div className="flex items-center justify-between">
-                {/* left */}
-                <button
-                    onClick={() => navigate('/groups')}
-                    className="p-2 hover:bg-gray-100 rounded-full"
-                >
-                    <img src="/group/back.png" className="w-6 h-6 rounded-full" />
-                </button>
-
-                {/* mid */}
-                <h1 className="text-lg font-medium">{groupName}</h1>
-
-                {/* right */}
-                <button
-                    onClick={() => navigate('/groupSetting', {
-                        state: {
-                            groupId,
-                            groupName
-                        }
-                    })}
-                    className="p-2 hover:bg-gray-100 rounded-full"
-                >
-                    <img src="/group/set_button.png" className="w-6 h-6 rounded-full" />
-                </button>
-            </div>
+            <Topbar
+                leftIcon="/group/back.png"
+                leftOnClick={() => {
+                    navigate('/groups');
+                    sessionStorage.removeItem("groupId");
+                    sessionStorage.removeItem("groupPage");
+                    sessionStorage.removeItem("groupType");
+                    sessionStorage.removeItem("groupName");
+                }}
+                title={groupName||''}
+                rightIcon="/group/set_button.png"
+                rightOnClick={() => {
+                    navigate('/groupSetting');
+                    sessionStorage.setItem("groupPage", "setting");
+                }}
+            />
 
             {/* content */}
             <div className="p-4">
@@ -43,4 +34,4 @@ const GroupDetailPage = () => {
     );
 };
 
-export default auth(GroupDetailPage);
+export default GroupDetailPage;

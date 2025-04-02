@@ -51,7 +51,6 @@ export default function ResetPasswordPage() {
         if (Object.keys(errors).length > 0) return;
 
         try {
-            // 调用重置密码接口（根据你的API调整）
             await api.post('/auth/reset-password', {
                 email,
                 newPassword: password,

@@ -10,7 +10,9 @@ import HistoryPage from "./pages/HistoryPage";
 import AccountPage from "./pages/AccountPage";
 import GroupDetailPage from "./pages/GroupDetailPage";
 import GroupSettingPage from "./pages/GroupSettingPage";
-import AddPage from "./pages/AddPage";
+import AddExpensePage from "./pages/AddExpensePage";
+import ChooseGroup from "./pages/ChooseGroup";
+import InviteLinkAcceptPage from "./pages/InviteLinkAcceptPage";
 
 function App() {
   return (
@@ -20,16 +22,18 @@ function App() {
               <Route path="/" element={<HomePage />}>
                   <Route path="friends" element={<FriendsPage />} />
                   <Route path="groups" element={<GroupsPage />} />
-                  <Route path="history" element={<HistoryPage />} />
-                  <Route path="account" element={<AccountPage />} />
                   <Route path="groupDetail" element={<GroupDetailPage />} />
                   <Route path="groupSetting" element={<GroupSettingPage />} />
+                  <Route path="history" element={<HistoryPage />} />
+                  <Route path="account" element={<AccountPage />} />
               </Route>
-              <Route path="/add" element={<AddPage />} />
+              <Route path="/addExpense" element={<AddExpensePage />} />
+              <Route path="/chooseGroup" element={<ChooseGroup />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/forget" element={<ForgotPasswordPage />} />
               <Route path="/reset" element={<ResetPasswordPage />} />
+              <Route path="/inviteLink" element={<InviteLinkAcceptPage />} />
           </Routes>
       </Router>
   );
