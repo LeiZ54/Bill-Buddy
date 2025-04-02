@@ -59,6 +59,7 @@ const ExpenseList = () => {
 
         if (isPayer) {
             return {
+                payer: 'You',
                 type: 'lent',
                 amount: othersTotal
             };
@@ -83,7 +84,6 @@ const ExpenseList = () => {
     return (
         <div className="space-y-4">
             {expenses.length === 0 ? (
-                // 如果 expenses 为空，显示提示信息
                 <div className="text-center text-gray-500 text-lg py-4">
                     This group does not have any expenses
                 </div>
@@ -113,7 +113,7 @@ const ExpenseList = () => {
                                     <div className="flex-1">
                                         <div className="text-xl font-medium">{expense.description}</div>
                                         <div className="text-sm text-gray-500">
-                                            {expense.payer.username} paid US${expense.amount.toFixed(2)}
+                                            {expense.payer.username === currentUser ? "You" : expense.payer.username} paid ${expense.amount.toFixed(2)}
                                         </div>
                                     </div>
                                 </div>
@@ -123,13 +123,13 @@ const ExpenseList = () => {
                                     {status.type === 'lent' && (
                                         <div className="text-green-600">
                                             <div>You lent</div>
-                                            <div>US${status.amount.toFixed(2)}</div>
+                                            <div>${status.amount.toFixed(2)}</div>
                                         </div>
                                     )}
                                     {status.type === 'borrowed' && (
-                                        <div className="text-red-600">
+                                        <div className="text-orange-600">
                                             <div>You borrowed</div>
-                                            <div>US${status.amount.toFixed(2)}</div>
+                                            <div>${status.amount.toFixed(2)}</div>
                                         </div>
                                     )}
                                     {status.type === 'not-involved' && (
@@ -166,7 +166,6 @@ const GroupDetailPage = () => {
                     sessionStorage.removeItem("groupItems");
                     sessionStorage.removeItem("groupNetBalance");
                 }}
-                title={groupName || ''}
                 rightIcon="/group/set_button.png"
                 rightOnClick={() => {
                     navigate('/groupSetting');
@@ -174,33 +173,39 @@ const GroupDetailPage = () => {
                 }}
             />
 
-            {/* Group Header */}
-            <div className="flex items-center px-4 gap-3">
-                <img src={groupImage} alt="Group" className="w-12 h-12 rounded-full" />
-                <div>
-                    <h1 className="text-xl font-bold">{groupName}</h1>
-                    <p className="text-sm text-gray-500 capitalize">{groupType}</p>
+            <div className="flex flex-col px-4">
+                {/* Group Header */}
+                <div className="flex items-center gap-3">
+                    <img src={groupImage} alt="Group" className="w-12 h-12 rounded-full" />
+                    <div>
+                        <h1 className="text-xl font-bold">{groupName}</h1>
+                        <p className="text-sm text-gray-500 capitalize">{groupType}</p>
+                    </div>
                 </div>
+
+                {/* Balance Info */}
+                <div className="text-left mt-2">
+                    <p className="text-xl font-semibold text-green-600">
+                        {netBalance >= 0 ? 'You are owed' : 'You owe'} ${Math.abs(netBalance).toFixed(2)}
+                    </p>
+                    <ul className="text-sm text-gray-700">
+                        {expenseItems.map((item, index) => (
+                            <li key={index} className="mt-1">
+                                <span>
+                                    {item.type === 'get'
+                                        ? `${item.person} owes you `
+                                        : `You owe ${item.person} `}
+                                </span>
+                                <span className={`font-medium ${item.type === 'get' ? 'text-green-600' : 'text-orange-600'}`}>
+                                    ${item.amount.toFixed(2)}
+                                </span>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+
             </div>
-            <div className="text-center">
-                <p className="text-xl text-green-500">
-                    {netBalance >= 0 ? 'you are owed' : 'you owe'} US${Math.abs(netBalance).toFixed(2)}
-                </p>
-                <ul>
-                    {expenseItems.map((item, index) => (
-                        <li key={index}>
-                            <span className="text-gray-600">
-                                {item.type === 'get'
-                                    ? `${item.person} owes you `
-                                    : `you owe ${item.person} `}
-                            </span>
-                            <span className={`font-medium ${item.type === 'get' ? 'text-green-600' : 'text-red-600'}`}>
-                                US${item.amount.toFixed(2)}
-                            </span>
-                        </li>
-                    ))}
-                </ul>
-            </div>
+
 
             {/* Expense List */}
             <ExpenseList />

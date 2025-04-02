@@ -258,8 +258,8 @@ const GroupSection = ({ id, name, type, items, netBalance }: GroupData) => {
                                     ? `${item.person} owes you `
                                     : `you owe ${item.person} `}
                             </span>
-                            <span className={`font-medium ${item.type === 'get' ? 'text-green-600' : 'text-red-600'}`}>
-                                US${item.amount.toFixed(2)}
+                            <span className={`font-medium ${item.type === 'get' ? 'text-green-600' : 'text-orange-600'}`}>
+                                ${item.amount.toFixed(2)}
                             </span>
 
                             {/* line */}
@@ -284,7 +284,7 @@ const GroupSection = ({ id, name, type, items, netBalance }: GroupData) => {
                 </p>
                 <p className={`font-medium ${netBalance >= 0 ? 'text-green-600' : 'text-orange-600'
                     }`}>
-                    US${Math.abs(netBalance).toFixed(2)}
+                    ${Math.abs(netBalance).toFixed(2)}
                 </p>
             </div>
         </section>

@@ -1,0 +1,83 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+' ============ Entity Classes ============
+
+class User {
+  Long id
+  String username
+  String password
+  String email
+  String givenName
+  String familyName
+}
+
+class Group {
+  Long id
+  String name
+  String type
+}
+
+class GroupMember {
+  Long id
+  Long userId
+  String role
+  LocalDateTime joinedAt
+}
+
+class Expense {
+  Long id
+  BigDecimal amount
+  String currency
+  String description
+  LocalDateTime expenseDate
+}
+
+class ExpenseShare {
+  Long id
+  Long expenseId
+  Long userId
+  BigDecimal shareAmount
+}
+
+class Friend {
+    Long id
+    Long userId
+    Long friendId
+}
+
+class FriendRequest {
+  Long id
+  Long senderId
+  Long receiverId
+  String status
+  LocalDateTime createdAt
+}
+
+class History {
+  Long id
+  String userLentJson
+  String userPaidJson
+  String memberIds
+  String expenseIds
+  LocalDateTime createdAt
+}
+
+' ============ Associations ============
+
+User "1" -- "many" Group : creates >
+User "1" -- "many" GroupMember : is >
+Group "1" -- "many" GroupMember : contains >
+Group "1" -- "many" Expense : has >
+User "1" -- "many" Expense : pays >
+Expense "1" -- "many" ExpenseShare : has >
+User "1" -- "many" ExpenseShare : shares >
+
+User "1" -- "many" FriendRequest : sends >
+User "1" -- "many" FriendRequest : receives >
+
+User "1" -- "many" Friend : has >
+User "1" -- "many" History : owns >
+Group "1" -- "many" History : historyOf >
+
+@enduml
