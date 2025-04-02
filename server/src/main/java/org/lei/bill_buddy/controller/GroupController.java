@@ -5,9 +5,7 @@ import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.lei.bill_buddy.DTO.GroupCreateRequest;
-import org.lei.bill_buddy.DTO.GroupDetailsDTO;
 import org.lei.bill_buddy.DTO.GroupUpdateRequest;
-import org.lei.bill_buddy.model.ExpenseShare;
 import org.lei.bill_buddy.model.Group;
 import org.lei.bill_buddy.model.User;
 import org.lei.bill_buddy.service.ExpenseService;
@@ -24,9 +22,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -75,7 +71,7 @@ public class GroupController {
     }
 
     @GetMapping("/{groupId}/invitation-link")
-    public ResponseEntity<?> inviteMemberByEmail(@PathVariable Long groupId) {
+    public ResponseEntity<?> inviteLink(@PathVariable Long groupId) {
 
         Group group = groupService.getGroupById(groupId);
         String inviteLink = generateInvitationLink(group);
@@ -83,7 +79,7 @@ public class GroupController {
     }
 
     @PostMapping("/{groupId}/invite")
-    public ResponseEntity<?> invitationLink(@PathVariable Long groupId, @RequestParam String email) throws MessagingException, IOException {
+    public ResponseEntity<?> inviteMemberByEmail(@PathVariable Long groupId, @RequestParam String email) throws MessagingException, IOException {
 
         Group group = groupService.getGroupById(groupId);
         String inviteLink = generateInvitationLink(group);

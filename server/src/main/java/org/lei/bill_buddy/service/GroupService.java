@@ -23,6 +23,11 @@ public class GroupService {
     private final GroupMemberRepository groupMemberRepository;
     private final UserService userService;
 
+    public void groupUpdated(Group group) {
+        group.setUpdatedAt(LocalDateTime.now());
+        groupRepository.save(group);
+    }
+
     public Group createGroup(String groupName, String type, Long creatorId) {
         User creator = userService.getUserById(creatorId);
         if (creator == null) {
@@ -59,7 +64,6 @@ public class GroupService {
         if (newType != null && !newType.isEmpty()) {
             group.setType(newType);
         }
-        group.setUpdatedAt(LocalDateTime.now());
         return groupRepository.save(group);
     }
 
@@ -72,9 +76,10 @@ public class GroupService {
 
     @Transactional(readOnly = true)
     public Page<Group> getGroupsByUserId(Long userId, Pageable pageable) {
-        return groupRepository.findAllSortedByLatestActivity(userId, pageable);
+        return groupRepository.findAllByUserIdAndSortedByGroupUpdatedAt(userId, pageable);
     }
 
+    @Transactional
     public void addMemberToGroup(Long groupId, Long userId) {
         Group group = getGroupById(groupId);
         User user = userService.getUserById(userId);
@@ -92,8 +97,10 @@ public class GroupService {
         gm.setRole("member");
         gm.setJoinedAt(LocalDateTime.now());
         groupMemberRepository.save(gm);
+        groupUpdated(group);
     }
 
+    @Transactional
     public void removeMemberFromGroup(Long groupId, Long userId) {
         Group group = getGroupById(groupId);
         User user = userService.getUserById(userId);
@@ -106,6 +113,7 @@ public class GroupService {
 
         gm.setDeleted(true);
         groupMemberRepository.save(gm);
+        groupUpdated(group);
     }
 
     @Transactional(readOnly = true)

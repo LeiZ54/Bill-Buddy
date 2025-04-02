@@ -18,16 +18,10 @@ public interface GroupRepository extends JpaRepository<Group, Long> {
             value = """
         SELECT g.* FROM groups_table g
         JOIN group_members gm ON gm.group_id = g.id AND gm.deleted = false
-        LEFT JOIN (
-            SELECT group_id, MAX(created_at) AS latest_expense_time
-            FROM expenses
-            WHERE deleted = false
-            GROUP BY group_id
-        ) e ON g.id = e.group_id
         WHERE (gm.user_id = :userId OR g.created_by = :userId)
           AND g.deleted = false
         GROUP BY g.id
-        ORDER BY GREATEST(IFNULL(e.latest_expense_time, '1970-01-01'), g.created_at) DESC
+        ORDER BY g.updated_at DESC
         """,
             countQuery = """
         SELECT COUNT(DISTINCT g.id) FROM groups_table g
@@ -37,10 +31,11 @@ public interface GroupRepository extends JpaRepository<Group, Long> {
         """,
             nativeQuery = true
     )
-    Page<Group> findAllSortedByLatestActivity(
+    Page<Group> findAllByUserIdAndSortedByGroupUpdatedAt(
             @Param("userId") Long userId,
             Pageable pageable
     );
+
 }
 
 

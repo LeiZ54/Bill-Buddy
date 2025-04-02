@@ -7,7 +7,6 @@ import org.lei.bill_buddy.DTO.*;
 import org.lei.bill_buddy.model.User;
 import org.lei.bill_buddy.service.GoogleAuthService;
 import org.lei.bill_buddy.service.UserService;
-import org.lei.bill_buddy.util.DtoConvertorUtil;
 import org.lei.bill_buddy.util.JwtUtil;
 import org.lei.bill_buddy.util.MailSenderUtil;
 import org.lei.bill_buddy.util.VerificationCodeUtil;
@@ -46,7 +45,11 @@ public class AuthController {
         user.setFamilyName(request.getFamilyName());
         user = userService.addUser(user);
 
-        return ResponseEntity.ok(new UserLoggedInDTO(user.getUsername(), user.getEmail(), jwtUtil.generateAuthToken(user.getEmail())));
+        return ResponseEntity.ok(new UserLoggedInDTO(
+                user.getId(),
+                user.getUsername(),
+                user.getEmail(),
+                jwtUtil.generateAuthToken(user.getEmail())));
     }
 
     @PostMapping("/login")
@@ -57,7 +60,11 @@ public class AuthController {
 
         UserDetails principal = (UserDetails) authentication.getPrincipal();
         User loggedInUser = userService.getUserByEmail(principal.getUsername());
-        return ResponseEntity.ok(new UserLoggedInDTO(loggedInUser.getUsername(), loggedInUser.getEmail(), jwtUtil.generateAuthToken(loggedInUser.getEmail())));
+        return ResponseEntity.ok(new UserLoggedInDTO(
+                loggedInUser.getId(),
+                loggedInUser.getUsername(),
+                loggedInUser.getEmail(),
+                jwtUtil.generateAuthToken(loggedInUser.getEmail())));
     }
 
     @PostMapping("/google")
@@ -82,7 +89,11 @@ public class AuthController {
 
         String jwtToken = jwtUtil.generateAuthToken(email);
 
-        return ResponseEntity.ok(new UserLoggedInDTO(user.getUsername(), user.getEmail(), jwtToken));
+        return ResponseEntity.ok(new UserLoggedInDTO(
+                user.getId(),
+                user.getUsername(),
+                user.getEmail(),
+                jwtToken));
     }
 
     @PostMapping("/forgot-password")

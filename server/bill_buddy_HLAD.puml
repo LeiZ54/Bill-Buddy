@@ -1,0 +1,33 @@
+@startuml
+skinparam componentStyle rectangle
+
+package "Frontend (React)" {
+  [User Interface]
+  [API Layer]
+}
+
+package "Backend (Spring Boot)" {
+  [Controller Layer]
+  [Service Layer]
+  [JWT Auth]
+}
+
+package "Database" {
+  [MySQL Database]
+}
+
+package "External Services" {
+  [Google OAuth2]
+  [Google SMTP]
+}
+
+[User Interface] --> [API Layer] : User Actions
+[API Layer] --> [Controller Layer] : REST API Calls
+[Controller Layer] --> [Service Layer] : Service Method Calls
+[Service Layer] --> [MySQL Database] : CRUD Operations
+[JWT Auth] --> [Controller Layer] : Auth Filter
+
+[Service Layer] --> [Google OAuth2] : OAuth Login
+[Service Layer] --> [Google SMTP] : Send Email
+
+@enduml

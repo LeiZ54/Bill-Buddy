@@ -1,12 +1,9 @@
 package org.lei.bill_buddy.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import lombok.RequiredArgsConstructor;
 import org.lei.bill_buddy.DTO.ExpenseSummaryDTO;
 import org.lei.bill_buddy.model.Expense;
-import org.lei.bill_buddy.util.DtoConvertorUtil;
 import org.springframework.stereotype.Service;
 
 import java.math.RoundingMode;
@@ -70,6 +67,7 @@ public class ExpenseService {
         Expense savedExpense = expenseRepository.save(expense);
 
         distributeShares(savedExpense, participantIds, shareAmounts, amount);
+        groupService.groupUpdated(group);
 
         return savedExpense;
     }
@@ -85,6 +83,7 @@ public class ExpenseService {
             s.setDeleted(true);
             expenseShareRepository.save(s);
         });
+        groupService.groupUpdated(expense.getGroup());
     }
 
     @Transactional
@@ -120,6 +119,7 @@ public class ExpenseService {
 
             distributeShares(savedExpense, participantIds, shareAmounts, amount);
         }
+        groupService.groupUpdated(expense.getGroup());
 
         return expense;
     }
@@ -150,6 +150,7 @@ public class ExpenseService {
         }
         historyService.createHistories(histories);
         expenseRepository.softDeleteByGroupId(groupId);
+        groupService.groupUpdated(group);
     }
 
     public List<Expense> getExpensesByExpenseIdS(List<Long> expenseIds) {
