@@ -31,7 +31,7 @@ const InviteAcceptModal = ({
             try {
                 setLoading(true);
                 setError('');
-                const res = await api.get(`/groups/invitations/check?token=${encodeURIComponent(inviteJWT)}}`);
+                const res = await api.get(`/groups/invitations/check?token=${encodeURIComponent(inviteJWT)}`);
                 if (res.data.joined) {
                     throw new Error('You are already in the group!');
                 }
