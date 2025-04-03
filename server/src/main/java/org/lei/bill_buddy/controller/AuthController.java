@@ -5,10 +5,10 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.lei.bill_buddy.DTO.*;
 import org.lei.bill_buddy.model.User;
+import org.lei.bill_buddy.service.EmailProducer;
 import org.lei.bill_buddy.service.GoogleAuthService;
 import org.lei.bill_buddy.service.UserService;
 import org.lei.bill_buddy.util.JwtUtil;
-import org.lei.bill_buddy.util.MailSenderUtil;
 import org.lei.bill_buddy.util.VerificationCodeUtil;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -30,10 +30,10 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final UserService userService;
     private final GoogleAuthService googleAuthService;
-    private final MailSenderUtil mailSenderUtil;
     private final JwtUtil jwtUtil;
     private final VerificationCodeUtil verificationCodeUtil;
     private final PasswordEncoder passwordEncoder;
+    private final EmailProducer emailProducer;
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody @Valid UserRegisterRequest request) {
@@ -103,7 +103,12 @@ public class AuthController {
             throw new RuntimeException("User not found.");
         }
 
-        mailSenderUtil.sendVerificationCodeEmail(user.getUsername(), email, verificationCodeUtil.generateCode(email));
+        EmailDTO emailDTO = new EmailDTO();
+        emailDTO.setType("verify");
+        emailDTO.setToEmail(user.getEmail());
+        emailDTO.setUsername(user.getUsername());
+        emailDTO.setCode(verificationCodeUtil.generateCode(user.getEmail()));
+        emailProducer.sendEmail(emailDTO);
 
         return ResponseEntity.ok("Verification code sent to your email.");
     }

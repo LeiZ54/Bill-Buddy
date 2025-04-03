@@ -1,21 +1,24 @@
-package org.lei.bill_buddy.util;
+package org.lei.bill_buddy.service;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import org.lei.bill_buddy.DTO.EmailDTO;
+import org.lei.bill_buddy.config.RabbitMQConfig;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
-@Component
-public class MailSenderUtil {
-
+@Service
+@RequiredArgsConstructor
+public class EmailConsumer {
     private final JavaMailSender mailSender;
 
     @Value("${spring.mail.username}")
@@ -24,9 +27,27 @@ public class MailSenderUtil {
     @Value("#{${reset-password.code.expiration}}")
     private long codeExpirationMillis;
 
-    @Autowired
-    public MailSenderUtil(JavaMailSender mailSender) {
-        this.mailSender = mailSender;
+    @RabbitListener(queues = RabbitMQConfig.EMAIL_QUEUE_NAME)
+    public void handleMessage(EmailDTO email) {
+        try {
+            if ("verify".equalsIgnoreCase(email.getType())) {
+                sendVerificationCodeEmail(
+                        email.getUsername(),
+                        email.getToEmail(),
+                        email.getCode()
+                );
+            } else if ("invite".equalsIgnoreCase(email.getType())) {
+                sendInvitationEmail(
+                        email.getGroupName(),
+                        email.getToEmail(),
+                        email.getInviteLink()
+                );
+            } else {
+                System.err.println("Unknown email type: " + email.getType());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void sendEmail(String toEmail, String subject, String content) throws MessagingException {
@@ -60,3 +81,4 @@ public class MailSenderUtil {
         sendEmail(toEmail, "Reset Password Link", htmlContent);
     }
 }
+

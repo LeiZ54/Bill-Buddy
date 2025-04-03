@@ -6,7 +6,6 @@ import org.lei.bill_buddy.model.FriendRequest;
 import org.lei.bill_buddy.model.User;
 import org.lei.bill_buddy.repository.FriendRepository;
 import org.lei.bill_buddy.repository.FriendRequestRepository;
-import org.lei.bill_buddy.util.MailSenderUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -22,7 +21,6 @@ public class FriendService {
     private final FriendRepository friendRepository;
     private final FriendRequestRepository friendRequestRepository;
     private final UserService userService;
-    private final MailSenderUtil mailSender;
 
     public FriendRequest sendFriendRequest(Long senderId, Long receiverId) {
         if (senderId.equals(receiverId)) {

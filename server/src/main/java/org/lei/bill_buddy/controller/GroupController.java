@@ -4,16 +4,17 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.lei.bill_buddy.DTO.EmailDTO;
 import org.lei.bill_buddy.DTO.GroupCreateRequest;
 import org.lei.bill_buddy.DTO.GroupUpdateRequest;
 import org.lei.bill_buddy.model.Group;
 import org.lei.bill_buddy.model.User;
+import org.lei.bill_buddy.service.EmailProducer;
 import org.lei.bill_buddy.service.ExpenseService;
 import org.lei.bill_buddy.service.GroupService;
 import org.lei.bill_buddy.service.UserService;
 import org.lei.bill_buddy.util.DtoConvertorUtil;
 import org.lei.bill_buddy.util.JwtUtil;
-import org.lei.bill_buddy.util.MailSenderUtil;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -33,9 +34,9 @@ public class GroupController {
     private final GroupService groupService;
     private final UserService userService;
     private final ExpenseService expenseService;
-    private final MailSenderUtil mailSenderUtil;
     private final JwtUtil jwtUtil;
     private final DtoConvertorUtil dtoConvertor;
+    private final EmailProducer emailProducer;
 
     @Value("${bill-buddy.client.url}")
     private String clientUrl;
@@ -83,7 +84,12 @@ public class GroupController {
 
         Group group = groupService.getGroupById(groupId);
         String inviteLink = generateInvitationLink(group);
-        mailSenderUtil.sendInvitationEmail(group.getName(), email, inviteLink);
+        EmailDTO emailDTO = new EmailDTO();
+        emailDTO.setType("invite");
+        emailDTO.setToEmail(email);
+        emailDTO.setGroupName(group.getName());
+        emailDTO.setInviteLink(inviteLink);
+        emailProducer.sendEmail(emailDTO);
 
         return ResponseEntity.ok("Invitation sent to " + email);
     }
