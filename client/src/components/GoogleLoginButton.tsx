@@ -1,7 +1,6 @@
 import { GoogleLogin } from "@react-oauth/google";
-import api from "../services/axiosConfig";
-import { saveJWT } from "../services/jwt";
 import { useNavigate } from 'react-router-dom';
+import api from "../util/axiosConfig";
 
 const GoogleLoginButton = () => {
     const navigate = useNavigate();
@@ -12,8 +11,6 @@ const GoogleLoginButton = () => {
             const response = await api.post("/auth/google", {
                 googleId,
             });
-            saveJWT(response);
-            navigate('/');
         } catch (error) {
             console.error("Google login failed", error);
         }

@@ -1,150 +1,138 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useLocation, Outlet } from 'react-router-dom';
-import { auth } from "../services/auth";
+import { motion } from 'framer-motion';
+import { HomeFilled, TeamOutlined, HistoryOutlined, UserOutlined } from '@ant-design/icons';
+import { Layout } from 'antd';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 
-type Tab = 'friends' | 'groups' | 'add' | 'history' | 'account';
+const { Content, Footer } = Layout;
 
-const iconConfig = {
-    friends: {
-        active: '/bottomBar/friends_selected.png',
-        inactive: '/bottomBar/friends.png'
-    },
-    groups: {
-        active: '/bottomBar/groups_selected.png',
-        inactive: '/bottomBar/groups.png'
-    },
-    add: {
-        active: '/bottomBar/add.png',
-        inactive: '/bottomBar/add.png'
-    },
-    history: {
-        active: '/bottomBar/history_selected.png',
-        inactive: '/bottomBar/history.png'
-    },
-    account: {
-        active: '/bottomBar/account_selected.png',
-        inactive: '/bottomBar/account.png'
+const navItems = [
+    { key: 'friends', path: 'friends', icon: <TeamOutlined />, label: 'Friends' },
+    { key: 'groups', path: 'groups', icon: <HomeFilled />, label: 'Groups' },
+    { key: 'history', path: 'history', icon: <HistoryOutlined />, label: 'History' },
+    { key: 'account', path: 'account', icon: <UserOutlined />, label: 'Account' }
+];
+
+const pageVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+        opacity: 1,
+        y: 0,
+        transition: {
+            duration: 0.6,
+            ease: [0.25, 0.1, 0.25, 1],
+            when: "beforeChildren",
+            staggerChildren: 0.1
+        }
     }
 };
 
-const HomePage = () => {
+const contentVariants = {
+    hidden: { opacity: 0, y: 10 },
+    visible: { opacity: 1, y: 0 }
+};
+
+export default function HomePage() {
     const navigate = useNavigate();
     const location = useLocation();
-    const [activeTab, setActiveTab] = useState<Tab>('groups');
-    const [indicatorStyle, setIndicatorStyle] = useState({ left: '20%', width: '20%' });
+    const [indicatorWidth, setIndicatorWidth] = useState(0);
+    const [indicatorLeft, setIndicatorLeft] = useState(0);
 
-    const tabs = [
-        { id: 'friends', label: 'Friends', path: '/friends' },
-        { id: 'groups', label: 'Groups', path: '/groups' },
-        { id: 'add', label: '', path: '/add' },
-        { id: 'history', label: 'History', path: '/history' },
-        { id: 'account', label: 'Account', path: '/account' }
-    ];
-
-    useEffect(() => {
-        const currentTab = tabs.find(tab => location.pathname.startsWith(tab.path))?.id;
-        if (currentTab) {
-            const tabIndex = tabs.findIndex(tab => tab.id === currentTab);
-            updateIndicator(tabIndex);
-            setActiveTab(currentTab as Tab);
-        }
-    }, [location]);
-
-    const updateIndicator = (tabIndex: number) => {
-        const position = tabIndex * 20;
-        setIndicatorStyle({
-            left: `${position}%`,
-            width: '20%'
-        });
+    const getActiveIndex = () => {
+        const path = location.pathname.split('/').pop() || 'groups';
+        return navItems.findIndex(item => item.path === path);
     };
 
-    const handleTabClick = (tab: Tab, index: number, path: string) => {
-        switch (tab) {
-            case 'groups':
-                const groupPage = sessionStorage.getItem("groupPage");
-                switch (groupPage) {
-                    case 'detail':
-                        navigate('/groupDetail');
-                        setActiveTab(tab);
-                        updateIndicator(index);
-                        break;
-                    case 'setting':
-                        navigate('/groupSetting');
-                        setActiveTab(tab);
-                        updateIndicator(index);
-                        break;
-                    case 'expense':
-                        navigate('/expenseDetail');
-                        setActiveTab(tab);
-                        updateIndicator(index);
-                        break;
-                    default:
-                        navigate('/groups');
-                        setActiveTab(tab);
-                        updateIndicator(index);
-                        break;
-                }
-                break;
-            case 'add':
-                const groupId = sessionStorage.getItem("groupId");
-                if (activeTab === 'groups' && groupId) {
-                    navigate('/addExpense');
-                } else {
-                    navigate('/chooseGroup');
-                }
-                break;
-            default:
-                navigate(path);
-                setActiveTab(tab);
-                updateIndicator(index);
-        }
+    useEffect(() => {
+        const activeIndex = getActiveIndex();
+        const itemWidth = 100 / navItems.length;
+        setIndicatorLeft(itemWidth * activeIndex);
+        setIndicatorWidth(itemWidth);
+    }, [location]);
+
+    const handleTabClick = (path: string, index: number) => {
+        navigate(path);
+        const itemWidth = 100 / navItems.length;
+        setIndicatorLeft(itemWidth * index);
+        setIndicatorWidth(itemWidth);
     };
 
     return (
-        <>
-            {/* Outlet */}
-            <div className="fixed inset-x-0 top-0 bottom-16 overflow-y-auto p-4">
-                <Outlet />
-            </div>
+        <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={pageVariants}
+            className="h-screen"
+        >
+            <Layout className="h-screen">
+                <Content className="overflow-auto bg-white">
+                    <motion.div
+                        variants={contentVariants}
+                        className="p-4"
+                    >
+                        <Outlet />
+                    </motion.div>
+                </Content>
 
-            <div className="fixed inset-x-0 bottom-0 bg-white shadow-lg">
-                <nav className="relative h-16 border-t border-gray-200">
-                    <div
-                        className="absolute top-0 h-1 bg-green-500 transition-all duration-300 ease-out"
-                        style={indicatorStyle}
-                    />
-
-                    <div className="flex h-full items-center justify-around">
-                        {tabs.map((tab, index) => (
-                            <button
-                                key={tab.id}
-                                onClick={() => handleTabClick(tab.id as Tab, index, tab.path)}
-                                className={`flex flex-1 flex-col items-center justify-center h-full
-                                ${tab.id === 'add' ? 'scale-125 -mt-2' : ''}`}
-                            >
-                                <img
-                                    src={activeTab === tab.id
-                                        ? iconConfig[tab.id as keyof typeof iconConfig].active
-                                        : iconConfig[tab.id as keyof typeof iconConfig].inactive}
-                                    alt={tab.label}
-                                    className={`${tab.id === 'add' ? 'h-14 w-14' : 'h-6 w-6'} mb-1`}
-                                />
-                                <span
-                                    className={`text-xs ${activeTab === tab.id
-                                        ? 'text-green-500 font-medium'
-                                        : 'text-gray-500'
-                                        }`}
+                <Footer className="h-16 p-0 bg-white border-t border-gray-200">
+                    <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="relative flex h-full"
+                    >
+                        {navItems.map((item, index) => {
+                            const isActive = getActiveIndex() === index;
+                            return (
+                                <div
+                                    key={item.key}
+                                    className="flex-1 flex flex-col items-center justify-center cursor-pointer relative"
+                                    onClick={() => handleTabClick(item.path, index)}
                                 >
-                                    {tab.label}
-                                </span>
-                            </button>
+                                    <motion.div
+                                        className="text-xl"
+                                        animate={{
+                                            scale: isActive ? 1.2 : 1,
+                                            color: isActive ? '#3B82F6' : '#6B7280'
+                                        }}
+                                        transition={{
+                                            scale: { duration: 0.2 },
+                                            color: { duration: 0.3 }
+                                        }}
+                                    >
+                                        {item.icon}
+                                    </motion.div>
+                                    <span
+                                        className={`text-xs mt-1 ${isActive ? 'text-blue-500 font-medium' : 'text-gray-500'
+                                            }`}
+                                    >
+                                        {item.label}
+                                    </span>
+                                </div>
+                            );
+                        })}
 
-                        ))}
-                    </div>
-                </nav>
-            </div>
-        </>
+                        <motion.div
+                            className="absolute top-0 h-1 bg-blue-500"
+                            style={{
+                                width: `${indicatorWidth}%`,
+                                left: `${indicatorLeft}%`
+                            }}
+                            initial={false}
+                            animate={{
+                                width: `${indicatorWidth}%`,
+                                left: `${indicatorLeft}%`
+                            }}
+                            transition={{
+                                type: 'spring',
+                                stiffness: 500,
+                                damping: 15,
+                                delay: 0.1
+                            }}
+                        />
+                    </motion.div>
+                </Footer>
+            </Layout>
+        </motion.div>
     );
 }
-
-export default auth(HomePage);

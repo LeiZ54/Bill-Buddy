@@ -1,11 +1,11 @@
-const FriendsPage = () => {
-
-
-    return (
-        <div className="flex flex-col items-center justify-center h-screen">
-            <h1 className="text-3xl font-bold">Welcome to FriendsPage</h1>
-        </div>
-    );
-};
-
+import { motion } from 'framer-motion';
+const FriendsPage = () => (
+    <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3, delay: 0.2 }}
+    >
+        <div>Friends Content</div>
+    </motion.div>
+);
 export default FriendsPage;
