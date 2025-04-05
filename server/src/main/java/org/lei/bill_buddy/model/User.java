@@ -26,10 +26,10 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private String password;
 
-    @Column(name = "given_name")
+    @Column(name = "given_name", nullable = false)
     private String givenName;
 
-    @Column(name = "family_name")
+    @Column(name = "family_name", nullable = false)
     private String familyName;
 
     @Column(nullable = false)

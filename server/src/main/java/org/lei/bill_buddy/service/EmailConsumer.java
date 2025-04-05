@@ -70,12 +70,12 @@ public class EmailConsumer {
         sendEmail(toEmail, "You have been invited to join the group: " + groupName, htmlContent);
     }
 
-    public void sendVerificationCodeEmail(String name, String toEmail, String code) throws MessagingException, IOException {
+    public void sendVerificationCodeEmail(String givenName, String toEmail, String code) throws MessagingException, IOException {
         String templatePath = "templates/verification-code-email.html";
         Resource resource = new ClassPathResource(templatePath);
         String htmlContent = new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
 
-        htmlContent = htmlContent.replace("{{name}}", name);
+        htmlContent = htmlContent.replace("{{givenName}}", givenName);
         htmlContent = htmlContent.replace("{{verificationCode}}", code);
         htmlContent = htmlContent.replace("{{expirationTime}}", Long.toString(codeExpirationMillis / 1000 / 60));
         sendEmail(toEmail, "Reset Password Link", htmlContent);
