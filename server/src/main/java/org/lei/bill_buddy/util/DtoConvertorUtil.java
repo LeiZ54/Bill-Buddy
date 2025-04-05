@@ -27,10 +27,8 @@ public class DtoConvertorUtil {
     public UserDTO convertUserToUserDTO(User user) {
         UserDTO dto = new UserDTO();
         dto.setId(user.getId());
-        dto.setUsername(user.getUsername());
+        dto.setFullName(user.getFullName());
         dto.setEmail(user.getEmail());
-        dto.setGivenName(user.getGivenName());
-        dto.setFamilyName(user.getFamilyName());
         return dto;
     }
 
@@ -38,7 +36,7 @@ public class DtoConvertorUtil {
         Map<String, BigDecimal> shares = new HashMap<>();
         expenseService.getExpenseSharesByExpenseId(expense.getId())
                 .forEach(s -> {
-                    shares.put(s.getUser().getUsername(), s.getShareAmount());
+                    shares.put(s.getUser().getFullName(), s.getShareAmount());
                 });
         ExpenseDTO expenseDTO = new ExpenseDTO();
         expenseDTO.setId(expense.getId());
@@ -91,15 +89,14 @@ public class DtoConvertorUtil {
     }
 
     private Map<String, BigDecimal> formatExpenseSummary(List<Long> userIds, Map<Long, BigDecimal> expenseSummary) {
-        Map<Long, String> usernameMap = new HashMap<>();
+        Map<Long, String> nameMap = new HashMap<>();
         Map<String, BigDecimal> formated = new HashMap<>();
-        for (User usersById : userService.getUsersByIds(userIds)) {
-            usernameMap.put(usersById.getId(), usersById.getUsername());
+        for (User user : userService.getUsersByIds(userIds)) {
+            nameMap.put(user.getId(), user.getSimpleName());
         }
         expenseSummary.forEach((k, v) -> {
-            formated.put(usernameMap.get(k), v);
+            formated.put(nameMap.get(k), v);
         });
         return formated;
     }
-
 }

@@ -38,7 +38,6 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody @Valid UserRegisterRequest request) {
         User user = new User();
-        user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
         user.setPassword(request.getPassword());
         user.setGivenName(request.getGivenName());
@@ -47,7 +46,7 @@ public class AuthController {
 
         return ResponseEntity.ok(new UserLoggedInDTO(
                 user.getId(),
-                user.getUsername(),
+                user.getFullName(),
                 user.getEmail(),
                 jwtUtil.generateAuthToken(user.getEmail())));
     }
@@ -62,7 +61,7 @@ public class AuthController {
         User loggedInUser = userService.getUserByEmail(principal.getUsername());
         return ResponseEntity.ok(new UserLoggedInDTO(
                 loggedInUser.getId(),
-                loggedInUser.getUsername(),
+                loggedInUser.getFullName(),
                 loggedInUser.getEmail(),
                 jwtUtil.generateAuthToken(loggedInUser.getEmail())));
     }
@@ -72,14 +71,12 @@ public class AuthController {
         var payload = googleAuthService.verifyGoogleToken(request.getGoogleId());
 
         String email = payload.getEmail();
-        String name = (String) payload.get("name");
         String givenName = (String) payload.get("given_name");
         String familyName = (String) payload.get("family_name");
 
         User user = userService.getUserByEmail(email);
         if (user == null) {
             user = new User();
-            user.setUsername(name);
             user.setPassword("");
             user.setEmail(email);
             user.setGivenName(givenName);
@@ -91,13 +88,13 @@ public class AuthController {
 
         return ResponseEntity.ok(new UserLoggedInDTO(
                 user.getId(),
-                user.getUsername(),
+                user.getFullName(),
                 user.getEmail(),
                 jwtToken));
     }
 
     @PostMapping("/forgot-password")
-    public ResponseEntity<?> forgotPassword(@RequestParam String email) throws MessagingException, IOException {
+    public ResponseEntity<?> forgotPassword(@RequestParam String email) {
         User user = userService.getUserByEmail(email);
         if (user == null) {
             throw new RuntimeException("User not found.");
@@ -106,7 +103,7 @@ public class AuthController {
         EmailDTO emailDTO = new EmailDTO();
         emailDTO.setType("verify");
         emailDTO.setToEmail(user.getEmail());
-        emailDTO.setUsername(user.getUsername());
+        emailDTO.setGivenName(user.getGivenName());
         emailDTO.setCode(verificationCodeUtil.generateCode(user.getEmail()));
         emailProducer.sendEmail(emailDTO);
 

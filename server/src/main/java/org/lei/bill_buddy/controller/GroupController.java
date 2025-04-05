@@ -80,7 +80,7 @@ public class GroupController {
     }
 
     @PostMapping("/{groupId}/invite")
-    public ResponseEntity<?> inviteMemberByEmail(@PathVariable Long groupId, @RequestParam String email) throws MessagingException, IOException {
+    public ResponseEntity<?> inviteMemberByEmail(@PathVariable Long groupId, @RequestParam String email) {
 
         Group group = groupService.getGroupById(groupId);
         String inviteLink = generateInvitationLink(group);

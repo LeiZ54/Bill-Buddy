@@ -21,7 +21,7 @@ import java.nio.charset.StandardCharsets;
 public class EmailConsumer {
     private final JavaMailSender mailSender;
 
-    @Value("${spring.mail.username}")
+    @Value("${spring.mail.name}")
     private String fromEmail;
 
     @Value("#{${reset-password.code.expiration}}")
@@ -32,7 +32,7 @@ public class EmailConsumer {
         try {
             if ("verify".equalsIgnoreCase(email.getType())) {
                 sendVerificationCodeEmail(
-                        email.getUsername(),
+                        email.getGivenName(),
                         email.getToEmail(),
                         email.getCode()
                 );
@@ -70,12 +70,12 @@ public class EmailConsumer {
         sendEmail(toEmail, "You have been invited to join the group: " + groupName, htmlContent);
     }
 
-    public void sendVerificationCodeEmail(String username, String toEmail, String code) throws MessagingException, IOException {
+    public void sendVerificationCodeEmail(String name, String toEmail, String code) throws MessagingException, IOException {
         String templatePath = "templates/verification-code-email.html";
         Resource resource = new ClassPathResource(templatePath);
         String htmlContent = new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
 
-        htmlContent = htmlContent.replace("{{username}}", username);
+        htmlContent = htmlContent.replace("{{name}}", name);
         htmlContent = htmlContent.replace("{{verificationCode}}", code);
         htmlContent = htmlContent.replace("{{expirationTime}}", Long.toString(codeExpirationMillis / 1000 / 60));
         sendEmail(toEmail, "Reset Password Link", htmlContent);

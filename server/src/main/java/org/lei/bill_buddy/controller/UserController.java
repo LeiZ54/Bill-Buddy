@@ -6,7 +6,6 @@ import org.lei.bill_buddy.DTO.UserUpdateRequest;
 import org.lei.bill_buddy.model.User;
 import org.lei.bill_buddy.service.UserService;
 import org.lei.bill_buddy.util.DtoConvertorUtil;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,7 +24,6 @@ public class UserController {
             throw new RuntimeException("You do not have permission to update this user.");
         }
         User user = new User();
-        user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
         user.setGivenName(request.getGivenName());
         user.setFamilyName(request.getFamilyName());

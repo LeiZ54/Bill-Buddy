@@ -7,7 +7,7 @@ import lombok.Data;
 @AllArgsConstructor
 public class UserLoggedInDTO {
     private final Long id;
-    private String username;
+    private String name;
     private String email;
     private String token;
 }

@@ -8,7 +8,7 @@ import java.io.Serializable;
 public class EmailDTO implements Serializable {
     private String type;
     private String toEmail;
-    private String username;
+    private String givenName;
     private String groupName;
     private String code;
     private String inviteLink;

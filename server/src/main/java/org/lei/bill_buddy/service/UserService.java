@@ -24,7 +24,6 @@ public class UserService {
         }
 
         User newUser = new User();
-        user.setUsername(user.getUsername());
         user.setEmail(user.getEmail());
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         newUser.setGivenName(user.getGivenName());
@@ -41,8 +40,6 @@ public class UserService {
             }
             existingUser.setEmail(user.getEmail());
         }
-        if (user.getUsername() != null && !user.getUsername().isEmpty())
-            existingUser.setUsername(user.getUsername());
         if (user.getPassword() != null && !user.getPassword().isEmpty())
             existingUser.setPassword(passwordEncoder.encode(user.getPassword()));
         if (user.getGivenName() != null && !user.getGivenName().isEmpty())
@@ -53,7 +50,7 @@ public class UserService {
     }
 
     public List<User> searchUsers(String keyword) {
-        return userRepository.findByUsernameContainingIgnoreCaseOrEmailContainingIgnoreCaseAndDeletedFalse(keyword, keyword);
+        return userRepository.findByEmailContainingIgnoreCaseAndDeletedFalse(keyword);
     }
 
     public List<User> getUsersByIds(List<Long> ids) {
@@ -69,7 +66,7 @@ public class UserService {
     }
 
     public User getCurrentUser() {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        return getUserByEmail(username);
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return getUserByEmail(email);
     }
 }
