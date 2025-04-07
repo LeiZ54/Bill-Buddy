@@ -1,10 +1,13 @@
-const ActivityPage = () => {
+import { motion } from 'framer-motion';
 
-    return (
-        <div className="flex flex-col items-center justify-center h-screen">
-            <h1 className="text-3xl font-bold">Welcome to HistoryPage</h1>
-        </div>
-    );
-};
+const HistoryPage = () => (
+    <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3, delay: 0.2 }}
+    >
+        <div>History Content</div>
+    </motion.div>
+);
 
-export default ActivityPage;
+export default HistoryPage;
