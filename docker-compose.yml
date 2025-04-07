@@ -1,0 +1,28 @@
+version: '3.8'
+services:
+  mysql:
+    image: mysql:9
+    container_name: bb_mysql
+    environment:
+      MYSQL_DATABASE: bill_buddy
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+  redis:
+    image: redis:7
+    container_name: bb_redis
+    ports:
+      - "6379:6379"
+
+  rabbitmq:
+    image: rabbitmq:4
+    container_name: bb_rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+volumes:
+  mysql-data:

@@ -21,7 +21,7 @@ import java.nio.charset.StandardCharsets;
 public class EmailConsumer {
     private final JavaMailSender mailSender;
 
-    @Value("${spring.mail.name}")
+    @Value("${spring.mail.username}")
     private String fromEmail;
 
     @Value("#{${reset-password.code.expiration}}")

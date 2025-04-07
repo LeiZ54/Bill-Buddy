@@ -2,6 +2,7 @@ package org.lei.bill_buddy.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.mail.MessagingException;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.lei.bill_buddy.DTO.EmailDTO;
@@ -15,14 +16,15 @@ import org.lei.bill_buddy.service.GroupService;
 import org.lei.bill_buddy.service.UserService;
 import org.lei.bill_buddy.util.DtoConvertorUtil;
 import org.lei.bill_buddy.util.JwtUtil;
+import org.lei.bill_buddy.util.RateLimiterUtil;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +39,7 @@ public class GroupController {
     private final JwtUtil jwtUtil;
     private final DtoConvertorUtil dtoConvertor;
     private final EmailProducer emailProducer;
+    private final RateLimiterUtil rateLimiter;
 
     @Value("${bill-buddy.client.url}")
     private String clientUrl;
@@ -80,8 +83,18 @@ public class GroupController {
     }
 
     @PostMapping("/{groupId}/invite")
-    public ResponseEntity<?> inviteMemberByEmail(@PathVariable Long groupId, @RequestParam String email) {
+    public ResponseEntity<?> inviteMemberByEmail(@PathVariable Long groupId, @RequestParam String email,
+                                                 HttpServletRequest request) {
 
+        String ip = request.getHeader("X-Forwarded-For");
+        if (ip == null || ip.isEmpty()) {
+            ip = request.getRemoteAddr();
+        }
+
+        if (!rateLimiter.isAllowed(ip, 60)) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .body("Too many requests. Please try again later.");
+        }
         Group group = groupService.getGroupById(groupId);
         String inviteLink = generateInvitationLink(group);
         EmailDTO emailDTO = new EmailDTO();
@@ -90,7 +103,6 @@ public class GroupController {
         emailDTO.setGroupName(group.getName());
         emailDTO.setInviteLink(inviteLink);
         emailProducer.sendEmail(emailDTO);
-
         return ResponseEntity.ok("Invitation sent to " + email);
     }
 
