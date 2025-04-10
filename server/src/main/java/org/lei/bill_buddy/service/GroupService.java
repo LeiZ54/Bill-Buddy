@@ -1,23 +1,25 @@
 package org.lei.bill_buddy.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.transaction.annotation.Transactional;
+import lombok.extern.slf4j.Slf4j;
 import org.lei.bill_buddy.model.Group;
 import org.lei.bill_buddy.model.GroupMember;
 import org.lei.bill_buddy.model.User;
 import org.lei.bill_buddy.repository.GroupMemberRepository;
 import org.lei.bill_buddy.repository.GroupRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Service
+@Slf4j
 @Transactional
 @RequiredArgsConstructor
+@Service
 public class GroupService {
     private final GroupRepository groupRepository;
     private final GroupMemberRepository groupMemberRepository;
@@ -26,9 +28,11 @@ public class GroupService {
     public void groupUpdated(Group group) {
         group.setUpdatedAt(LocalDateTime.now());
         groupRepository.save(group);
+        log.debug("Group updated: {}", group.getId());
     }
 
     public Group createGroup(String groupName, String type, Long creatorId) {
+        log.info("Creating group: {} by user {}", groupName, creatorId);
         User creator = userService.getUserById(creatorId);
         if (creator == null) {
             throw new RuntimeException("User not found with id: " + creatorId);
@@ -47,16 +51,19 @@ public class GroupService {
         gm.setJoinedAt(LocalDateTime.now());
         groupMemberRepository.save(gm);
 
+        log.info("Group created successfully: {}", savedGroup.getId());
         return savedGroup;
     }
 
     @Transactional(readOnly = true)
     public Group getGroupById(Long groupId) {
+        log.debug("Fetching group by ID: {}", groupId);
         return groupRepository.findByIdAndDeletedFalse(groupId)
                 .orElseThrow(() -> new RuntimeException("Group not found with id: " + groupId));
     }
 
     public Group updateGroup(Long groupId, String newName, String newType) {
+        log.info("Updating group {} with name: {}, type: {}", groupId, newName, newType);
         Group group = getGroupById(groupId);
         if (newName != null && !newName.isEmpty()) {
             group.setName(newName);
@@ -68,19 +75,23 @@ public class GroupService {
     }
 
     public void deleteGroup(Long groupId) {
+        log.warn("Deleting group with id: {}", groupId);
         Group group = getGroupById(groupId);
         groupMemberRepository.softDeleteAllByGroup(group);
         group.setDeleted(true);
         groupRepository.save(group);
+        log.info("Group {} marked as deleted.", groupId);
     }
 
     @Transactional(readOnly = true)
     public Page<Group> getGroupsByUserId(Long userId, Pageable pageable) {
+        log.debug("Getting groups for user: {}", userId);
         return groupRepository.findAllByUserIdAndSortedByGroupUpdatedAt(userId, pageable);
     }
 
     @Transactional
     public void addMemberToGroup(Long groupId, Long userId) {
+        log.info("Adding user {} to group {}", userId, groupId);
         Group group = getGroupById(groupId);
         User user = userService.getUserById(userId);
         if (user == null) {
@@ -98,10 +109,13 @@ public class GroupService {
         gm.setJoinedAt(LocalDateTime.now());
         groupMemberRepository.save(gm);
         groupUpdated(group);
+
+        log.info("User {} added to group {}", userId, groupId);
     }
 
     @Transactional
     public void removeMemberFromGroup(Long groupId, Long userId) {
+        log.info("Removing user {} from group {}", userId, groupId);
         Group group = getGroupById(groupId);
         User user = userService.getUserById(userId);
         if (user == null) {
@@ -114,10 +128,13 @@ public class GroupService {
         gm.setDeleted(true);
         groupMemberRepository.save(gm);
         groupUpdated(group);
+
+        log.info("User {} removed from group {}", userId, groupId);
     }
 
     @Transactional(readOnly = true)
     public List<User> getMembersOfGroup(Long groupId) {
+        log.debug("Getting members of group {}", groupId);
         List<GroupMember> memberList = groupMemberRepository.findAllByGroupIdAndDeletedFalse(groupId);
         return memberList.stream()
                 .map(GroupMember::getUser)
@@ -131,6 +148,7 @@ public class GroupService {
 
     @Transactional
     public void updateMemberRole(Long groupId, Long userId, String role) {
+        log.info("Updating role of user {} in group {} to {}", userId, groupId, role);
         Group group = getGroupById(groupId);
         User user = userService.getUserById(userId);
         if (user == null) {
@@ -150,5 +168,3 @@ public class GroupService {
         return groupMemberRepository.existsByUserIdAndGroupIdAndRoleAndDeletedFalse(userId, groupId, "admin");
     }
 }
-
-

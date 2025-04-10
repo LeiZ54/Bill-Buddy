@@ -1,27 +1,26 @@
 package org.lei.bill_buddy.service;
 
 import com.google.gson.Gson;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.lei.bill_buddy.DTO.ExpenseSummaryDTO;
-import org.lei.bill_buddy.model.Expense;
+import org.lei.bill_buddy.model.*;
+import org.lei.bill_buddy.repository.*;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.YearMonth;
 import java.util.*;
 
-import org.lei.bill_buddy.model.*;
-import org.lei.bill_buddy.repository.*;
-
-import jakarta.transaction.Transactional;
-
-import java.math.BigDecimal;
-
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ExpenseService {
+
     private final ExpenseRepository expenseRepository;
     private final ExpenseShareRepository expenseShareRepository;
     private final GroupService groupService;
@@ -31,31 +30,37 @@ public class ExpenseService {
 
     @Transactional
     public List<Expense> getExpensesByGroupId(Long groupId) {
+        log.info("Fetching expenses for groupId: {}", groupId);
         return expenseRepository.findByGroupIdAndDeletedFalse(groupId);
     }
 
     @Transactional
-    public Expense createExpense(Long groupId,
-                                 Long payerId,
-                                 BigDecimal amount,
-                                 String currency,
-                                 String description,
-                                 LocalDateTime expenseDate,
-                                 List<Long> participantIds,
-                                 List<BigDecimal> shareAmounts) {
+    public Expense createExpense(Long groupId, Long payerId, BigDecimal amount, String currency,
+                                 String description, LocalDateTime expenseDate,
+                                 List<Long> participantIds, List<BigDecimal> shareAmounts) {
+
+        log.info("Creating expense: groupId={}, payerId={}, amount={}, currency={}, description={}, date={}, participants={}",
+                groupId, payerId, amount, currency, description, expenseDate, participantIds);
+
         Group group = groupService.getGroupById(groupId);
         if (group == null) {
+            log.error("Group not found: {}", groupId);
             throw new RuntimeException("Group not found");
         }
+
         User payer = userService.getUserById(payerId);
         if (payer == null) {
+            log.error("Payer user not found: {}", payerId);
             throw new RuntimeException("User not found");
         }
+
         participantIds.forEach(id -> {
             if (!groupService.isMemberOfGroup(id, groupId)) {
+                log.error("User with id {} is not a member of group {}", id, groupId);
                 throw new RuntimeException("User with id " + id + " is not a member of this group");
             }
         });
+
         Expense expense = new Expense();
         expense.setGroup(group);
         expense.setPayer(payer);
@@ -65,16 +70,19 @@ public class ExpenseService {
         expense.setExpenseDate(expenseDate);
 
         Expense savedExpense = expenseRepository.save(expense);
-
         distributeShares(savedExpense, participantIds, shareAmounts, amount);
         groupService.groupUpdated(group);
+        log.info("Expense created successfully: id={}", savedExpense.getId());
 
         return savedExpense;
     }
 
     @Transactional
     public void deleteExpense(Long expenseId) {
-        Expense expense = expenseRepository.findById(expenseId).orElseThrow(() -> new RuntimeException("Expense not found"));
+        log.info("Deleting expense with id={}", expenseId);
+        Expense expense = expenseRepository.findById(expenseId)
+                .orElseThrow(() -> new RuntimeException("Expense not found"));
+
         expense.setDeleted(true);
         expenseRepository.save(expense);
 
@@ -83,59 +91,56 @@ public class ExpenseService {
             s.setDeleted(true);
             expenseShareRepository.save(s);
         });
+
         groupService.groupUpdated(expense.getGroup());
+        log.info("Expense deleted successfully: id={}", expenseId);
     }
 
     @Transactional
-    public Expense updateExpense(
-            Long expenseId,
-            BigDecimal amount,
-            String currency,
-            String description,
-            LocalDateTime expenseDate,
-            List<Long> participantIds,
-            List<BigDecimal> shareAmounts) {
-        Expense expense = expenseRepository.findById(expenseId).orElseThrow(() -> new RuntimeException("Expense not found"));
-        if (amount != null) {
-            expense.setAmount(amount);
-        }
-        if (currency != null && !currency.isEmpty()) {
-            expense.setCurrency(currency);
-        }
+    public Expense updateExpense(Long expenseId, BigDecimal amount, String currency,
+                                 String description, LocalDateTime expenseDate,
+                                 List<Long> participantIds, List<BigDecimal> shareAmounts) {
 
-        if (description != null && !description.isEmpty()) {
-            expense.setDescription(description);
-        }
+        log.info("Updating expense: id={}", expenseId);
+        Expense expense = expenseRepository.findById(expenseId)
+                .orElseThrow(() -> new RuntimeException("Expense not found"));
 
-        if (expenseDate != null) {
-            expense.setExpenseDate(expenseDate);
-        }
+        if (amount != null) expense.setAmount(amount);
+        if (currency != null && !currency.isEmpty()) expense.setCurrency(currency);
+        if (description != null && !description.isEmpty()) expense.setDescription(description);
+        if (expenseDate != null) expense.setExpenseDate(expenseDate);
 
         Expense savedExpense = expenseRepository.save(expense);
 
         if (participantIds != null && !participantIds.isEmpty()) {
             List<ExpenseShare> shares = expenseShareRepository.findByExpenseIdAndDeletedFalse(expenseId);
             expenseShareRepository.deleteAll(shares);
-
             distributeShares(savedExpense, participantIds, shareAmounts, amount);
         }
-        groupService.groupUpdated(expense.getGroup());
 
-        return expense;
+        groupService.groupUpdated(expense.getGroup());
+        log.info("Expense updated: id={}", expenseId);
+
+        return savedExpense;
     }
 
     @Transactional
     public void checkOutExpenseByGroupId(Long groupId) {
+        log.info("Checking out expenses for group: {}", groupId);
         Group group = groupService.getGroupById(groupId);
         if (group == null) {
+            log.error("Group not found: {}", groupId);
             throw new RuntimeException("Group not found");
         }
+
         List<Long> expenseIds = expenseRepository.findIdsByGroupIdAndDeletedFalse(groupId);
         List<Long> memberIds = groupService.getMemberIdsByGroupId(groupId);
         List<Expense> expenses = getExpensesByExpenseIdS(expenseIds);
         List<History> histories = new ArrayList<>();
+
         String expensesIdsString = gson.toJson(expenseIds);
         String memberIdsString = gson.toJson(memberIds);
+
         for (User member : userService.getUsersByIds(memberIds)) {
             ExpenseSummaryDTO summary = getExpenseSummary(member.getId(), expenses);
             History history = new History();
@@ -148,9 +153,11 @@ public class ExpenseService {
             history.setMemberIds(memberIdsString);
             histories.add(history);
         }
+
         historyService.createHistories(histories);
         expenseRepository.softDeleteByGroupId(groupId);
         groupService.groupUpdated(group);
+        log.info("Checkout completed for group: {}", groupId);
     }
 
     public List<Expense> getExpensesByExpenseIdS(List<Long> expenseIds) {
@@ -158,51 +165,40 @@ public class ExpenseService {
     }
 
     public List<Expense> getExpensesByGroupIdAndMonth(Long groupId, String month) {
-        LocalDateTime start, end;
+        log.info("Getting expenses for groupId={} in month={}", groupId, month);
         if (month != null) {
             YearMonth ym = YearMonth.parse(month);
-            start = ym.atDay(1).atStartOfDay();
-            end = ym.atEndOfMonth().atTime(LocalTime.MAX);
+            LocalDateTime start = ym.atDay(1).atStartOfDay();
+            LocalDateTime end = ym.atEndOfMonth().atTime(LocalTime.MAX);
             return expenseRepository.findByGroupIdAndExpenseDateBetweenAndDeletedFalse(groupId, start, end);
-        } else {
-            return expenseRepository.findByGroupIdAndDeletedFalse(groupId);
         }
+        return expenseRepository.findByGroupIdAndDeletedFalse(groupId);
     }
-
 
     public List<ExpenseShare> getExpenseSharesByGroupId(Long groupId) {
         List<Expense> expenses = expenseRepository.findByGroupIdAndDeletedFalse(groupId);
         return expenses.stream()
                 .flatMap(e -> expenseShareRepository.findByExpenseIdAndDeletedFalse(e.getId()).stream())
-                .collect(java.util.stream.Collectors.toList());
+                .toList();
     }
 
     public Expense getExpenseById(Long expenseId) {
-        return expenseRepository.findById(expenseId)
-                .orElse(null);
+        log.info("Fetching expense by id={}", expenseId);
+        return expenseRepository.findById(expenseId).orElse(null);
     }
 
-    private void distributeShares(
-            Expense expense,
-            List<Long> participantIds,
-            List<BigDecimal> shares,
-            BigDecimal totalAmount
-    ) {
+    private void distributeShares(Expense expense, List<Long> participantIds,
+                                  List<BigDecimal> shares, BigDecimal totalAmount) {
+        log.info("Distributing shares for expense id={}", expense.getId());
         Map<Long, User> participants = new HashMap<>();
-        userService.getUsersByIds(participantIds).forEach(user -> {
-            participants.put(user.getId(), user);
-        });
+        userService.getUsersByIds(participantIds).forEach(user -> participants.put(user.getId(), user));
 
         if (shares == null || shares.size() != participantIds.size()) {
             BigDecimal share = totalAmount.divide(BigDecimal.valueOf(participants.size()), 2, RoundingMode.HALF_UP);
-            participants.forEach((id, u) -> {
-                createExpenseShare(expense, u, share);
-            });
+            participants.forEach((id, u) -> createExpenseShare(expense, u, share));
         } else {
-            totalAmount = BigDecimal.valueOf(0);
             for (int i = 0; i < participantIds.size(); i++) {
                 createExpenseShare(expense, participants.get(participantIds.get(i)), shares.get(i));
-                totalAmount = totalAmount.add(shares.get(i));
             }
         }
     }
@@ -212,6 +208,7 @@ public class ExpenseService {
     }
 
     public ExpenseSummaryDTO getExpenseSummary(Long currentUserId, List<Expense> expenses) {
+        log.debug("Generating expense summary for userId={}", currentUserId);
         Map<Long, BigDecimal> balances = new HashMap<>();
         Set<Long> userIds = new HashSet<>();
         List<ExpenseShare> shares = expenses.stream()
@@ -237,7 +234,6 @@ public class ExpenseService {
 
         for (Map.Entry<Long, BigDecimal> entry : balances.entrySet()) {
             BigDecimal balance = entry.getValue();
-
             if (balance.compareTo(BigDecimal.ZERO) > 0) {
                 owesCurrentUser.put(entry.getKey(), balance);
             } else if (balance.compareTo(BigDecimal.ZERO) < 0) {
@@ -252,7 +248,6 @@ public class ExpenseService {
         return summary;
     }
 
-
     private void createExpenseShare(Expense expense, User user, BigDecimal shareAmount) {
         ExpenseShare share = new ExpenseShare();
         share.setExpense(expense);
@@ -261,7 +256,4 @@ public class ExpenseService {
         share.setDeleted(false);
         expenseShareRepository.save(share);
     }
-
 }
-
-
