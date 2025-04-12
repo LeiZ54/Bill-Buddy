@@ -28,5 +28,4 @@ public interface GroupMemberRepository extends JpaRepository<GroupMember, Long> 
     @Query("UPDATE GroupMember gm SET gm.deleted = true WHERE gm.group = :group")
     void softDeleteAllByGroup(@Param("group") Group group);
 
-    boolean existsByUserIdAndGroupIdAndRoleAndDeletedFalse(Long userId, Long groupId, String role);
 }

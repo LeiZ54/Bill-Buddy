@@ -9,6 +9,7 @@ import org.lei.bill_buddy.model.Group;
 import org.lei.bill_buddy.model.History;
 import org.lei.bill_buddy.model.User;
 import org.lei.bill_buddy.service.ExpenseService;
+import org.lei.bill_buddy.service.ExpenseSummaryService;
 import org.lei.bill_buddy.service.UserService;
 import org.springframework.stereotype.Component;
 
@@ -22,6 +23,7 @@ import java.util.Map;
 public class DtoConvertorUtil {
     private final UserService userService;
     private final ExpenseService expenseService;
+    private final ExpenseSummaryService expenseSummaryService;
     private final Gson gson;
 
     public UserDTO convertUserToUserDTO(User user) {
@@ -59,7 +61,7 @@ public class DtoConvertorUtil {
 
     public GroupDetailsDTO convertGroupToGroupDetailsDTO(Group group) {
         ExpenseSummaryDTO expenseSummary =
-                expenseService.getExpenseSummary(userService.getCurrentUser().getId(), expenseService.getExpensesByGroupId(group.getId()));
+                expenseSummaryService.getExpenseSummary(userService.getCurrentUser().getId(), expenseService.getExpensesByGroupId(group.getId()));
         GroupDetailsDTO dto = new GroupDetailsDTO();
         dto.setGroupId(group.getId());
         dto.setGroupName(group.getName());

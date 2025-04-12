@@ -24,4 +24,13 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
     @Modifying
     @Query("UPDATE Expense e SET e.deleted = true WHERE e.group.id = :groupId AND e.deleted = false")
     void softDeleteByGroupId(@Param("groupId") Long groupId);
+
+    @Query("""
+                SELECT COUNT(e) FROM Expense e
+                WHERE e.group.id = :groupId
+                AND e.payer.id = :userId
+                AND e.deleted = false
+            """)
+    Long countExpensesByGroupAndPayer(@Param("groupId") Long groupId, @Param("userId") Long userId);
+
 }

@@ -47,8 +47,8 @@ public class JwtUtil {
         return generateToken("Authorization", Map.of("email", email), jwtExpirationTime);
     }
 
-    public String generateInviteToken(Long groupId, String groupName) {
-        return generateToken("Invitation", Map.of("groupId", groupId, "groupName", groupName), inviteTokenExpirationTime);
+    public String generateInviteToken(Long groupId, String groupName, String groupType) {
+        return generateToken("Invitation", Map.of("groupId", groupId, "groupName", groupName, "groupType", groupType), inviteTokenExpirationTime);
     }
 
     public String generateResetPasswordToken(String email) {
@@ -80,7 +80,8 @@ public class JwtUtil {
         Claims claims = parseClaims(token);
         return Map.of(
                 "groupId", claims.get("groupId", Long.class),
-                "groupName", claims.get("groupName", String.class)
+                "groupName", claims.get("groupName", String.class),
+                "groupType", claims.get("groupType", String.class)
         );
     }
 }

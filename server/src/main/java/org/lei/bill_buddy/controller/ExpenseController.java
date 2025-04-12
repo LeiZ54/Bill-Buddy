@@ -5,7 +5,6 @@ import lombok.RequiredArgsConstructor;
 import org.lei.bill_buddy.DTO.ExpenseCreateRequest;
 import org.lei.bill_buddy.DTO.ExpenseUpdateRequest;
 import org.lei.bill_buddy.model.Expense;
-import org.lei.bill_buddy.model.User;
 import org.lei.bill_buddy.service.ExpenseService;
 import org.lei.bill_buddy.service.GroupService;
 import org.lei.bill_buddy.service.UserService;
@@ -45,9 +44,8 @@ public class ExpenseController {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteExpense(
             @PathVariable Long id) {
-
-        if (!hasPermission(id)) {
-            throw new RuntimeException("You do not have permission to delete this expense.");
+        if (!groupService.isMemberOfGroup(userService.getCurrentUser().getId(), id)) {
+            throw new RuntimeException("You do not have permission to delete expense");
         }
         expenseService.deleteExpense(id);
         return ResponseEntity.ok("Expense with id " + id + " deleted");
@@ -58,8 +56,8 @@ public class ExpenseController {
             @PathVariable Long id,
             @Valid @RequestBody ExpenseUpdateRequest request) {
 
-        if (!hasPermission(id)) {
-            throw new RuntimeException("You do not have permission to update this expense.");
+        if (!groupService.isMemberOfGroup(userService.getCurrentUser().getId(), id)) {
+            throw new RuntimeException("You do not have permission to update expense");
         }
         Expense expense = expenseService.updateExpense(
                 id,
@@ -87,14 +85,5 @@ public class ExpenseController {
                 .stream()
                 .map(dtoConvertor::convertExpenseToExpenseDTO)
                 .collect(Collectors.toList()));
-    }
-
-    private boolean hasPermission(Long expenseId) {
-        Expense expense = expenseService.getExpenseById(expenseId);
-        User user = userService.getCurrentUser();
-        if (expense == null) {
-            throw new RuntimeException("Expense not found.");
-        }
-        return expense.getPayer().equals(user) || groupService.isMemberAdmin(expense.getGroup().getId(), user.getId());
     }
 }

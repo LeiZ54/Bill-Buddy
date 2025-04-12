@@ -1,7 +1,5 @@
 package org.lei.bill_buddy.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -10,10 +8,7 @@ import org.lei.bill_buddy.DTO.GroupCreateRequest;
 import org.lei.bill_buddy.DTO.GroupUpdateRequest;
 import org.lei.bill_buddy.model.Group;
 import org.lei.bill_buddy.model.User;
-import org.lei.bill_buddy.service.EmailProducer;
-import org.lei.bill_buddy.service.ExpenseService;
-import org.lei.bill_buddy.service.GroupService;
-import org.lei.bill_buddy.service.UserService;
+import org.lei.bill_buddy.service.*;
 import org.lei.bill_buddy.util.DtoConvertorUtil;
 import org.lei.bill_buddy.util.JwtUtil;
 import org.lei.bill_buddy.util.RateLimiterUtil;
@@ -34,6 +29,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class GroupController {
     private final GroupService groupService;
+    private final GroupMemberService groupMemberService;
     private final UserService userService;
     private final ExpenseService expenseService;
     private final JwtUtil jwtUtil;
@@ -58,7 +54,7 @@ public class GroupController {
 
     @PutMapping("/{groupId}")
     public ResponseEntity<?> updateGroup(@PathVariable Long groupId, @Valid @RequestBody GroupUpdateRequest request) {
-        if (!groupService.isMemberAdmin(userService.getCurrentUser().getId(), groupId)) {
+        if (!groupService.isMemberOfGroup(userService.getCurrentUser().getId(), groupId)) {
             throw new RuntimeException("You do not have permission to update this group.");
         }
         Group updated = groupService.updateGroup(groupId, request.getNewName(), request.getNewType());
@@ -67,7 +63,7 @@ public class GroupController {
 
     @DeleteMapping("/{groupId}")
     public ResponseEntity<?> deleteGroup(@PathVariable Long groupId) {
-        if (!groupService.isMemberAdmin(userService.getCurrentUser().getId(), groupId)) {
+        if (!groupService.isMemberOfGroup(userService.getCurrentUser().getId(), groupId)) {
             throw new RuntimeException("You do not have permission to delete this group.");
         }
         groupService.deleteGroup(groupId);
@@ -118,7 +114,7 @@ public class GroupController {
 
         User user = userService.getCurrentUser();
 
-        groupService.addMemberToGroup(groupId, user.getId());
+        groupMemberService.addMemberToGroup(groupId, user.getId());
 
         return ResponseEntity.ok("Invitation accepted. You've joined the group!");
     }
@@ -133,18 +129,9 @@ public class GroupController {
         return ResponseEntity.ok(Map.of("joined", groupService.isMemberOfGroup(userService.getCurrentUser().getId(), groupId)));
     }
 
-    @PostMapping("/check-out/{groupId}")
-    public ResponseEntity<?> checkOutGroup(@PathVariable Long groupId) throws JsonProcessingException {
-        if (!groupService.isMemberAdmin(userService.getCurrentUser().getId(), groupId)) {
-            throw new RuntimeException("You do not have permission to check out this group.");
-        }
-        expenseService.checkOutExpenseByGroupId(groupId);
-        return ResponseEntity.ok("All expenses in this group were checked out");
-    }
-
     @DeleteMapping("/{groupId}/members/{userId}")
     public ResponseEntity<?> removeMemberFromGroup(@PathVariable Long groupId, @PathVariable Long userId) {
-        groupService.removeMemberFromGroup(groupId, userId);
+        groupMemberService.removeMemberFromGroup(groupId, userId);
         return ResponseEntity.ok(Collections.singletonMap("message", "Member removed from group."));
     }
 
@@ -153,7 +140,7 @@ public class GroupController {
         if (!groupService.isMemberOfGroup(userService.getCurrentUser().getId(), groupId)) {
             throw new RuntimeException("You do not have permission to view members of this group.");
         }
-        List<User> userList = groupService.getMembersOfGroup(groupId);
+        List<User> userList = groupMemberService.getMembersOfGroup(groupId);
         return ResponseEntity.ok(userList.stream().map(dtoConvertor::convertUserToUserDTO));
     }
 
@@ -178,6 +165,6 @@ public class GroupController {
     }
 
     private String generateInvitationLink(Group group) {
-        return clientUrl + "/inviteLink?token=" + jwtUtil.generateInviteToken(group.getId(), group.getName());
+        return clientUrl + "/inviteLink?token=" + jwtUtil.generateInviteToken(group.getId(), group.getName(), group.getType());
     }
 }
