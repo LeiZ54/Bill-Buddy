@@ -40,16 +40,23 @@ public class DtoConvertorUtil {
                 .forEach(s -> {
                     shares.put(s.getUser().getFullName(), s.getShareAmount());
                 });
+
         ExpenseDTO expenseDTO = new ExpenseDTO();
         expenseDTO.setId(expense.getId());
+        expenseDTO.setTitle(expense.getTitle());
         expenseDTO.setAmount(expense.getAmount());
         expenseDTO.setDescription(expense.getDescription());
         expenseDTO.setCurrency(expense.getCurrency());
         expenseDTO.setPayer(convertUserToUserDTO(expense.getPayer()));
         expenseDTO.setShares(shares);
         expenseDTO.setExpenseDate(expense.getExpenseDate());
+        expenseDTO.setType(expense.getType());
+        expenseDTO.setIsRecurring(expense.getIsRecurring());
+        expenseDTO.setRecurrenceUnit(expense.getRecurrenceUnit());
+        expenseDTO.setRecurrenceInterval(expense.getRecurrenceInterval());
         return expenseDTO;
     }
+
 
     public GroupDTO convertGroupToGroupDTO(Group group) {
         GroupDTO groupDTO = new GroupDTO();

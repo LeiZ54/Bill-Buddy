@@ -25,30 +25,30 @@ public class ExpenseController {
     private final DtoConvertorUtil dtoConvertor;
 
     @PostMapping
-    public ResponseEntity<?> createExpense(
-            @Valid @RequestBody ExpenseCreateRequest request) {
-        if (!groupService.isMemberOfGroup(userService.getCurrentUser().getId(), request.getGroupId())) {
-            throw new RuntimeException("You do not have permission to add expense");
+    public ResponseEntity<?> createExpense(@Valid @RequestBody ExpenseCreateRequest request) {
+        Long currentUserId = userService.getCurrentUser().getId();
+
+        if (!groupService.isMemberOfGroup(currentUserId, request.getGroupId())) {
+            return ResponseEntity.status(403).body("You do not have permission to add expenses to this group.");
         }
-        Expense expense = expenseService.createExpense(request.getGroupId(),
-                userService.getCurrentUser().getId(),
+
+        Expense expense = expenseService.createExpense(
+                request.getGroupId(),
+                request.getPayerId() != null ? request.getPayerId() : currentUserId,
+                request.getTitle(),
+                request.getType(),
                 request.getAmount(),
                 request.getCurrency(),
                 request.getDescription(),
                 request.getExpenseDate(),
+                request.getIsRecurring(),
+                request.getRecurrenceUnit(),
+                request.getRecurrenceInterval(),
                 request.getParticipants(),
-                request.getShares());
-        return ResponseEntity.ok("Expense with id " + expense.getId() + " created");
-    }
+                request.getShares()
+        );
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteExpense(
-            @PathVariable Long id) {
-        if (!groupService.isMemberOfGroup(userService.getCurrentUser().getId(), id)) {
-            throw new RuntimeException("You do not have permission to delete expense");
-        }
-        expenseService.deleteExpense(id);
-        return ResponseEntity.ok("Expense with id " + id + " deleted");
+        return ResponseEntity.ok("Expense created with ID: " + expense.getId());
     }
 
     @PutMapping("/{id}")
@@ -56,20 +56,41 @@ public class ExpenseController {
             @PathVariable Long id,
             @Valid @RequestBody ExpenseUpdateRequest request) {
 
-        if (!groupService.isMemberOfGroup(userService.getCurrentUser().getId(), id)) {
-            throw new RuntimeException("You do not have permission to update expense");
+        Long currentUserId = userService.getCurrentUser().getId();
+
+        if (!groupService.isMemberOfGroup(currentUserId, id)) {
+            return ResponseEntity.status(403).body("You do not have permission to update this expense.");
         }
+
         Expense expense = expenseService.updateExpense(
                 id,
+                request.getPayerId(),
+                request.getTitle(),
+                request.getType(),
                 request.getAmount(),
                 request.getCurrency(),
                 request.getDescription(),
                 request.getExpenseDate(),
+                request.getIsRecurring(),
+                request.getRecurrenceUnit(),
+                request.getRecurrenceInterval(),
                 request.getParticipants(),
                 request.getShares()
         );
 
-        return ResponseEntity.ok("Expense with id " + expense.getId() + " updated");
+        return ResponseEntity.ok("Expense updated with ID: " + expense.getId());
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteExpense(@PathVariable Long id) {
+        Long currentUserId = userService.getCurrentUser().getId();
+
+        if (!groupService.isMemberOfGroup(currentUserId, id)) {
+            return ResponseEntity.status(403).body("You do not have permission to delete this expense.");
+        }
+
+        expenseService.deleteExpense(id);
+        return ResponseEntity.ok("Expense deleted with ID: " + id);
     }
 
     @GetMapping("/group/{groupId}")
@@ -77,9 +98,12 @@ public class ExpenseController {
             @PathVariable Long groupId,
             @RequestParam(required = false) String month
     ) {
-        if (!groupService.isMemberOfGroup(userService.getCurrentUser().getId(), groupId)) {
-            throw new RuntimeException("You do not have permission to view the expenses.");
+        Long currentUserId = userService.getCurrentUser().getId();
+
+        if (!groupService.isMemberOfGroup(currentUserId, groupId)) {
+            return ResponseEntity.status(403).body("You do not have permission to view expenses of this group.");
         }
+
         return ResponseEntity.ok(expenseService
                 .getExpensesByGroupIdAndMonth(groupId, month)
                 .stream()

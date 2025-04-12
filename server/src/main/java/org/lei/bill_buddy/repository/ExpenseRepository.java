@@ -16,6 +16,8 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
 
     List<Expense> findByGroupIdAndExpenseDateBetweenAndDeletedFalse(Long groupId, LocalDateTime start, LocalDateTime end);
 
+    List<Expense> findByIsRecurringTrueAndDeletedFalse();
+
     @Query("SELECT e.id FROM Expense e WHERE e.group.id = :groupId AND e.deleted = false")
     List<Long> findIdsByGroupIdAndDeletedFalse(@Param("groupId") Long groupId);
 
