@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Form, Input, Button, Alert, Row, Col } from 'antd';
+import { Form, Input, Button, Alert, Row, Col, Spin } from 'antd';
 import { motion } from 'framer-motion';
 import { LockOutlined, MailOutlined } from '@ant-design/icons';
 import AuthHeader from '../components/AuthHeader';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../stores/authStore';
+import api from '../util/axiosConfig';
 
 const formVariants = {
     hidden: { opacity: 0, y: 20 },
@@ -15,6 +16,7 @@ export default function RegisterPage() {
     const [form] = Form.useForm();
     const { register, isLoading, error } = useAuthStore();
     const [isFormValid, setIsFormValid] = useState(false);
+    const [checkingEmail, setCheckingEmail] = useState(false);
     const navigate = useNavigate();
 
     // form check
@@ -39,7 +41,7 @@ export default function RegisterPage() {
             animate="visible"
             variants={formVariants}
             transition={{ duration: 0.5 }}
-            className="h-screen w-screen overflow-auto"
+            className="h-screen w-screen"
         >
             <AuthHeader />
             <motion.div
@@ -61,10 +63,36 @@ export default function RegisterPage() {
                             label="Email"
                             name="email"
                             rules={[
-                                { required: true, message: 'Please input your email!' },
                                 {
-                                    type: 'email',
-                                    message: 'Please input a valid email!',
+                                    validator: async (_, value) => {
+                                        if (!value) {
+                                            return Promise.reject(new Error('Please input your email!'));
+                                        }
+                                        else if (!/^[\w-]+@([\w-]+\.)+[\w-]{2,4}$/.test(value)) {
+                                            return Promise.reject(new Error('Please input a valid email!'));
+                                        }
+                                        return;
+                                    },
+                                },
+                                {
+                                    validator: async (_, value) => {
+                                        if (!value || !/^[\w-]+@([\w-]+\.)+[\w-]{2,4}$/.test(value)) {
+                                            return;
+                                        }
+
+                                        try {
+                                            setCheckingEmail(true);
+                                            const res = await api.get(`/auth/check-email?email=${value}`);
+                                            if (!res.data.available) {
+                                                return Promise.reject(new Error('This email is already registered.'));
+                                            }
+                                        } catch (err) {
+                                        } finally {
+                                            setCheckingEmail(false);
+                                        }
+
+                                        return Promise.resolve();
+                                    },
                                 },
                             ]}
                         >
@@ -72,6 +100,7 @@ export default function RegisterPage() {
                                 prefix={<MailOutlined className="text-gray-300" />}
                                 size="large"
                                 allowClear
+                                suffix={checkingEmail ? <Spin size="small" /> : null}
                             />
                         </Form.Item>
 

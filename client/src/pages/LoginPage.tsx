@@ -54,7 +54,7 @@ export default function LoginPage() {
             animate="visible"
             variants={formVariants}
             transition={{ duration: 0.5 }}
-            className="h-screen w-screen overflow-auto"
+            className="h-screen w-scree"
         >
             <AuthHeader />
             <motion.div

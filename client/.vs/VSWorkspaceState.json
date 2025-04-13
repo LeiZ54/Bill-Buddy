@@ -2,8 +2,12 @@
   "ExpandedNodes": [
     "",
     "\\src",
-    "\\src\\pages"
+    "\\src\\components",
+    "\\src\\pages",
+    "\\src\\routes",
+    "\\src\\stores",
+    "\\src\\util"
   ],
-  "SelectedNode": "\\src\\pages\\LoginPage.tsx",
+  "SelectedNode": "\\src\\components\\LinkInviteModal.tsx",
   "PreviewInSolutionExplorer": false
 }

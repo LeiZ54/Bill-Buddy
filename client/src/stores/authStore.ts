@@ -91,11 +91,21 @@ const useAuthStore = create<AuthState>()(
                 }
             },
 
-            logout: () => set({ token: null, email: null, id: null, name: null, exp: null }),
+            logout: () => {
+                set({ token: null, email: null, id: null, name: null, exp: null });
+                localStorage.removeItem('auth-storage');
+            },
             resetError: () => set({ error: null }),
         }),
         {
             name: 'auth-storage', // localStorage key
+            partialize: (state) => ({
+                token: state.token,
+                email: state.email,
+                id: state.id,
+                name: state.name,
+                exp: state.exp,
+            }),
         }
     )
 );

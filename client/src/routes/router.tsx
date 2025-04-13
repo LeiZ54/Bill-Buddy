@@ -10,6 +10,10 @@ import FriendsPage from '../pages/FriendsPage';
 import GroupsPage from '../pages/GroupsPage';
 import HistoryPage from '../pages/HistoryPage';
 import AccountPage from '../pages/AccountPage';
+import GroupDetailPage from '../pages/GroupDetailPage';
+import GroupSettingPage from '../pages/GroupSettingPage';
+import InviteLinkPage from '../pages/InviteLinkPage';
+import AddPage from '../pages/AddPage';
 
 export const router = createBrowserRouter([
     {
@@ -23,13 +27,20 @@ export const router = createBrowserRouter([
                         path: "/",
                         element: <HomePage />,
                         children: [
-                            { index: true, element: <Navigate to="/groups" replace /> },
+                            {index: true, element: <Navigate to="/groups" replace />},
                             { path: "friends", element: <FriendsPage /> },
-                            { path: "groups", element: <GroupsPage /> },
+                            {
+                                path: "groups", children: [
+                                    { index: true, element: <GroupsPage /> },
+                                    { path: "detail", element: <GroupDetailPage /> },
+                                    { path: "setting", element: <GroupSettingPage /> }
+                                ]
+                            },
                             { path: "history", element: <HistoryPage /> },
                             { path: "account", element: <AccountPage /> }
                         ]
-                    }
+                    },
+                    { path: "add", element: <AddPage /> },
                 ]
             },
             {
@@ -43,6 +54,10 @@ export const router = createBrowserRouter([
             {
                 path: "forgot",
                 element: <ForgotPasswordPage />,
+            },
+            {
+                path: "inviteLink",
+                element: <InviteLinkPage />,
             },
             {
                 path: "*",
