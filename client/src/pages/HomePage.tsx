@@ -85,7 +85,7 @@ export default function HomePage() {
                 <Content className="bg-white flex-1 overflow-y-auto">
                     <motion.div
                         variants={contentVariants}
-                        className="p-4  min-h-full"
+                        className="min-h-full"
                     >
                         <Outlet />
                     </motion.div>
