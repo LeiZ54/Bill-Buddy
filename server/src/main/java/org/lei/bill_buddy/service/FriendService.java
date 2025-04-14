@@ -93,7 +93,7 @@ public class FriendService {
 
         if (friendRepository.existsByUserAndFriendAndDeletedFalse(user, friend)) {
             log.warn("Friendship already exists: user={}, friend={}", user.getId(), friend.getId());
-            throw new IllegalStateException("You are already friends.");
+            return;
         }
 
         Friend userToFriend = new Friend();
@@ -112,6 +112,15 @@ public class FriendService {
         friendRepository.save(friendToUser);
 
         log.info("Friendship created successfully between {} and {}", user.getId(), friend.getId());
+    }
+
+    public void addFriends(User user, List<User> friends) {
+        for (User friend : friends) {
+            if (!user.getId().equals(friend.getId()) &&
+                    !friendRepository.existsByUserAndFriendAndDeletedFalse(user, friend)) {
+                addFriend(user, friend);
+            }
+        }
     }
 
     @Transactional(readOnly = true)

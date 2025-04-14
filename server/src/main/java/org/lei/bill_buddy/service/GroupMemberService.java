@@ -21,17 +21,24 @@ public class GroupMemberService {
     private final UserService userService;
     private final GroupService groupService;
     private final ExpenseService expenseService;
+    private final FriendService friendService;
 
     @Transactional
     public void addMemberToGroup(Long groupId, Long userId) {
         log.info("Adding user {} to group {}", userId, groupId);
         Group group = groupService.getGroupById(groupId);
+        if (group == null) {
+            log.warn("Group {} does not exist", groupId);
+            throw new RuntimeException("Group not found with id: " + groupId);
+        }
         User user = userService.getUserById(userId);
         if (user == null) {
+            log.warn("User {} does not exist", userId);
             throw new RuntimeException("User not found with id: " + userId);
         }
 
         if (groupService.isMemberOfGroup(userId, groupId)) {
+            log.warn("User {} is already member of group {}", userId, groupId);
             throw new RuntimeException("User already in this group");
         }
 
@@ -41,6 +48,11 @@ public class GroupMemberService {
         gm.setJoinedAt(LocalDateTime.now());
         groupMemberRepository.save(gm);
         groupService.groupUpdated(group);
+
+        List<User> existingMembers = getMembersOfGroup(groupId).stream()
+                .filter(member -> !member.getId().equals(userId))
+                .toList();
+        friendService.addFriends(user, existingMembers);
 
         log.info("User {} added to group {}", userId, groupId);
     }

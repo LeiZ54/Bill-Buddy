@@ -59,7 +59,7 @@ public class GroupService {
     public Group getGroupById(Long groupId) {
         log.debug("Fetching group by ID: {}", groupId);
         return groupRepository.findByIdAndDeletedFalse(groupId)
-                .orElseThrow(() -> new RuntimeException("Group not found with id: " + groupId));
+                .orElse(null);
     }
 
     public Group updateGroup(Long groupId, String newName, String defaultCurrency, String newType) {
