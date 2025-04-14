@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.lei.bill_buddy.enums.Currency;
+import org.lei.bill_buddy.enums.GroupType;
 
 import java.time.LocalDateTime;
 
@@ -24,8 +25,9 @@ public class Group {
     @JoinColumn(name = "created_by", nullable = false)
     private User creator;
 
-    @Column
-    private String type;
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private GroupType type;
 
     @Column(name = "default_currency", nullable = false, length = 10)
     @Enumerated(EnumType.STRING)

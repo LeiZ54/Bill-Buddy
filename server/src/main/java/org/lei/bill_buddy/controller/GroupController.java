@@ -164,6 +164,6 @@ public class GroupController {
     }
 
     private String generateInvitationLink(Group group) {
-        return clientUrl + "/inviteLink?token=" + jwtUtil.generateInviteToken(group.getId(), group.getName(), group.getType());
+        return clientUrl + "/inviteLink?token=" + jwtUtil.generateInviteToken(group.getId(), group.getName(), group.getType().name());
     }
 }

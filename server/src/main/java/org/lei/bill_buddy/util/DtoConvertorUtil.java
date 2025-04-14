@@ -62,7 +62,7 @@ public class DtoConvertorUtil {
         GroupDTO groupDTO = new GroupDTO();
         groupDTO.setGroupId(group.getId());
         groupDTO.setGroupName(group.getName());
-        groupDTO.setType(group.getType());
+        groupDTO.setType(group.getType().name());
         groupDTO.setDefaultCurrency(group.getDefaultCurrency().name());
         return groupDTO;
     }
@@ -73,7 +73,7 @@ public class DtoConvertorUtil {
         GroupDetailsDTO dto = new GroupDetailsDTO();
         dto.setGroupId(group.getId());
         dto.setGroupName(group.getName());
-        dto.setType(group.getType());
+        dto.setType(group.getType().name());
         dto.setDefaultCurrency(group.getDefaultCurrency().name());
         dto.setOwesCurrentUser(formatExpenseSummary(expenseSummary.getUserIds(), expenseSummary.getOwesCurrentUser()));
         dto.setCurrentUserOwes(formatExpenseSummary(expenseSummary.getUserIds(), expenseSummary.getCurrentUserOwes()));

@@ -3,6 +3,7 @@ package org.lei.bill_buddy.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.lei.bill_buddy.enums.Currency;
+import org.lei.bill_buddy.enums.GroupType;
 import org.lei.bill_buddy.model.Group;
 import org.lei.bill_buddy.model.GroupMember;
 import org.lei.bill_buddy.model.User;
@@ -29,12 +30,21 @@ public class GroupService {
         log.debug("Group updated: {}", group.getId());
     }
 
-    public Group createGroup(String groupName, String type, String defaultCurrency, User creator) {
+    public Group createGroup(String groupName, String typeStr, String defaultCurrency, User creator) {
         log.info("Creating group: {} by user {}", groupName, creator.getId());
         Group group = new Group();
         group.setName(groupName);
         group.setCreator(creator);
+
+        GroupType type;
+        try {
+            type = GroupType.valueOf(typeStr.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            log.warn("Unknown group type '{}', defaulting to OTHER in group creating", typeStr);
+            type = GroupType.OTHER;
+        }
         group.setType(type);
+
         Currency currencyEnum;
         try {
             currencyEnum = Currency.valueOf(defaultCurrency.toUpperCase());
@@ -69,7 +79,14 @@ public class GroupService {
             group.setName(newName);
         }
         if (newType != null && !newType.isEmpty()) {
-            group.setType(newType);
+            GroupType type;
+            try {
+                type = GroupType.valueOf(newType.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                log.warn("Unknown group type '{}', defaulting to OTHER in group updating", newType);
+                type = GroupType.OTHER;
+            }
+            group.setType(type);
         }
         if (defaultCurrency != null && !defaultCurrency.isEmpty()) {
             Currency currencyEnum;
