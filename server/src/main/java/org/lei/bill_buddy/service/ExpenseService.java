@@ -3,6 +3,7 @@ package org.lei.bill_buddy.service;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.lei.bill_buddy.enums.Currency;
 import org.lei.bill_buddy.enums.ExpenseType;
 import org.lei.bill_buddy.enums.RecurrenceUnit;
 import org.lei.bill_buddy.model.*;
@@ -17,14 +18,15 @@ import java.time.YearMonth;
 import java.util.*;
 
 @Slf4j
-@RequiredArgsConstructor
 @Service
+@RequiredArgsConstructor
 public class ExpenseService {
 
     private final ExpenseRepository expenseRepository;
     private final ExpenseShareRepository expenseShareRepository;
     private final GroupService groupService;
     private final UserService userService;
+    private final ExchangeRateService exchangeRateService;
 
     @Transactional
     public List<Expense> getExpensesByGroupId(Long groupId) {
@@ -70,20 +72,30 @@ public class ExpenseService {
         try {
             type = ExpenseType.valueOf(typeStr.toUpperCase());
         } catch (IllegalArgumentException e) {
-            log.warn("Unknown expense type '{}', defaulting to OTHER", typeStr);
+            log.warn("Unknown expense type '{}', defaulting to OTHER in expense creating", typeStr);
             type = ExpenseType.OTHER;
         }
 
+        Currency groupCurrency = group.getDefaultCurrency();
+        BigDecimal finalAmount = amount;
+
+        if (!currency.equalsIgnoreCase(groupCurrency.name())) {
+            log.info("Converting {} {} to {}", amount, currency, groupCurrency.name());
+            BigDecimal rate = exchangeRateService.getExchangeRate(currency, groupCurrency.name());
+            finalAmount = exchangeRateService.convert(amount, rate);
+            shareAmounts.replaceAll(share -> exchangeRateService.convert(share, rate));
+        }
+
         log.info("Creating expense: groupId={}, payerId={}, title={}, type={}, amount={}, currency={}, description={}, date={}, isRecurring={}, recurrenceUnit={}, recurrenceInterval={}, participants={}",
-                groupId, payerId, title, type, amount, currency, description, expenseDate, isRecurring, recurrenceUnit, recurrenceInterval, participantIds);
+                groupId, payerId, title, type, finalAmount, groupCurrency, description, expenseDate, isRecurring, recurrenceUnit, recurrenceInterval, participantIds);
 
         Expense expense = new Expense();
         expense.setGroup(group);
         expense.setPayer(payer);
         expense.setTitle(title);
         expense.setType(type);
-        expense.setAmount(amount);
-        expense.setCurrency(currency);
+        expense.setAmount(finalAmount);
+        expense.setCurrency(groupCurrency);
         expense.setDescription(description);
         expense.setExpenseDate(expenseDate);
         expense.setIsRecurring(isRecurring);
@@ -91,7 +103,7 @@ public class ExpenseService {
         expense.setRecurrenceInterval(recurrenceInterval);
 
         Expense savedExpense = expenseRepository.save(expense);
-        distributeShares(savedExpense, participantIds, shareAmounts, amount);
+        distributeShares(savedExpense, participantIds, shareAmounts, finalAmount);
         groupService.groupUpdated(group);
 
         log.info("Expense created successfully: id={}", savedExpense.getId());
@@ -146,7 +158,16 @@ public class ExpenseService {
         if (payerId != null) expense.setPayer(userService.getUserById(payerId));
         if (title != null && !title.isEmpty()) expense.setTitle(title);
         if (amount != null) expense.setAmount(amount);
-        if (currency != null && !currency.isEmpty()) expense.setCurrency(currency);
+        if (currency != null && !currency.isEmpty()) {
+            Currency currencyEnum;
+            try {
+                currencyEnum = Currency.valueOf(currency.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                log.warn("Unsupported currency '{}', defaulting to USD in expense updating", currency);
+                currencyEnum = Currency.USD;
+            }
+            expense.setCurrency(currencyEnum);
+        }
         if (description != null && !description.isEmpty()) expense.setDescription(description);
         if (expenseDate != null) expense.setExpenseDate(expenseDate);
         if (isRecurring != null) expense.setIsRecurring(isRecurring);
@@ -168,7 +189,7 @@ public class ExpenseService {
     }
 
     @Transactional
-    public Expense duplicateExpense(Expense original) {
+    public void duplicateExpense(Expense original) {
         Expense clone = new Expense();
         clone.setTitle(original.getTitle());
         clone.setGroup(original.getGroup());
@@ -202,7 +223,6 @@ public class ExpenseService {
             expenseShareRepository.save(copy);
         }
 
-        return saved;
     }
 
 

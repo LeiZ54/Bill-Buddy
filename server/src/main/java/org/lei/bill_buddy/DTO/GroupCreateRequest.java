@@ -9,4 +9,6 @@ public class GroupCreateRequest {
     private String groupName;
     @NotBlank
     private String type;
+    @NotBlank
+    private String defaultCurrency;
 }

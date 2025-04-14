@@ -10,6 +10,7 @@ public class GroupDetailsDTO {
     private Long groupId;
     private String groupName;
     private String type;
+    private String defaultCurrency;
     private Map<String, BigDecimal> owesCurrentUser;
     private Map<String, BigDecimal> currentUserOwes;
 }
