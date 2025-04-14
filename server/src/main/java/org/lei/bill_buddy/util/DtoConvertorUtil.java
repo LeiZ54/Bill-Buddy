@@ -46,7 +46,7 @@ public class DtoConvertorUtil {
         expenseDTO.setTitle(expense.getTitle());
         expenseDTO.setAmount(expense.getAmount());
         expenseDTO.setDescription(expense.getDescription());
-        expenseDTO.setCurrency(expense.getCurrency());
+        expenseDTO.setCurrency(expense.getCurrency().name());
         expenseDTO.setPayer(convertUserToUserDTO(expense.getPayer()));
         expenseDTO.setShares(shares);
         expenseDTO.setExpenseDate(expense.getExpenseDate());
@@ -63,6 +63,7 @@ public class DtoConvertorUtil {
         groupDTO.setGroupId(group.getId());
         groupDTO.setGroupName(group.getName());
         groupDTO.setType(group.getType());
+        groupDTO.setDefaultCurrency(group.getDefaultCurrency().name());
         return groupDTO;
     }
 
@@ -73,6 +74,7 @@ public class DtoConvertorUtil {
         dto.setGroupId(group.getId());
         dto.setGroupName(group.getName());
         dto.setType(group.getType());
+        dto.setDefaultCurrency(group.getDefaultCurrency().name());
         dto.setOwesCurrentUser(formatExpenseSummary(expenseSummary.getUserIds(), expenseSummary.getOwesCurrentUser()));
         dto.setCurrentUserOwes(formatExpenseSummary(expenseSummary.getUserIds(), expenseSummary.getCurrentUserOwes()));
         return dto;

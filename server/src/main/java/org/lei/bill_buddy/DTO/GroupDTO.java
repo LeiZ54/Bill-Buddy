@@ -7,4 +7,5 @@ public class GroupDTO {
     private Long groupId;
     private String groupName;
     private String type;
+    private String defaultCurrency;
 }

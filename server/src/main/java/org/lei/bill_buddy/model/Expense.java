@@ -3,6 +3,7 @@ package org.lei.bill_buddy.model;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.lei.bill_buddy.enums.Currency;
 import org.lei.bill_buddy.enums.ExpenseType;
 import org.lei.bill_buddy.enums.RecurrenceUnit;
 
@@ -33,7 +34,8 @@ public class Expense {
     private BigDecimal amount;
 
     @Column(nullable = false, length = 10)
-    private String currency;
+    @Enumerated(EnumType.STRING)
+    private Currency currency = Currency.USD;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

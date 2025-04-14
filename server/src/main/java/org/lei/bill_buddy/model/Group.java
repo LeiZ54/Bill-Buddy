@@ -3,6 +3,7 @@ package org.lei.bill_buddy.model;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.lei.bill_buddy.enums.Currency;
 
 import java.time.LocalDateTime;
 
@@ -11,6 +12,7 @@ import java.time.LocalDateTime;
 @Setter
 @Table(name = "groups_table")
 public class Group {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -24,6 +26,10 @@ public class Group {
 
     @Column
     private String type;
+
+    @Column(name = "default_currency", nullable = false, length = 10)
+    @Enumerated(EnumType.STRING)
+    private Currency defaultCurrency = Currency.USD;
 
     @Column(nullable = false)
     private Boolean deleted = false;
@@ -39,4 +45,3 @@ public class Group {
         this.updatedAt = LocalDateTime.now();
     }
 }
-

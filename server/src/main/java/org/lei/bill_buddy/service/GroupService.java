@@ -2,6 +2,7 @@ package org.lei.bill_buddy.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.lei.bill_buddy.enums.Currency;
 import org.lei.bill_buddy.model.Group;
 import org.lei.bill_buddy.model.GroupMember;
 import org.lei.bill_buddy.model.User;
@@ -13,7 +14,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Slf4j
 @Transactional
@@ -22,7 +22,6 @@ import java.util.List;
 public class GroupService {
     private final GroupRepository groupRepository;
     private final GroupMemberRepository groupMemberRepository;
-    private final UserService userService;
 
     public void groupUpdated(Group group) {
         group.setUpdatedAt(LocalDateTime.now());
@@ -30,17 +29,20 @@ public class GroupService {
         log.debug("Group updated: {}", group.getId());
     }
 
-    public Group createGroup(String groupName, String type, Long creatorId) {
-        log.info("Creating group: {} by user {}", groupName, creatorId);
-        User creator = userService.getUserById(creatorId);
-        if (creator == null) {
-            throw new RuntimeException("User not found with id: " + creatorId);
-        }
-
+    public Group createGroup(String groupName, String type, String defaultCurrency, User creator) {
+        log.info("Creating group: {} by user {}", groupName, creator.getId());
         Group group = new Group();
         group.setName(groupName);
         group.setCreator(creator);
         group.setType(type);
+        Currency currencyEnum;
+        try {
+            currencyEnum = Currency.valueOf(defaultCurrency.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            log.warn("Unsupported currency '{}', defaulting to USD in group creating", defaultCurrency);
+            currencyEnum = Currency.USD;
+        }
+        group.setDefaultCurrency(currencyEnum);
         Group savedGroup = groupRepository.save(group);
 
         GroupMember gm = new GroupMember();
@@ -60,7 +62,7 @@ public class GroupService {
                 .orElseThrow(() -> new RuntimeException("Group not found with id: " + groupId));
     }
 
-    public Group updateGroup(Long groupId, String newName, String newType) {
+    public Group updateGroup(Long groupId, String newName, String defaultCurrency, String newType) {
         log.info("Updating group {} with name: {}, type: {}", groupId, newName, newType);
         Group group = getGroupById(groupId);
         if (newName != null && !newName.isEmpty()) {
@@ -68,6 +70,16 @@ public class GroupService {
         }
         if (newType != null && !newType.isEmpty()) {
             group.setType(newType);
+        }
+        if (defaultCurrency != null && !defaultCurrency.isEmpty()) {
+            Currency currencyEnum;
+            try {
+                currencyEnum = Currency.valueOf(defaultCurrency.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                log.warn("Unsupported currency '{}', defaulting to USD in group updating", defaultCurrency);
+                currencyEnum = Currency.USD;
+            }
+            group.setDefaultCurrency(currencyEnum);
         }
         return groupRepository.save(group);
     }

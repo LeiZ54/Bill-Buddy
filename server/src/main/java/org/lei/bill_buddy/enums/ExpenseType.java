@@ -11,5 +11,6 @@ public enum ExpenseType {
     GIFT,
     SUBSCRIPTION,
     SETTLE_UP,
+    UTILITIES,
     OTHER
 }

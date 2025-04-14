@@ -31,7 +31,6 @@ public class GroupController {
     private final GroupService groupService;
     private final GroupMemberService groupMemberService;
     private final UserService userService;
-    private final ExpenseService expenseService;
     private final JwtUtil jwtUtil;
     private final DtoConvertorUtil dtoConvertor;
     private final EmailProducer emailProducer;
@@ -42,7 +41,7 @@ public class GroupController {
 
     @PostMapping
     public ResponseEntity<?> createGroup(@Valid @RequestBody GroupCreateRequest request) {
-        Group newGroup = groupService.createGroup(request.getGroupName(), request.getType(), userService.getCurrentUser().getId());
+        Group newGroup = groupService.createGroup(request.getGroupName(), request.getType(), request.getDefaultCurrency(), userService.getCurrentUser());
         return ResponseEntity.ok(dtoConvertor.convertGroupToGroupDTO(newGroup));
     }
 
@@ -57,7 +56,7 @@ public class GroupController {
         if (!groupService.isMemberOfGroup(userService.getCurrentUser().getId(), groupId)) {
             throw new RuntimeException("You do not have permission to update this group.");
         }
-        Group updated = groupService.updateGroup(groupId, request.getNewName(), request.getNewType());
+        Group updated = groupService.updateGroup(groupId, request.getNewName(), request.getNewDefaultCurrency(), request.getNewType());
         return ResponseEntity.ok(dtoConvertor.convertGroupToGroupDTO(updated));
     }
 
