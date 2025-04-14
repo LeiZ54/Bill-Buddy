@@ -4,10 +4,10 @@ import lombok.Getter;
 
 @Getter
 public enum GroupType {
-    TRIP("https://ibb.co/prJfHycy"),
-    PARTY("https://ibb.co/8nDc69Nq"),
-    DAILY("https://ibb.co/C5MdgbTY"),
-    OTHER("https://ibb.co/QFzt0mxn");
+    TRIP("https://i.ibb.co/XkS7n818/GROUP-TRIP.png"),
+    PARTY("https://i.ibb.co/LDz5n1Ym/GROUP-PARTY.png"),
+    DAILY("https://i.ibb.co/gMP1NSBf/GROUP-DAILY.png"),
+    OTHER("https://i.ibb.co/GvBNmPrk/GROUP-OTHER.png");
 
     private final String imageUrl;
 

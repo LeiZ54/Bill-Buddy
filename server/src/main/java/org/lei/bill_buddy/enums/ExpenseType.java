@@ -4,18 +4,18 @@ import lombok.Getter;
 
 @Getter
 public enum ExpenseType {
-    FOOD("https://ibb.co/pvjLBFp8"),
-    TRANSPORT("https://ibb.co/xKkyWR1W"),
-    HOUSING("https://ibb.co/WNjT0yq0"),
-    ENTERTAINMENT("https://ibb.co/PsgVQYzG"),
-    HEALTH("https://ibb.co/wZQSPhxV"),
-    SHOPPING("https://ibb.co/SXfTMZDw"),
-    EDUCATION("https://ibb.co/mrQkmgkc"),
-    GIFT("https://ibb.co/S7MqpGQv"),
-    SUBSCRIPTION("https://ibb.co/k6krgBgn"),
-    SETTLE_UP("https://ibb.co/J02sgZT"),
-    UTILITIES("https://ibb.co/99G4P0ch"),
-    OTHER("https://ibb.co/TM8RtfDp");
+    FOOD("https://i.ibb.co/RpTDkwWm/FOOD.png"),
+    TRANSPORT("https://i.ibb.co/LDFMm2xm/TRANSPORT.png"),
+    HOUSING("https://i.ibb.co/CpDr67N6/HOUSING.png"),
+    ENTERTAINMENT("https://i.ibb.co/4wp0dfgR/ENTERTAINMENT.png"),
+    HEALTH("https://i.ibb.co/Kcs2fx3d/HEALTH.png"),
+    SHOPPING("https://i.ibb.co/BVnDQYH2/SHOPPING.png"),
+    EDUCATION("https://i.ibb.co/fVmfbLfx/EDUCATION.png"),
+    GIFT("https://i.ibb.co/5xSqVwYc/GIFT.png"),
+    SUBSCRIPTION("https://i.ibb.co/Hp1MD4Dv/SUBSCRIPTION.png"),
+    SETTLE_UP("https://i.ibb.co/DskRTdF/SETTLE-UP.png"),
+    UTILITIES("https://i.ibb.co/VW3C6GJx/UTILITIES.png"),
+    OTHER("https://i.ibb.co/F4wJzrkN/OTHER.png");
 
     private final String imageUrl;
 
