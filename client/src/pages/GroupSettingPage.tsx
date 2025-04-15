@@ -8,10 +8,12 @@ import { useNavigate } from 'react-router-dom';
 import CreateGroupModal from '../components/CreateGroupModal';
 import EmailInviteModal from '../components/EmailInviteModal';
 import LinkInviteModal from '../components/LinkInviteModal';
+import useAuthStore from '../stores/authStore';
 
 const GroupSettingPage = () => {
 
-    const { activeGroup, isLoading, error, fetchMember, members, resetError, getUrlByType } = useGroupStore();
+    const { activeGroup, isLoading, error, fetchMember, members, resetError } = useGroupStore();
+    const { groupType } = useAuthStore();
     const navigate = useNavigate();
     if (!activeGroup) {
         return (
@@ -77,7 +79,7 @@ const GroupSettingPage = () => {
                 <div className="flex justify-between gap-4 mb-4">
                     <div>
                         <Avatar
-                            src={getUrlByType(activeGroup.type)}
+                            src={groupType[activeGroup.type]}
                             size={40}
                             className="flex-shrink-0 mr-4"
                         />

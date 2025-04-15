@@ -3,6 +3,7 @@ import { Modal, Spin, Alert, Button, message, Avatar } from 'antd';
 import { jwtDecode } from 'jwt-decode';
 import { useGroupStore } from '../stores/groupStore';
 import api from '../util/axiosConfig';
+import useAuthStore from '../stores/authStore';
 
 interface InvitationModalProps {
     visible: boolean;
@@ -17,12 +18,13 @@ interface InvitationData {
 const AcceptInvitationModal = ({ visible, onCancel }: InvitationModalProps) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [groupType, setGroupType] = useState("other");
+    const [type, setType] = useState("other");
     const [groupName, setGroupName] = useState("");
     const [accepting, setAccepting] = useState(false);
     const [hasJoined, setHasJoined] = useState(false);
 
-    const { inviteToken, fetchGroups, getUrlByType } = useGroupStore();
+    const { inviteToken, fetchGroups } = useGroupStore();
+    const { groupType } = useAuthStore();
 
     useEffect(() => {
         const checkInvitation = async () => {
@@ -32,7 +34,7 @@ const AcceptInvitationModal = ({ visible, onCancel }: InvitationModalProps) => {
                 const decoded = jwtDecode<InvitationData>(inviteToken || '');
                 setHasJoined(response.data.joined);
                 setGroupName(decoded.groupName);
-                setGroupType(decoded.groupType || 'other');
+                setType(decoded.groupType || 'other');
             } catch (err: any) {
                 setError(err?.response?.data?.error || "Network Error!");
             } finally {
@@ -88,7 +90,7 @@ const AcceptInvitationModal = ({ visible, onCancel }: InvitationModalProps) => {
 
                         <div className="flex items-center">
                             <Avatar
-                                src={getUrlByType(groupType)}
+                                src={groupType[type]}
                                 size={40}
                                 className="flex-shrink-0 mr-4"
                             />

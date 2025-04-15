@@ -3,6 +3,7 @@ import { Avatar, Typography } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { GroupData } from '../util/util';
 import { useGroupStore } from '../stores/groupStore';
+import useAuthStore from '../stores/authStore';
 
 const { Text } = Typography;
 
@@ -11,9 +12,10 @@ const itemVariants = {
     visible: { opacity: 1, y: 0 }
 };
 
-const GroupSection = ({ id, name, type, items, netBalance }: GroupData) => {
+const GroupSection = ({ id, name, type, items, netBalance, currency }: GroupData) => {
     const navigate = useNavigate();
-    const { getUrlByType, setActiveGroup, resetError } = useGroupStore();
+    const { setActiveGroup, resetError } = useGroupStore();
+    const { groupType } = useAuthStore();
     return (
         <motion.section
             initial={{ opacity: 0 }}
@@ -22,14 +24,14 @@ const GroupSection = ({ id, name, type, items, netBalance }: GroupData) => {
             whileTap={{ scale: 0.98 }}
             className="flex justify-between items-start p-4 mb-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer"
             onClick={() => {
-                setActiveGroup({ id, name, type, items, netBalance });
+                setActiveGroup({ id, name, type, items, netBalance, currency });
                 navigate('detail');
                 resetError();
             }}
         >
             {/* left */}
             <Avatar
-                src={getUrlByType(type)}
+                src={groupType[type]}
                 size={40}
                 className="flex-shrink-0 mr-4"
             />
@@ -56,9 +58,6 @@ const GroupSection = ({ id, name, type, items, netBalance }: GroupData) => {
                             variants={itemVariants}
                             className="relative pl-6"
                         >
-                            <div className="absolute left-0 top-2 w-4 h-px bg-gray-200" />
-                            <div className="absolute left-0 -top-3 w-px h-6 bg-gray-200" />
-
                             <Text className="text-sm">
                                 {item.type === 'get'
                                     ? `${item.person} owes you `
@@ -67,7 +66,7 @@ const GroupSection = ({ id, name, type, items, netBalance }: GroupData) => {
                                     type={item.type === 'get' ? 'success' : 'warning'}
                                     strong
                                 >
-                                    ${item.amount.toFixed(2)}
+                                    {currency} {item.amount.toFixed(2)}
                                 </Text>
                             </Text>
                         </motion.div>
@@ -85,7 +84,7 @@ const GroupSection = ({ id, name, type, items, netBalance }: GroupData) => {
                     strong
                     className="text-lg block"
                 >
-                    ${Math.abs(netBalance).toFixed(2)}
+                    {currency} {Math.abs(netBalance).toFixed(2)}
                 </Text>
             </div>
         </motion.section>

@@ -2,11 +2,10 @@ import { motion } from 'framer-motion';
 import Topbar from '../components/TopBar';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { Form, Input, Tag, Avatar, Checkbox, Button, DatePicker, message } from 'antd';
+import { Form, Input, Tag, Avatar, Checkbox, Button, DatePicker, message, Select } from 'antd';
 import useAuthStore from '../stores/authStore';
 import { ExpenseTypeSelectorModal, GroupSelectorModal, RecurrenceTimeSelectorModal } from '../components/AddModal';
 import { easyGroup } from '../util/util';
-import { useGroupStore } from '../stores/groupStore';
 import { useExpenseStore } from '../stores/expenseStore';
 import ExpenseSplitSection from '../components/ExpenseSplitSection';
 import api from '../util/axiosConfig';
@@ -14,11 +13,11 @@ import api from '../util/axiosConfig';
 
 const AddPage = () => {
     const navigate = useNavigate();
-    const { getUrlByType } = useGroupStore();
+    const { groupType } = useAuthStore();
     const { getRecurrenceLabel } = useExpenseStore();
     const [hideMask, setHideMask] = useState(false);
     const [form] = Form.useForm();
-    const { id } = useAuthStore();
+    const { id, currencies } = useAuthStore();
     const [loading, setLoading] = useState(false);
 
     const [step, setStep] = useState(1);
@@ -61,10 +60,11 @@ const AddPage = () => {
                 payerId: id,
                 title: allValues.title,
                 amount: parseFloat(amount),
-                currency: 'USD',
+                currency: allValues.currency,
                 description: allValues.description,
                 expenseDate: allValues.date.toISOString(),
-                participants: selectedMembers,
+                participants: splitMethod === 'unequally'
+                    ? participants : selectedMembers ,
                 shares: splitMethod === 'unequally'
                     ? shares : [],
                 type: allValues.type,
@@ -74,14 +74,12 @@ const AddPage = () => {
                 recurrenceInterval: allValues.isRecurring
                     ? allValues.recurrenceTime.recurrenceInterval : null,
             };
-            console.log(payload);
             setLoading(true);
             await api.post('/expenses', payload);
             setLoading(false);
             message.success("Add expense successfully!")
             navigate('/groups');
         } catch (err) {
-            console.log(err);
             setLoading(false);
         }
 
@@ -96,6 +94,7 @@ const AddPage = () => {
                 'title',
                 'description',
                 'isRecurring',
+                'currency',
                 ...(form.getFieldValue('isRecurring') ? ['recurrenceTime'] : []),
             ]);
             setStep(2); 
@@ -112,6 +111,7 @@ const AddPage = () => {
                 'title',
                 'description',
                 'isRecurring',
+                'currency',
                 ...(form.getFieldValue('isRecurring') ? ['recurrenceTime'] : []),
             ], { validateOnly: true }).then(
                 () => {
@@ -169,7 +169,7 @@ const AddPage = () => {
                                         {selectedGroup ? (
                                             <>
                                                 <Avatar
-                                                    src={getUrlByType(selectedGroup.type)}
+                                                    src={groupType[selectedGroup.type]}
                                                     className="flex-shrink-0 mr-2"
                                                     size={20}
                                                 />
@@ -225,6 +225,21 @@ const AddPage = () => {
                             >
                                 <DatePicker className="w-full" />
                             </Form.Item>
+
+                            <Form.Item
+                                label="Currency"
+                                name="currency"
+                                rules={[{ required: true, message: 'Please select a currency!' }]}
+                            >
+                                <Select placeholder="Select a currency">
+                                    {Object.entries(currencies).map(([code, symbol]) => (
+                                        <Select.Option key={code} value={code}>
+                                            {code} ({symbol})
+                                        </Select.Option>
+                                    ))}
+                                </Select>
+                            </Form.Item>
+
 
                             {/* Title */}
                             <Form.Item
