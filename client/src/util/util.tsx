@@ -2,8 +2,10 @@ export interface Group {
     groupId: number;
     groupName: string;
     type: string;
+    defaultCurrency: string;
     owesCurrentUser: Record<string, number>;
     currentUserOwes: Record<string, number>;
+
 }
 
 interface ExpenseItem {
@@ -18,6 +20,7 @@ export interface GroupData {
     type: string;
     items: ExpenseItem[];
     netBalance: number;
+    currency: string,
 }
 
 export interface Member {
@@ -35,19 +38,6 @@ export interface ExpenseDate {
 
 }
 
-export const expenseType = [
-    'FOOD',
-    'TRANSPORT',
-    'HOUSING',
-    'ENTERTAINMENT',
-    'HEALTH',
-    'SHOPPING',
-    'EDUCATION',
-    'GIFT',
-    'SUBSCRIPTION',
-    'SETTLE_UP',
-    'OTHER',
-];
 export const recurrenceOptions = [
     { label: 'Day', unit: 'DAY', interval: 1 },
     { label: 'Week', unit: 'WEEK', interval: 1 },

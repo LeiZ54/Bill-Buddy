@@ -19,7 +19,6 @@ interface GroupState {
     fetchGroups: (page?: number) => Promise<void>;
     loadMoreGroups: () => Promise<void>;
     resetError: () => void;
-    getUrlByType: (type: string) => string;
     fetchMember: (groupId: number) => Promise<void>;
     updateGroup: (newGroup: GroupData) => void;
     setInviteToken: (token: string | null) => void;
@@ -56,6 +55,7 @@ export const useGroupStore = create<GroupState>()(
                         name: group.groupName,
                         type: group.type,
                         netBalance,
+                        currency:group.defaultCurrency,
                         items: [
                             ...Object.entries(group.owesCurrentUser).map(([person, amount]) => ({
                                 person,
@@ -107,15 +107,6 @@ export const useGroupStore = create<GroupState>()(
                 } catch (err) {
                     set({ error: 'Failed to load more data!', isLoadingMore: false });
                 }
-            },
-
-            getUrlByType: (type: string): string => {
-                return {
-                    trip: '/group/trip.png',
-                    daily: '/group/daily.png',
-                    party: '/group/party.png',
-                    other: '/group/other.png'
-                }[type] || '/group/other.png';
             },
 
             fetchMember: async (groupId: number) => {

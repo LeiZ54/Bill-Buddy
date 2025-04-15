@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Modal, List, Spin, message, Avatar, Radio, Grid, InputNumber, Select } from 'antd';
 import api from '../util/axiosConfig';
-import { easyGroup, expenseType, recurrenceOptions } from '../util/util';
-import { useGroupStore } from '../stores/groupStore';
+import { easyGroup, recurrenceOptions } from '../util/util';
+import useAuthStore from '../stores/authStore';
 
 const { useBreakpoint } = Grid;
 
@@ -14,7 +14,7 @@ export const GroupSelectorModal = ({ open, onCancel, onSelect }: {
 }) => {
     const [groups, setGroups] = useState<easyGroup[]>([]);
     const [loading, setLoading] = useState(false);
-    const { getUrlByType } = useGroupStore();
+    const { groupType } = useAuthStore();
 
     const fetchAllGroups = async () => {
         let page = 0;
@@ -71,7 +71,7 @@ export const GroupSelectorModal = ({ open, onCancel, onSelect }: {
                                 className="cursor-pointer hover:bg-gray-100 px-2 py-1 rounded"
                             >
                                 <Avatar
-                                    src={getUrlByType(group.type)}
+                                    src={groupType[group.type]}
                                     className="flex-shrink-0 mr-4"
                                 />
                                 {group.groupName}
@@ -91,6 +91,7 @@ export const ExpenseTypeSelectorModal = ({ open, onCancel, onSelect }: {
 }) => {
     const [value, setValue] = useState<string>("other");
     const screens = useBreakpoint();
+    const { expenseTypes } = useAuthStore();
 
 
     const handleChange = (val: string) => {
@@ -111,7 +112,7 @@ export const ExpenseTypeSelectorModal = ({ open, onCancel, onSelect }: {
                 className="w-full"
             >
                 <div className={`grid grid-cols-2 gap-3 ${screens.xs ? '' : 'sm:grid-cols-4'}`}>
-                    {expenseType.map((type) => (
+                    {Object.entries(expenseTypes).map(([type, url]) => (
                         <Radio.Button
                             key={type}
                             value={type}
@@ -122,6 +123,7 @@ export const ExpenseTypeSelectorModal = ({ open, onCancel, onSelect }: {
                             }}
                         >
                             <div className="flex flex-col items-center">
+                                <Avatar src={url}/>
                                 <span className="text-gray-600">{type}</span>
                             </div>
                         </Radio.Button>

@@ -12,6 +12,10 @@ interface AuthState {
     exp: number | null;
     isLoading: boolean;
     error: string | null;
+    groupType: { [key: string]: string };
+    currencies: { [key: string]: string };
+    expenseTypes: { [key: string]: string };
+
     login: (loginEmail: string, loginPassword: string) => Promise<boolean>;
     loginWithGoogle: (googleId: string) => Promise<boolean>;
     register: (email: string, password: string, givenName: string, familyName: string) => Promise<boolean>;
@@ -29,14 +33,23 @@ const useAuthStore = create<AuthState>()(
             exp: null,
             isLoading: false,
             error: null,
+            groupType: {},
+            currencies: {},
+            expenseTypes: {},
 
             login: async (loginEmail, loginPassword) => {
                 try {
                     set({ isLoading: true, error: null });
-                    const res = await api.post('/auth/login', { email: loginEmail, password: loginPassword });
+                    let res = await api.post('/auth/login', { email: loginEmail, password: loginPassword });
                     const { token, email, id, name } = res.data;
                     const { exp } = jwtDecode(token); 
                     set({ token, email, id, name, exp });
+                    res = await api.get('/common/group-types');
+                    set({ groupType: res.data });
+                    res = await api.get('/common/currencies');
+                    set({ currencies: res.data });
+                    res = await api.get('/common/expense-types');
+                    set({ expenseTypes: res.data });
                     return true;
                 } catch (err: any) {
                     if (err.response.data.error) {
@@ -53,10 +66,16 @@ const useAuthStore = create<AuthState>()(
             loginWithGoogle: async (googleId) => {
                 try {
                     set({ isLoading: true, error: null });
-                    const res = await api.post("/auth/google", { googleId });
+                    let res = await api.post("/auth/google", { googleId });
                     const { token, email, id, name } = res.data;
                     const exp = jwtDecode(token).exp;
                     set({ token, email, id, name, exp });
+                    res = await api.get('/common/group-types');
+                    set({ groupType: res.data });
+                    res = await api.get('/common/currencies');
+                    set({ currencies: res.data });
+                    res = await api.get('/common/expense-types');
+                    set({ expenseTypes: res.data });
                     return true;
                 } catch (err) {
                     set({ error: 'Google login failed!' });
@@ -69,7 +88,7 @@ const useAuthStore = create<AuthState>()(
             register: async (registerEmail, registerPassword, registerGivenName, registerFamilyName) => {
                 try { 
                     set({ isLoading: true, error: null });
-                    const res = await api.post('/auth/register', {
+                    let res = await api.post('/auth/register', {
                         email: registerEmail,
                         password: registerPassword,
                         givenName: registerGivenName,
@@ -78,6 +97,12 @@ const useAuthStore = create<AuthState>()(
                     const { token, email, id, name } = res.data;
                     const exp = jwtDecode(token).exp;
                     set({ token, email, id, name, exp });
+                    res = await api.get('/common/group-types');
+                    set({ groupType: res.data });
+                    res = await api.get('/common/currencies');
+                    set({ currencies: res.data });
+                    res = await api.get('/common/expense-types');
+                    set({ expenseTypes: res.data });
                     return true;
                 } catch (err: any) {
                     if (err.response.data.error) {
@@ -92,7 +117,7 @@ const useAuthStore = create<AuthState>()(
             },
 
             logout: () => {
-                set({ token: null, email: null, id: null, name: null, exp: null });
+                set({ token: null, email: null, id: null, name: null, exp: null, groupType: {}, currencies: {}, expenseTypes: {} });
                 localStorage.removeItem('auth-storage');
             },
             resetError: () => set({ error: null }),
@@ -105,6 +130,9 @@ const useAuthStore = create<AuthState>()(
                 id: state.id,
                 name: state.name,
                 exp: state.exp,
+                groupType: state.groupType,
+                currencies: state.currencies,
+                expenseTypes: state.expenseTypes
             }),
         }
     )

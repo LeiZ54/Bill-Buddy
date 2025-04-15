@@ -1,19 +1,21 @@
-import { Spin, Alert } from 'antd';
+import { Alert } from 'antd';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import Topbar from '../components/TopBar';
 import { useGroupStore } from '../stores/groupStore';
 import { useEffect } from 'react';
+import useAuthStore from '../stores/authStore';
 
 export default function GroupDetailPage() {
     const {
         activeGroup,
-        getUrlByType,
         clearActiveGroup,
         resetError,
         error,
         isLoading
     } = useGroupStore();
+    const { groupType } = useAuthStore();
+
     const navigate = useNavigate();
 
     if (!activeGroup) {
@@ -66,7 +68,7 @@ export default function GroupDetailPage() {
                 {/* group */}
                 <div className="flex items-center gap-4 p-4 bg-white rounded-lg shadow">
                     <img
-                        src={getUrlByType(activeGroup.type)}
+                        src={groupType[activeGroup.type]}
                         alt={activeGroup.type}
                         className="w-16 h-16 object-contain"
                     />
