@@ -30,6 +30,8 @@ public class DtoConvertorUtil {
         UserDTO dto = new UserDTO();
         dto.setId(user.getId());
         dto.setFullName(user.getFullName());
+        dto.setGivenName(user.getGivenName());
+        dto.setFamilyName(user.getFamilyName());
         dto.setEmail(user.getEmail());
         return dto;
     }

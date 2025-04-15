@@ -45,6 +45,8 @@ public class AuthController {
         return ResponseEntity.ok(new UserLoggedInDTO(
                 user.getId(),
                 user.getFullName(),
+                user.getGivenName(),
+                user.getFamilyName(),
                 user.getEmail(),
                 jwtUtil.generateAuthToken(user.getEmail())));
     }
@@ -60,6 +62,8 @@ public class AuthController {
         return ResponseEntity.ok(new UserLoggedInDTO(
                 loggedInUser.getId(),
                 loggedInUser.getFullName(),
+                loggedInUser.getGivenName(),
+                loggedInUser.getFamilyName(),
                 loggedInUser.getEmail(),
                 jwtUtil.generateAuthToken(loggedInUser.getEmail())));
     }
@@ -87,6 +91,8 @@ public class AuthController {
         return ResponseEntity.ok(new UserLoggedInDTO(
                 user.getId(),
                 user.getFullName(),
+                user.getGivenName(),
+                user.getFamilyName(),
                 user.getEmail(),
                 jwtToken));
     }
