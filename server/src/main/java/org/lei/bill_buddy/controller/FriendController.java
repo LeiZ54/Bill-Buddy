@@ -3,6 +3,7 @@ package org.lei.bill_buddy.controller;
 import lombok.RequiredArgsConstructor;
 import org.lei.bill_buddy.DTO.FriendRequestDTO;
 import org.lei.bill_buddy.DTO.FriendsListDTO;
+import org.lei.bill_buddy.annotation.RateLimit;
 import org.lei.bill_buddy.model.Friend;
 import org.lei.bill_buddy.model.FriendRequest;
 import org.lei.bill_buddy.service.FriendService;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+@RateLimit
 @RestController
 @RequestMapping("/api/friends")
 @RequiredArgsConstructor

@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.lei.bill_buddy.DTO.ExpenseCreateRequest;
 import org.lei.bill_buddy.DTO.ExpenseUpdateRequest;
+import org.lei.bill_buddy.annotation.RateLimit;
 import org.lei.bill_buddy.model.Expense;
 import org.lei.bill_buddy.service.ExpenseService;
 import org.lei.bill_buddy.service.GroupService;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.stream.Collectors;
 
+@RateLimit
 @RestController
 @RequestMapping("/api/expenses")
 @RequiredArgsConstructor

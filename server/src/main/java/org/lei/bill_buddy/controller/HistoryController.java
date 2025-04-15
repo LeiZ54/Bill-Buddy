@@ -2,6 +2,7 @@ package org.lei.bill_buddy.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.lei.bill_buddy.DTO.HistoryDTO;
+import org.lei.bill_buddy.annotation.RateLimit;
 import org.lei.bill_buddy.model.History;
 import org.lei.bill_buddy.service.HistoryService;
 import org.lei.bill_buddy.service.UserService;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+@RateLimit
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/histories")

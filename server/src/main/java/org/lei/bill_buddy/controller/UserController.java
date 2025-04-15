@@ -3,6 +3,7 @@ package org.lei.bill_buddy.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.lei.bill_buddy.DTO.UserUpdateRequest;
+import org.lei.bill_buddy.annotation.RateLimit;
 import org.lei.bill_buddy.model.User;
 import org.lei.bill_buddy.service.UserService;
 import org.lei.bill_buddy.util.DtoConvertorUtil;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Objects;
 
+@RateLimit
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor

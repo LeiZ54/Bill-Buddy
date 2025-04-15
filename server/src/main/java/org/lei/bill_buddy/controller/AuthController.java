@@ -3,6 +3,7 @@ package org.lei.bill_buddy.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.lei.bill_buddy.DTO.*;
+import org.lei.bill_buddy.annotation.RateLimit;
 import org.lei.bill_buddy.model.User;
 import org.lei.bill_buddy.service.EmailProducer;
 import org.lei.bill_buddy.service.GoogleAuthService;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Collections;
 import java.util.Map;
 
+@RateLimit
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
@@ -97,6 +99,7 @@ public class AuthController {
                 jwtToken));
     }
 
+    @RateLimit(maxRequests = 1)
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(@RequestParam String email) {
         User user = userService.getUserByEmail(email);

@@ -1,6 +1,7 @@
 package org.lei.bill_buddy.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.lei.bill_buddy.annotation.RateLimit;
 import org.lei.bill_buddy.enums.Currency;
 import org.lei.bill_buddy.enums.ExpenseType;
 import org.lei.bill_buddy.enums.GroupType;
@@ -9,10 +10,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@RateLimit
 @RestController
 @RequestMapping("/api/common")
 @RequiredArgsConstructor

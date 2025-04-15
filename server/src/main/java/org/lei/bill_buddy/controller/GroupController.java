@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.lei.bill_buddy.DTO.EmailDTO;
 import org.lei.bill_buddy.DTO.GroupCreateRequest;
 import org.lei.bill_buddy.DTO.GroupUpdateRequest;
+import org.lei.bill_buddy.annotation.RateLimit;
 import org.lei.bill_buddy.model.Group;
 import org.lei.bill_buddy.model.User;
 import org.lei.bill_buddy.service.*;
@@ -24,6 +25,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+@RateLimit
 @RestController
 @RequestMapping("/api/groups")
 @RequiredArgsConstructor
@@ -77,6 +79,7 @@ public class GroupController {
         return ResponseEntity.ok(Map.of("inviteLink", inviteLink));
     }
 
+    @RateLimit(maxRequests = 1)
     @PostMapping("/{groupId}/invite")
     public ResponseEntity<?> inviteMemberByEmail(@PathVariable Long groupId, @RequestParam String email,
                                                  HttpServletRequest request) {
