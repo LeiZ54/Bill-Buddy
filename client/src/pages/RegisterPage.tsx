@@ -63,6 +63,7 @@ export default function RegisterPage() {
                             label="Email"
                             name="email"
                             rules={[
+                                { required: true, message: '' },
                                 {
                                     validator: async (_, value) => {
                                         if (!value) {
