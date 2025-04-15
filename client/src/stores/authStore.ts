@@ -126,7 +126,7 @@ const useAuthStore = create<AuthState>()(
                 const{familyName,givenName,email,id} = get();
                 if(familyName != newFamilyName || givenName != newGivenName || email != newEmail){
                    try{
-                       set({isLoading: true});
+                       // set({isLoading: true});
                        await api.post(`/users/${id}`, {
                            email: newEmail,
                            givenName: newGivenName,
@@ -141,7 +141,7 @@ const useAuthStore = create<AuthState>()(
                            message.error('Network Error!');
                        }
                    }finally {
-                       set({isLoading: false});
+                       // set({isLoading: false});
                    }
 
 

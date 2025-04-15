@@ -9,10 +9,10 @@ import {Typography} from 'antd';
 
 
 export default function AccountPage() {
-    const [form1] = Form.useForm();
-    const [form2] = Form.useForm();
-    const [isForm1Valid, setIsForm1Valid] = useState(false);
-    const [isForm2Valid, setIsForm2Valid] = useState(false);
+    const [inforForm] = Form.useForm();
+    const [passwordForm] = Form.useForm();
+    const [isInforFormValid, setIsInforFormValid] = useState(false);
+    const [isPasswordFormValid, setIsPasswordFormValid] = useState(false);
     const {logout, familyName, givenName, email, isLoading, updateUserInfo} = useAuthStore();
     const navigate = useNavigate();
     const {Text} = Typography;
@@ -29,17 +29,17 @@ export default function AccountPage() {
 
     const {Step} = Steps;
 
-    const values1 = Form.useWatch([], form1);
+    const values1 = Form.useWatch([], inforForm);
     useEffect(() => {
-        form1.validateFields({validateOnly: true}).then(
-            () => setIsForm1Valid(true),
-            () => setIsForm1Valid(false)
+        inforForm.validateFields({validateOnly: true}).then(
+            () => setIsInforFormValid(true),
+            () => setIsInforFormValid(false)
         );
-    }, [form1, values1]);
+    }, [inforForm, values1]);
 
     useEffect(() => {
         if (isModalOpen) {
-            form1.setFieldsValue({
+            inforForm.setFieldsValue({
                 familyName,
                 givenName,
                 email,
@@ -47,13 +47,14 @@ export default function AccountPage() {
         }
     }, [isModalOpen]);
 
-    const values2 = Form.useWatch([], form2);
+    const values2 = Form.useWatch([], passwordForm);
+
     useEffect(() => {
-        form2.validateFields({validateOnly: true}).then(
-            () => setIsForm2Valid(true),
-            () => setIsForm2Valid(false)
+        passwordForm.validateFields({validateOnly: true}).then(
+            () => setIsPasswordFormValid(true),
+            () => setIsPasswordFormValid(false)
         );
-    }, [form2, values2]);
+    }, [passwordForm, values2]);
 
     useEffect(() => {
         if (countdown > 0) {
@@ -94,7 +95,7 @@ export default function AccountPage() {
                     });
                     setIsChangePasswordModalOpen(false);
                     message.success('Password updated!');
-                    form2.resetFields();
+                    passwordForm.resetFields();
                     setCurrentStep(0);
                     break;
             }
@@ -127,17 +128,21 @@ export default function AccountPage() {
                     <Text className="text-lg text-gray-500 mt-1 text-center">{email || 'Guest User'}</Text>
                 </div>
 
-                <div className="mt-10">
-                    <Divider className="border-t-[2px] border-gray-300 my-0"/>
+                <div className="mt-10 px-4">
+                    <div className="w-[100%] mx-auto border-t border-gray-200 my-0"/>
                     <Button
                         type="text"
                         block
                         className="font-bold text-xl h-auto leading-none py-3"
-                        onClick={()=>{        setIsModalOpen(true);}}
+                        onClick={() => {
+                            setIsModalOpen(true);
+                        }}
                     >
                         Edit Information
                     </Button>
-                    <Divider className="border-t-[2px] border-gray-300 my-0"/>
+                    <div className="w-[100%] mx-auto border-t border-gray-200 my-0"/>
+
+
                     <Button
                         type="text"
                         block
@@ -148,7 +153,8 @@ export default function AccountPage() {
                     >
                         Change Password
                     </Button>
-                    <Divider className="border-t-[2px] border-gray-300 my-0"/>
+                    <div className="w-[100%] mx-auto border-t border-gray-200 my-0"/>
+
                 </div>
 
                 <Button
@@ -173,7 +179,7 @@ export default function AccountPage() {
                     footer={null}
                 >
                     <Form
-                        form={form1}
+                        form={inforForm}
                         onFinish={(values)=>{
                             updateUserInfo(values.familyName,values.givenName,values.email);
                             setIsModalOpen(false);
@@ -265,7 +271,7 @@ export default function AccountPage() {
                                 size="large"
                                 type="primary"
                                 loading={isLoading}
-                                disabled={!isForm1Valid || isLoading}
+                                disabled={!isInforFormValid || isLoading}
                             >
                                 Update
                             </Button>
@@ -278,7 +284,7 @@ export default function AccountPage() {
                     onCancel={() => {
                         setIsChangePasswordModalOpen(false);
                         setCurrentStep(0);
-                        form2.resetFields();
+                        passwordForm.resetFields();
                         setError("");
                     }}
                     footer={null}
@@ -299,7 +305,7 @@ export default function AccountPage() {
                             </Steps>
 
                             <Form
-                                form={form2}
+                                form={passwordForm}
                                 onFinish={handleSubmit}
                                 layout="vertical"
                                 autoComplete="off"
@@ -410,7 +416,7 @@ export default function AccountPage() {
                                     block
                                     size="large"
                                     loading={isLoadingPassword}
-                                    disabled={!isForm2Valid || isLoadingPassword }
+                                    disabled={!isPasswordFormValid || isLoadingPassword }
                                 >
                                     {currentStep === 0 && 'Verify'}
                                     {currentStep === 1 && 'Reset password'}
