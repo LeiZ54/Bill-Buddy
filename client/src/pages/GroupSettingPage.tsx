@@ -44,21 +44,24 @@ const GroupSettingPage = () => {
 
     return (
         <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{opacity: 0, y: 20}}
+            animate={{opacity: 1, y: 0}}
         >
             <Topbar
+
                 leftType="back"
                 leftOnClick={() => {
                     navigate("/groups/detail");
                 }}
-                title={"Group settings"}
+                title={<span className="text-xl font-bold">Group settings</span>}
+
             />
 
             <CreateGroupModal
                 open={isUpdateModaOpen}
                 onCancel={() => setisUpdateModalOpen(false)}
-                onSuccess={() => {}}
+                onSuccess={() => {
+                }}
                 isEdit
             />
 
@@ -74,21 +77,25 @@ const GroupSettingPage = () => {
                 groupId={activeGroup!.id}
             />
 
-            {/* Group Name Section */}
-            <div className="mb-8">
+
+            <div className="w-[100%] mx-auto border-t border-gray-400 my-0 mt-2"/>
+            <div className="mt-4 px-6">
                 <div className="flex justify-between gap-4 mb-4">
                     <div>
                         <Avatar
                             src={groupType[activeGroup.type]}
-                            size={40}
+                            size={60}
                             className="flex-shrink-0 mr-4"
                         />
-                        {activeGroup.name}
+                        <span className="text-xl font-semibold">{activeGroup.name}</span>
                     </div>
                     <Button
                         type="text"
-                        icon={<EditOutlined />}
-                        onClick={() => { setisUpdateModalOpen(true) } }
+                        icon={<EditOutlined className="text-blue-500" />}
+                        onClick={() => {
+                            setisUpdateModalOpen(true)
+                        }}
+                        className="text-base font-medium text-blue-500"
                     >
                         Edit
                     </Button>
@@ -96,31 +103,34 @@ const GroupSettingPage = () => {
             </div>
 
             {/* Members Section */}
-            <div className="mb-8">
+            <div className="px-4 mt-10">
                 <div className="flex-l justify-between items-center mb-4">
                     <h3 className="text-lg font-medium">Group members</h3>
+
                     <Button
                         type="text"
-                        className="w-full text-left"
-                        icon={<UserAddOutlined />}
+                        className="px-5 w-full text-left"
+                        icon={<UserAddOutlined/>}
                         size="large"
                     >
                         Add friends
                     </Button>
+                    <div className="w-[100%] mx-auto border-t border-gray-200 my-0"/>
                     <Button
                         type="text"
-                        className="w-full text-left"
+                        className="px-5 w-full text-left"
                         size="large"
-                        icon={<MailOutlined />}
-                        onClick={ ()=>setisEmailModalOpen(true)}
+                        icon={<MailOutlined/>}
+                        onClick={() => setisEmailModalOpen(true)}
                     >
                         Invite via email
                     </Button>
+                    <div className="w-[100%] mx-auto border-t border-gray-200 my-0"/>
                     <Button
                         type="text"
-                        className="w-full text-left"
+                        className="px-5 w-full text-left"
                         size="large"
-                        icon={<LinkOutlined />}
+                        icon={<LinkOutlined/>}
                         onClick={() => setisLinkModalOpen(true)}
                     >
                         Invite via link
@@ -129,50 +139,52 @@ const GroupSettingPage = () => {
 
                     {
                         error ? (
-                            < Alert message={error} type="error" className="m-4" />
+                            < Alert message={error} type="error" className="m-4"/>
                         ) : (
-                            isLoading ? <Spin /> :
-                            <List
-                                dataSource={members}
-                                renderItem={(member) => (
-                                    <List.Item className="!px-0">
-                                        <div className="flex justify-between w-full p-4">
-                                            <span className="font-medium">{member.fullName}</span>
-                                            <span className="text-gray-500 ml-2">{member.email}</span>
-                                        </div>
-                                    </List.Item>
-                                )}
-                            />
+                            isLoading ? <Spin/> :
+                                <List
+                                    dataSource={members}
+                                    renderItem={(member) => (
+                                        <List.Item className="!px-0">
+                                            <div className="flex justify-between w-full px-4 py-2">
+                                                <span className="text-xl font-medium">{member.fullName}</span>
+                                                <span className="text-gray-500 ml-2">{member.email}</span>
+                                            </div>
+                                        </List.Item>
+                                    )}
+                                />
                         )
                     }
                 </div>
-                <div className="mb-8">
-                    <h3 className="font-medium">Other function</h3>
+
+                <div className="mb-8 mt-5 ">
+                    <h3 className="text-lg font-medium">Other function</h3>
 
                     {/* Leave Group */}
                     <Button
                         type="text"
-                        icon={<LogoutOutlined />}
-                        className="w-full text-left"
+                        icon={<LogoutOutlined/>}
+                        className="mt-2 w-full text-left px-5"
                         size="large"
                     >
                         <span>Leave group</span>
                     </Button>
-
+                    <div className="w-[100%] mx-auto border-t border-gray-200 my-0"/>
                     {/* Delete Group */}
                     <Button
                         type="text"
-                        icon={<DeleteOutlined className="text-red-500" />}
-                        className="w-full text-left"
+                        icon={<DeleteOutlined className="text-red-500"/>}
+                        className="w-full text-left px-5"
                         size="large"
                     >
                         <span className="text-red-500">Delete group</span>
                     </Button>
+
                 </div>
-              
+
             </div>
 
-      
+
         </motion.div>
     );
 };

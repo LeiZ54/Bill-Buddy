@@ -5,7 +5,7 @@ import { LeftOutlined, SearchOutlined, SettingOutlined } from '@ant-design/icons
 interface TopbarProps {
     leftType?: 'back' | 'search';
     leftOnClick?: () => void;
-    title?: string;
+    title?: ReactNode;
     rightText?: string;
     rightOnClick?: () => void;
 }
@@ -16,6 +16,7 @@ const Topbar = ({
     title,
     rightText,
     rightOnClick,
+
 }: TopbarProps) => {
     return (
         <motion.div
