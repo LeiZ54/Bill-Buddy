@@ -3,7 +3,9 @@ package org.lei.bill_buddy.service;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.lei.bill_buddy.config.exception.AppException;
 import org.lei.bill_buddy.enums.Currency;
+import org.lei.bill_buddy.enums.ErrorCode;
 import org.lei.bill_buddy.enums.ExpenseType;
 import org.lei.bill_buddy.enums.RecurrenceUnit;
 import org.lei.bill_buddy.model.*;
@@ -52,19 +54,19 @@ public class ExpenseService {
         Group group = groupService.getGroupById(groupId);
         if (group == null) {
             log.error("Group not found: {}", groupId);
-            throw new RuntimeException("Group not found");
+            throw new AppException(ErrorCode.GROUP_NOT_FOUND);
         }
 
         User payer = userService.getUserById(payerId);
         if (payer == null) {
             log.error("Payer user not found: {}", payerId);
-            throw new RuntimeException("User not found");
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
         }
 
         participantIds.forEach(id -> {
             if (!groupService.isMemberOfGroup(id, groupId)) {
                 log.error("User with id {} is not a member of group {}", id, groupId);
-                throw new RuntimeException("User with id " + id + " is not a member of this group");
+                throw new AppException(ErrorCode.NOT_A_MEMBER);
             }
         });
 
@@ -114,7 +116,7 @@ public class ExpenseService {
     public void deleteExpense(Long expenseId) {
         log.info("Deleting expense with id={}", expenseId);
         Expense expense = expenseRepository.findById(expenseId)
-                .orElseThrow(() -> new RuntimeException("Expense not found"));
+                .orElseThrow(() -> new AppException(ErrorCode.EXPENSE_NOT_FOUND));
 
         expense.setDeleted(true);
         expenseRepository.save(expense);
@@ -146,7 +148,7 @@ public class ExpenseService {
 
         log.info("Updating expense: id={}", expenseId);
         Expense expense = expenseRepository.findById(expenseId)
-                .orElseThrow(() -> new RuntimeException("Expense not found"));
+                .orElseThrow(() -> new AppException(ErrorCode.EXPENSE_NOT_FOUND));
         ExpenseType type;
         try {
             type = ExpenseType.valueOf(typeStr.toUpperCase());

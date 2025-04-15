@@ -2,6 +2,8 @@ package org.lei.bill_buddy.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.lei.bill_buddy.config.exception.AppException;
+import org.lei.bill_buddy.enums.ErrorCode;
 import org.lei.bill_buddy.model.Group;
 import org.lei.bill_buddy.model.GroupMember;
 import org.lei.bill_buddy.model.User;
@@ -28,18 +30,18 @@ public class GroupMemberService {
         log.info("Adding user {} to group {}", userId, groupId);
         Group group = groupService.getGroupById(groupId);
         if (group == null) {
-            log.warn("Group {} does not exist", groupId);
-            throw new RuntimeException("Group not found with id: " + groupId);
+            log.warn("Can not add member to group {}, because it does not exit", groupId);
+            throw new AppException(ErrorCode.GROUP_NOT_FOUND);
         }
         User user = userService.getUserById(userId);
         if (user == null) {
             log.warn("User {} does not exist", userId);
-            throw new RuntimeException("User not found with id: " + userId);
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
         }
 
         if (groupService.isMemberOfGroup(userId, groupId)) {
             log.warn("User {} is already member of group {}", userId, groupId);
-            throw new RuntimeException("User already in this group");
+            throw new AppException(ErrorCode.ALREADY_IN_GROUP);
         }
 
         GroupMember gm = new GroupMember();
@@ -64,7 +66,7 @@ public class GroupMemberService {
         User user = userService.getUserById(userId);
         if (user == null) {
             log.warn("User not found with id: {}", userId);
-            throw new RuntimeException("User not found with id: " + userId);
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
         }
 
         GroupMember gm = groupMemberRepository.findByGroupAndUserAndDeletedFalse(group, user)
@@ -72,7 +74,7 @@ public class GroupMemberService {
 
         if (expenseService.hasActiveExpensesInGroup(groupId, userId)) {
             log.warn("User {} has expense in group {}", userId, groupId);
-            throw new RuntimeException("This member cannot be removed because there are active expenses for this member.");
+            throw new AppException(ErrorCode.MEMBER_CAN_NOT_BE_REMOVED, "Member can not be removed because there are expenses related to this member.");
         }
         gm.setDeleted(true);
         groupMemberRepository.save(gm);
@@ -84,6 +86,11 @@ public class GroupMemberService {
     @Transactional(readOnly = true)
     public List<User> getMembersOfGroup(Long groupId) {
         log.debug("Getting members of group {}", groupId);
+        Group group = groupService.getGroupById(groupId);
+        if (group == null) {
+            log.warn("Can not get members of group {}, because it does not exit", groupId);
+            throw new AppException(ErrorCode.GROUP_NOT_FOUND);
+        }
         List<GroupMember> memberList = groupMemberRepository.findAllByGroupIdAndDeletedFalse(groupId);
         return memberList.stream()
                 .map(GroupMember::getUser)

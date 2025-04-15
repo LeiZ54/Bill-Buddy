@@ -1,4 +1,4 @@
-package org.lei.bill_buddy.config;
+package org.lei.bill_buddy.config.util;
 
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;

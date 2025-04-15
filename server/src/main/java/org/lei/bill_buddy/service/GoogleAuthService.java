@@ -6,6 +6,8 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
 import lombok.extern.slf4j.Slf4j;
+import org.lei.bill_buddy.config.exception.AppException;
+import org.lei.bill_buddy.enums.ErrorCode;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -32,7 +34,7 @@ public class GoogleAuthService {
             return idToken.getPayload();
         } else {
             log.warn("Google ID Token verification failed.");
-            throw new RuntimeException("Invalid Google ID Token.");
+            throw new AppException(ErrorCode.INVALID_GOOGLE_ID);
         }
     }
 }

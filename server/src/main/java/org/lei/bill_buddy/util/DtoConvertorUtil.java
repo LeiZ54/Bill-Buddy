@@ -1,12 +1,10 @@
 package org.lei.bill_buddy.util;
 
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import lombok.RequiredArgsConstructor;
 import org.lei.bill_buddy.DTO.*;
 import org.lei.bill_buddy.model.Expense;
 import org.lei.bill_buddy.model.Group;
-import org.lei.bill_buddy.model.History;
 import org.lei.bill_buddy.model.User;
 import org.lei.bill_buddy.service.ExpenseService;
 import org.lei.bill_buddy.service.ExpenseSummaryService;
@@ -79,25 +77,6 @@ public class DtoConvertorUtil {
         dto.setDefaultCurrency(group.getDefaultCurrency().name());
         dto.setOwesCurrentUser(formatExpenseSummary(expenseSummary.getUserIds(), expenseSummary.getOwesCurrentUser()));
         dto.setCurrentUserOwes(formatExpenseSummary(expenseSummary.getUserIds(), expenseSummary.getCurrentUserOwes()));
-        return dto;
-    }
-
-    public HistoryDTO convertHistoryToHistoryDTO(History history) {
-        HistoryDTO dto = new HistoryDTO();
-        dto.setId(history.getId());
-        dto.setGroup(convertGroupToGroupDTO(history.getGroup()));
-        Map<Long, BigDecimal> currentUserLent = gson.fromJson(history.getUserLentJson(), new TypeToken<Map<Long, BigDecimal>>() {
-        }.getType());
-        Map<Long, BigDecimal> currentUserPaid = gson.fromJson(history.getUserPaidJson(), new TypeToken<Map<Long, BigDecimal>>() {
-        }.getType());
-        List<Long> userIds = gson.fromJson(history.getMemberIds(), new TypeToken<List<Long>>() {
-        }.getType());
-        dto.setCurrentUserLent(formatExpenseSummary(userIds, currentUserLent));
-        dto.setCurrentUserPaid(formatExpenseSummary(userIds, currentUserPaid));
-        List<Expense> expenses = expenseService.getExpensesByExpenseIdS(gson.fromJson(history.getExpenseIds(), new TypeToken<List<Long>>() {
-        }.getType()));
-        dto.setExpenses(expenses.stream().map(this::convertExpenseToExpenseDTO).toList());
-        dto.setGenerateTime(history.getCreatedAt());
         return dto;
     }
 

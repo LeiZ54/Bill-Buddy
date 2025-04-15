@@ -1,4 +1,4 @@
-package org.lei.bill_buddy.config;
+package org.lei.bill_buddy.config.web;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

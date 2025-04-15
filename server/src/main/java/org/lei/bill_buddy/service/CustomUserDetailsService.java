@@ -2,6 +2,8 @@ package org.lei.bill_buddy.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.lei.bill_buddy.config.exception.AppException;
+import org.lei.bill_buddy.enums.ErrorCode;
 import org.lei.bill_buddy.model.User;
 import org.lei.bill_buddy.repository.UserRepository;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -24,7 +26,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         User user = userRepository.findByEmailAndDeletedFalse(name)
                 .orElseThrow(() -> {
                     log.warn("User not found with email: {}", name);
-                    return new UsernameNotFoundException("User not found!");
+                    return new AppException(ErrorCode.USER_NOT_FOUND);
                 });
 
         log.info("User found: {}", user.getEmail());

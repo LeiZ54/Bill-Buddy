@@ -2,6 +2,8 @@ package org.lei.bill_buddy.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.lei.bill_buddy.config.exception.AppException;
+import org.lei.bill_buddy.enums.ErrorCode;
 import org.lei.bill_buddy.model.Friend;
 import org.lei.bill_buddy.model.FriendRequest;
 import org.lei.bill_buddy.model.User;
@@ -30,7 +32,7 @@ public class FriendService {
 
         if (senderId.equals(receiverId)) {
             log.warn("User {} attempted to send a friend request to themselves", senderId);
-            throw new IllegalArgumentException("You cannot send friend request to yourself.");
+            throw new AppException(ErrorCode.SELF_FRIEND_REQUEST);
         }
 
         User sender = userService.getUserById(senderId);
@@ -38,17 +40,17 @@ public class FriendService {
 
         if (sender == null || receiver == null) {
             log.error("Sender or Receiver not found: senderId={}, receiverId={}", senderId, receiverId);
-            throw new RuntimeException("User not found");
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
         }
 
         if (friendRepository.existsByUserAndFriendAndDeletedFalse(sender, receiver)) {
             log.warn("Users {} and {} are already friends", senderId, receiverId);
-            throw new IllegalStateException("You are already friends.");
+            throw new AppException(ErrorCode.ALREADY_FRIENDS);
         }
 
         if (friendRequestRepository.existsBySenderAndReceiverAndStatus(sender, receiver, "pending")) {
             log.warn("Duplicate friend request detected: senderId={}, receiverId={}", senderId, receiverId);
-            throw new IllegalStateException("Friend request already sent.");
+            throw new AppException(ErrorCode.FRIEND_REQUEST_ALREADY_SENT);
         }
 
         FriendRequest request = new FriendRequest();
@@ -63,12 +65,12 @@ public class FriendService {
         FriendRequest request = friendRequestRepository.findById(requestId)
                 .orElseThrow(() -> {
                     log.error("Friend request not found: id={}", requestId);
-                    return new RuntimeException("Request not found");
+                    return new AppException(ErrorCode.FRIEND_REQUEST_NOT_FOUND);
                 });
 
         if (!"pending".equals(request.getStatus())) {
             log.warn("Request {} has already been handled with status={}", requestId, request.getStatus());
-            throw new IllegalStateException("Request already handled.");
+            throw new AppException(ErrorCode.FRIEND_REQUEST_ALREADY_HANDLED);
         }
 
         if (accepted) {
@@ -88,7 +90,7 @@ public class FriendService {
 
         if (user.getId().equals(friend.getId())) {
             log.warn("User {} attempted to add themselves as a friend", user.getId());
-            throw new IllegalArgumentException("You cannot add yourself as a friend.");
+            throw new AppException(ErrorCode.SELF_FRIEND_REQUEST);
         }
 
         if (friendRepository.existsByUserAndFriendAndDeletedFalse(user, friend)) {

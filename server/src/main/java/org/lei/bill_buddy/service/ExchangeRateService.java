@@ -4,6 +4,8 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.lei.bill_buddy.config.exception.AppException;
+import org.lei.bill_buddy.enums.ErrorCode;
 import org.springframework.stereotype.Service;
 
 import java.io.InputStreamReader;
@@ -39,6 +41,7 @@ public class ExchangeRateService {
             }
         } catch (Exception e) {
             log.error("Error fetching exchange rate: {}", e.getMessage());
+            throw new AppException(ErrorCode.EXCHANGE_RATE_FETCH_FAILED);
         }
         return null;
     }

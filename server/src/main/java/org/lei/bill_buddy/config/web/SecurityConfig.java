@@ -1,4 +1,4 @@
-package org.lei.bill_buddy.config;
+package org.lei.bill_buddy.config.web;
 
 import org.lei.bill_buddy.service.CustomUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;

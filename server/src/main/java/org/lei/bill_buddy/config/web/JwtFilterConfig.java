@@ -1,4 +1,4 @@
-package org.lei.bill_buddy.config;
+package org.lei.bill_buddy.config.web;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

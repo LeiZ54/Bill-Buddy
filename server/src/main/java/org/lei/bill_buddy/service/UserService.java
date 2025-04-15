@@ -2,6 +2,8 @@ package org.lei.bill_buddy.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.lei.bill_buddy.config.exception.AppException;
+import org.lei.bill_buddy.enums.ErrorCode;
 import org.lei.bill_buddy.model.User;
 import org.lei.bill_buddy.repository.UserRepository;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -20,8 +22,8 @@ public class UserService {
     public User addUser(User user) {
         log.info("Attempting to register user with email: {}", user.getEmail());
         if (getUserByEmail(user.getEmail()) != null) {
-            log.warn("Email already taken: {}", user.getEmail());
-            throw new RuntimeException("Email already taken!");
+            log.warn("Email already exists: {}", user.getEmail());
+            throw new AppException(ErrorCode.EMAIL_ALREADY_EXISTS);
         }
 
         user.setPassword(passwordEncoder.encode(user.getPassword()));
@@ -35,7 +37,7 @@ public class UserService {
         User existingUser = userRepository.findById(id)
                 .orElseThrow(() -> {
                     log.warn("User not found for id: {}", id);
-                    return new RuntimeException("User not found.");
+                    return new AppException(ErrorCode.USER_NOT_FOUND);
                 });
 
         if (user.getEmail() != null && !user.getEmail().isEmpty()) {

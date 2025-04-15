@@ -2,7 +2,9 @@ package org.lei.bill_buddy.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.lei.bill_buddy.config.exception.AppException;
 import org.lei.bill_buddy.enums.Currency;
+import org.lei.bill_buddy.enums.ErrorCode;
 import org.lei.bill_buddy.enums.GroupType;
 import org.lei.bill_buddy.model.Group;
 import org.lei.bill_buddy.model.GroupMember;
@@ -75,6 +77,10 @@ public class GroupService {
     public Group updateGroup(Long groupId, String newName, String defaultCurrency, String newType) {
         log.info("Updating group {} with name: {}, type: {}", groupId, newName, newType);
         Group group = getGroupById(groupId);
+        if (group == null) {
+            log.warn("Can not update group {} because it does not exit", groupId);
+            throw new AppException(ErrorCode.GROUP_NOT_FOUND);
+        }
         if (newName != null && !newName.isEmpty()) {
             group.setName(newName);
         }
@@ -103,6 +109,10 @@ public class GroupService {
 
     public void deleteGroup(Long groupId) {
         log.warn("Deleting group with id: {}", groupId);
+        if (!groupRepository.existsById(groupId)) {
+            log.warn("Can not delete group {} because it does not exit", groupId);
+            throw new AppException(ErrorCode.GROUP_NOT_FOUND);
+        }
         Group group = getGroupById(groupId);
         groupMemberRepository.softDeleteAllByGroup(group);
         group.setDeleted(true);
