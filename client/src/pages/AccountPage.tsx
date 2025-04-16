@@ -1,4 +1,4 @@
-import {Steps, Avatar, Button, Divider, Input, Modal, message, Form, Alert, Spin, Row, Col} from 'antd';
+import {Steps, Avatar, Button, Input, Modal, message, Form, Alert, Spin, Row, Col} from 'antd';
 import {LockOutlined, LogoutOutlined, MailOutlined, SafetyOutlined} from '@ant-design/icons';
 import useAuthStore from '../stores/authStore';
 import {useNavigate} from 'react-router-dom';
@@ -13,12 +13,13 @@ export default function AccountPage() {
     const [passwordForm] = Form.useForm();
     const [isInforFormValid, setIsInforFormValid] = useState(false);
     const [isPasswordFormValid, setIsPasswordFormValid] = useState(false);
-    const {logout, familyName, givenName, email, isLoading, updateUserInfo, error} = useAuthStore();
+    const {logout, familyName, givenName, email, updateUserInfo} = useAuthStore();
     const navigate = useNavigate();
     const {Text} = Typography;
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [checkingEmail, setCheckingEmail] = useState(false);
+    const [isLoadingEdit, setIsLoadingEdit] = useState(false);
 
     const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
     const [isLoadingPassword, setIsLoadingPassword] = useState(false);
@@ -106,6 +107,22 @@ export default function AccountPage() {
             setIsLoadingPassword(false);
         }
     };
+
+    const handleSubmitEdit = async (values: any) => {
+        setIsLoadingEdit(true);
+        try {
+            await updateUserInfo(values.familyName, values.givenName, values.email);
+            setIsModalOpen(false);
+        } catch (err: any) {
+            if (err.response.data.error) {
+                message.error(err.response.data.error);
+            } else {
+                message.error('Network Error!');
+            }
+        } finally {
+            setIsLoadingEdit(false);
+        }
+    };
     return (
         <motion.div
             initial={{opacity: 0}}
@@ -176,19 +193,14 @@ export default function AccountPage() {
                     title={<span className="text-2xl font-bold">Edit Information</span>}
                     open={isModalOpen}
                     onCancel={() => {setIsModalOpen(false);
-                        if(!error){
-                            setIsModalOpen(false)
-                        }
                     }}
                     footer={null}
                 >
                     <Form
                         form={inforForm}
-                        onFinish={(values)=>{
-                            updateUserInfo(values.familyName,values.givenName,values.email);
-                        }}
                         layout="vertical"
                         autoComplete="off"
+                        onFinish={handleSubmitEdit}
                     >
                         <Form.Item
                             label="Email"
@@ -219,7 +231,6 @@ export default function AccountPage() {
                                                     return Promise.reject(new Error('This email is already registered.'));
                                                 }
                                             } catch (err) {
-                                                console.log(err)
                                             } finally {
                                                 setCheckingEmail(false);
                                             }
@@ -274,8 +285,8 @@ export default function AccountPage() {
                                 block
                                 size="large"
                                 type="primary"
-                                loading={isLoading}
-                                disabled={!isInforFormValid || isLoading}
+                                loading={isLoadingEdit}
+                                disabled={!isInforFormValid || isLoadingEdit}
                             >
                                 Update
                             </Button>
