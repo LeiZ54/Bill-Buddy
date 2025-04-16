@@ -279,9 +279,11 @@ public class ExpenseService {
 
     }
 
-
-    public List<Expense> getExpensesByExpenseIdS(List<Long> expenseIds) {
-        return expenseRepository.findAllById(expenseIds);
+    public Expense getExpenseById(Long id) {
+        Expense expense = expenseRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.EXPENSE_NOT_FOUND));
+        if (!groupService.isMemberOfGroup(userService.getCurrentUser().getId(), expense.getGroup().getId()))
+            throw new AppException(ErrorCode.NOT_A_MEMBER);
+        return expense;
     }
 
     public List<Expense> getExpensesByGroupIdAndMonth(Long groupId, String month) {

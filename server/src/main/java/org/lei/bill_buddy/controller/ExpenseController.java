@@ -49,6 +49,13 @@ public class ExpenseController {
         return ResponseEntity.ok("Expense created with ID: " + expense.getId());
     }
 
+
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getExpenseById(@PathVariable Long id) {
+        Expense expense = expenseService.getExpenseById(id);
+        return ResponseEntity.ok(dtoConvertor.convertExpenseToExpenseDetailsDTO(expense));
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<?> updateExpense(
             @PathVariable Long id,

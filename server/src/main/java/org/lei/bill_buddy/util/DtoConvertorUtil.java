@@ -3,10 +3,7 @@ package org.lei.bill_buddy.util;
 import com.google.gson.Gson;
 import lombok.RequiredArgsConstructor;
 import org.lei.bill_buddy.DTO.*;
-import org.lei.bill_buddy.model.Expense;
-import org.lei.bill_buddy.model.Group;
-import org.lei.bill_buddy.model.GroupDebt;
-import org.lei.bill_buddy.model.User;
+import org.lei.bill_buddy.model.*;
 import org.lei.bill_buddy.service.ExpenseService;
 import org.lei.bill_buddy.service.ExpenseSummaryService;
 import org.lei.bill_buddy.service.GroupDebtService;
@@ -38,26 +35,40 @@ public class DtoConvertorUtil {
     }
 
     public ExpenseDTO convertExpenseToExpenseDTO(Expense expense) {
-        Map<String, BigDecimal> shares = new HashMap<>();
-        expenseService.getExpenseSharesByExpenseId(expense.getId())
-                .forEach(s -> {
-                    shares.put(s.getUser().getFullName(), s.getShareAmount());
-                });
+        User currentUser = userService.getCurrentUser();
+        ExpenseDTO dto = new ExpenseDTO();
+        dto.setId(expense.getId());
+        dto.setTitle(expense.getTitle());
+        dto.setAmount(expense.getAmount());
+        dto.setCurrency(expense.getCurrency().name());
+        dto.setPayer(convertUserToUserDTO(expense.getPayer()));
+        dto.setExpenseDate(expense.getExpenseDate());
+        dto.setType(expense.getType());
+        dto.setDebtsAmount(calculateExpenseDebtsAmount(currentUser.getId(), expense));
+        return dto;
+    }
 
-        ExpenseDTO expenseDTO = new ExpenseDTO();
-        expenseDTO.setId(expense.getId());
-        expenseDTO.setTitle(expense.getTitle());
-        expenseDTO.setAmount(expense.getAmount());
-        expenseDTO.setDescription(expense.getDescription());
-        expenseDTO.setCurrency(expense.getCurrency().name());
-        expenseDTO.setPayer(convertUserToUserDTO(expense.getPayer()));
-        expenseDTO.setShares(shares);
-        expenseDTO.setExpenseDate(expense.getExpenseDate());
-        expenseDTO.setType(expense.getType());
-        expenseDTO.setIsRecurring(expense.getIsRecurring());
-        expenseDTO.setRecurrenceUnit(expense.getRecurrenceUnit());
-        expenseDTO.setRecurrenceInterval(expense.getRecurrenceInterval());
-        return expenseDTO;
+    public ExpenseDetailsDTO convertExpenseToExpenseDetailsDTO(Expense expense) {
+        Map<String, BigDecimal> shares = new HashMap<>();
+        User currentUser = userService.getCurrentUser();
+        expenseService.getExpenseSharesByExpenseId(expense.getId())
+                .forEach(s -> shares.put(s.getUser().getFullName(), s.getShareAmount()));
+
+        ExpenseDetailsDTO dto = new ExpenseDetailsDTO();
+        dto.setId(expense.getId());
+        dto.setTitle(expense.getTitle());
+        dto.setAmount(expense.getAmount());
+        dto.setDescription(expense.getDescription());
+        dto.setCurrency(expense.getCurrency().name());
+        dto.setPayer(convertUserToUserDTO(expense.getPayer()));
+        dto.setDebtsAmount(calculateExpenseDebtsAmount(currentUser.getId(), expense));
+        dto.setShares(shares);
+        dto.setExpenseDate(expense.getExpenseDate());
+        dto.setType(expense.getType());
+        dto.setIsRecurring(expense.getIsRecurring());
+        dto.setRecurrenceUnit(expense.getRecurrenceUnit());
+        dto.setRecurrenceInterval(expense.getRecurrenceInterval());
+        return dto;
     }
 
 
@@ -120,5 +131,22 @@ public class DtoConvertorUtil {
             netDebts.put(otherUserId, netDebts.getOrDefault(otherUserId, BigDecimal.ZERO).add(debt.getAmount()));
         }
         return netDebts;
+    }
+
+    private BigDecimal calculateExpenseDebtsAmount(Long userId, Expense expense) {
+
+        List<ExpenseShare> shares = expenseService.getExpenseSharesByExpenseId(expense.getId());
+
+        boolean isPayer = expense.getPayer().getId().equals(userId);
+
+        BigDecimal userShare = shares.stream()
+                .filter(share -> share.getUser().getId().equals(userId))
+                .map(ExpenseShare::getShareAmount)
+                .findFirst()
+                .orElse(BigDecimal.ZERO);
+
+        return isPayer
+                ? expense.getAmount().subtract(userShare)
+                : userShare.negate();
     }
 }
