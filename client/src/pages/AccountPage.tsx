@@ -13,7 +13,7 @@ export default function AccountPage() {
     const [passwordForm] = Form.useForm();
     const [isInforFormValid, setIsInforFormValid] = useState(false);
     const [isPasswordFormValid, setIsPasswordFormValid] = useState(false);
-    const {logout, familyName, givenName, email, isLoading, updateUserInfo} = useAuthStore();
+    const {logout, familyName, givenName, email, isLoading, updateUserInfo, error} = useAuthStore();
     const navigate = useNavigate();
     const {Text} = Typography;
 
@@ -24,7 +24,7 @@ export default function AccountPage() {
     const [isLoadingPassword, setIsLoadingPassword] = useState(false);
     const [currentStep, setCurrentStep] = useState(0);
     const [token, setToken] = useState('');
-    const [error, setError] = useState('');
+    const [errorPassword, setErrorPassword] = useState('');
     const [countdown, setCountdown] = useState(0);
 
     const {Step} = Steps;
@@ -99,9 +99,9 @@ export default function AccountPage() {
                     setCurrentStep(0);
                     break;
             }
-            setError('');
+            setErrorPassword('');
         } catch (err: any) {
-            setError(err.response?.data?.error || 'Network Error!');
+            setErrorPassword(err.response?.data?.error || 'Network Error!');
         } finally {
             setIsLoadingPassword(false);
         }
@@ -175,14 +175,17 @@ export default function AccountPage() {
                     }}
                     title={<span className="text-2xl font-bold">Edit Information</span>}
                     open={isModalOpen}
-                    onCancel={() => {setIsModalOpen(false);}}
+                    onCancel={() => {setIsModalOpen(false);
+                        if(!error){
+                            setIsModalOpen(false)
+                        }
+                    }}
                     footer={null}
                 >
                     <Form
                         form={inforForm}
                         onFinish={(values)=>{
                             updateUserInfo(values.familyName,values.givenName,values.email);
-                            setIsModalOpen(false);
                         }}
                         layout="vertical"
                         autoComplete="off"
@@ -216,6 +219,7 @@ export default function AccountPage() {
                                                     return Promise.reject(new Error('This email is already registered.'));
                                                 }
                                             } catch (err) {
+                                                console.log(err)
                                             } finally {
                                                 setCheckingEmail(false);
                                             }
@@ -285,7 +289,7 @@ export default function AccountPage() {
                         setIsChangePasswordModalOpen(false);
                         setCurrentStep(0);
                         passwordForm.resetFields();
-                        setError("");
+                        setErrorPassword("");
                     }}
                     footer={null}
                     title={
@@ -401,12 +405,12 @@ export default function AccountPage() {
                                     </motion.div>
                                 )}
 
-                                {error && (
+                                {errorPassword && (
                                     <motion.div
                                         initial={{opacity: 0}}
                                         animate={{opacity: 1}}
                                     >
-                                        <Alert message={error} type="error" className="mb-4"/>
+                                        <Alert message={errorPassword} type="error" className="mb-4"/>
                                     </motion.div>
                                 )}
 

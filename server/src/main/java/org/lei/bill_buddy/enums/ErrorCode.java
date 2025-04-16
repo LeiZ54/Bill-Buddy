@@ -16,7 +16,7 @@ public enum ErrorCode {
     // === User Related ===
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "User not found."),
     EMAIL_ALREADY_EXISTS(HttpStatus.CONFLICT, "Email already exists."),
-    WRONG_EMAIL_OR_PASSWORD(HttpStatus.BAD_REQUEST, "Wrong email or password."),
+    WRONG_EMAIL_OR_PASSWORD(HttpStatus.BAD_REQUEST, "Wrong password please try again."),
     SELF_FRIEND_REQUEST(HttpStatus.BAD_REQUEST, "Cannot add yourself as friend."),
     ALREADY_FRIENDS(HttpStatus.CONFLICT, "You are already friends."),
     FRIEND_REQUEST_ALREADY_SENT(HttpStatus.CONFLICT, "Friend request already sent."),

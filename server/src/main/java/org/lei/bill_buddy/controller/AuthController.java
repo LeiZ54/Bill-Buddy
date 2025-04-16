@@ -4,6 +4,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.lei.bill_buddy.DTO.*;
 import org.lei.bill_buddy.annotation.RateLimit;
+import org.lei.bill_buddy.config.exception.AppException;
+import org.lei.bill_buddy.enums.ErrorCode;
 import org.lei.bill_buddy.model.User;
 import org.lei.bill_buddy.service.EmailProducer;
 import org.lei.bill_buddy.service.GoogleAuthService;
@@ -55,6 +57,9 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody @Valid UserLoginRequest request) {
+        if (userService.getUserByEmail(request.getEmail()) == null) {
+            throw new AppException(ErrorCode.USER_NOT_FOUND, "This email address is not registered.");
+        }
         UsernamePasswordAuthenticationToken authenticationToken =
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword());
         Authentication authentication = authenticationManager.authenticate(authenticationToken);

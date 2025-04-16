@@ -28,7 +28,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler({BadCredentialsException.class})
     public ResponseEntity<?> handleBadCredentialsException() {
-        throw new AppException(ErrorCode.WRONG_EMAIL_OR_PASSWORD);
+        return ResponseEntity.status(ErrorCode.WRONG_EMAIL_OR_PASSWORD.getHttpCode()).body(Collections.singletonMap("error", ErrorCode.WRONG_EMAIL_OR_PASSWORD.getMessage()));
     }
 
     @ExceptionHandler({AppException.class})
@@ -38,7 +38,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler({Exception.class})
     public ResponseEntity<?> handleExceptions(Exception e) {
-        return ResponseEntity.internalServerError().body(Collections.singletonMap("error", e.getClass().getSimpleName()));
+        return ResponseEntity.internalServerError().body(Collections.singletonMap("error", e.getMessage()));
     }
 }
 

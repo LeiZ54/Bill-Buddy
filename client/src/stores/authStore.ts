@@ -126,22 +126,26 @@ const useAuthStore = create<AuthState>()(
                 const{familyName,givenName,email,id} = get();
                 if(familyName != newFamilyName || givenName != newGivenName || email != newEmail){
                    try{
-                       // set({isLoading: true});
-                       await api.post(`/users/${id}`, {
+                       set({isLoading: true, error:null});
+                       const res = await api.post(`/users/${id}`, {
                            email: newEmail,
                            givenName: newGivenName,
                            familyName: newFamilyName
                        });
-                       set({email:newEmail, familyName:newFamilyName,givenName:newGivenName});
+                       const {token, email, name, familyName, givenName} = res.data;
+                       const exp = jwtDecode(token).exp;
+                       set({token, email, name, familyName, givenName, exp});
                        message.success('User Information updated successfully!');
                    }catch (err){
                        if (err.response.data.error) {
                            message.error(err.response.data.error);
+                           set({error:err.response.data.error});
                        } else {
                            message.error('Network Error!');
+                           set({error:'Network Error!'});
                        }
                    }finally {
-                       // set({isLoading: false});
+                       set({isLoading: false});
                    }
 
 
