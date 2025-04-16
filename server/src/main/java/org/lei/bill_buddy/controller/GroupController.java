@@ -3,9 +3,7 @@ package org.lei.bill_buddy.controller;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.lei.bill_buddy.DTO.EmailDTO;
-import org.lei.bill_buddy.DTO.GroupCreateRequest;
-import org.lei.bill_buddy.DTO.GroupUpdateRequest;
+import org.lei.bill_buddy.DTO.*;
 import org.lei.bill_buddy.annotation.RateLimit;
 import org.lei.bill_buddy.model.Group;
 import org.lei.bill_buddy.model.User;
@@ -32,6 +30,7 @@ import java.util.Map;
 public class GroupController {
     private final GroupService groupService;
     private final GroupMemberService groupMemberService;
+    private final GroupDebtService groupDebtService;
     private final UserService userService;
     private final JwtUtil jwtUtil;
     private final DtoConvertorUtil dtoConvertor;
@@ -147,13 +146,20 @@ public class GroupController {
     }
 
     @GetMapping("/detail")
-    public ResponseEntity<?> getDetailedGroups(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
+    public ResponseEntity<?> getDetailedGroups(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
 
         User user = userService.getCurrentUser();
         Pageable pageable = PageRequest.of(page, size);
-        Page<Group> groupPage = groupService.getGroupsByUserId(user.getId(), pageable);
+        Page<GroupDetailsDTO> groupPage = groupService.getGroupsByUserId(user.getId(), pageable)
+                .map(dtoConvertor::convertGroupToGroupDetailsDTO);
+        GroupPageDTO groupPageDTO = new GroupPageDTO();
+        groupPageDTO.setTotalCurrentUserDebts(groupDebtService.getTotalUserDebts(user.getId()));
+        groupPageDTO.setGroupPage(groupPage);
 
-        return ResponseEntity.ok(groupPage.map(dtoConvertor::convertGroupToGroupDetailsDTO));
+
+        return ResponseEntity.ok(groupPageDTO);
     }
 
     @GetMapping

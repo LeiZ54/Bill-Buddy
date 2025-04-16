@@ -8,7 +8,12 @@ import java.util.Optional;
 
 public interface GroupDebtRepository extends JpaRepository<GroupDebt, Long> {
     Optional<GroupDebt> findByGroupIdAndLenderIdAndBorrowerIdAndDeletedFalse(Long groupId, Long lenderId, Long borrowerId);
+
     List<GroupDebt> findByGroupIdAndBorrowerIdAndDeletedFalse(Long groupId, Long borrowerId);
+
     List<GroupDebt> findByGroupIdAndLenderIdAndDeletedFalse(Long groupId, Long lenderId);
 
+    List<GroupDebt> findByBorrowerIdAndDeletedFalse(Long borrowerId);
+
+    List<GroupDebt> findByLenderIdAndDeletedFalse(Long lenderId);
 }

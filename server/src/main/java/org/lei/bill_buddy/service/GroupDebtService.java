@@ -53,6 +53,20 @@ public class GroupDebtService {
         groupDebtRepository.save(gb);
     }
 
+    public BigDecimal getTotalUserDebts(Long userId) {
+        BigDecimal owesOthers = groupDebtRepository.findByBorrowerIdAndDeletedFalse(userId).stream()
+                .map(GroupDebt::getAmount)
+                .filter(amount -> amount.compareTo(BigDecimal.ZERO) > 0)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal othersOweMe = groupDebtRepository.findByLenderIdAndDeletedFalse(userId).stream()
+                .map(GroupDebt::getAmount)
+                .filter(amount -> amount.compareTo(BigDecimal.ZERO) > 0)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        return othersOweMe.subtract(owesOthers);
+    }
+
     public List<GroupDebt> getByGroupAndLender(Group group, User lender) {
         return groupDebtRepository.findByGroupIdAndLenderIdAndDeletedFalse(group.getId(), lender.getId());
     }
