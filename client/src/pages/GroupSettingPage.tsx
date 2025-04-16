@@ -146,8 +146,8 @@ const GroupSettingPage = () => {
                                     dataSource={members}
                                     renderItem={(member) => (
                                         <List.Item className="!px-0">
-                                            <div className="flex justify-between w-full px-4 py-2">
-                                                <span className="text-xl font-medium">{member.fullName}</span>
+                                            <div className="flex justify-between w-full px-5 py-2">
+                                                <span className="font-bold">{member.fullName}</span>
                                                 <span className="text-gray-500 ml-2">{member.email}</span>
                                             </div>
                                         </List.Item>
