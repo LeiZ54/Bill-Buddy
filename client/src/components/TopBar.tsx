@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { Button } from 'antd';
 import { LeftOutlined, SearchOutlined, SettingOutlined } from '@ant-design/icons';
+import {ReactNode} from "react";
 
 interface TopbarProps {
     leftType?: 'back' | 'search';
@@ -8,6 +9,7 @@ interface TopbarProps {
     title?: ReactNode;
     rightText?: string;
     rightOnClick?: () => void;
+    className?: string;
 }
 
 const Topbar = ({
@@ -16,13 +18,14 @@ const Topbar = ({
     title,
     rightText,
     rightOnClick,
+    className = "",
 
 }: TopbarProps) => {
     return (
         <motion.div
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="relative flex items-center justify-between h-12 bg-white"
+            className={`relative flex items-center justify-between h-12 ${className}`}
         >
             {/* left */}
             <div className="flex">
