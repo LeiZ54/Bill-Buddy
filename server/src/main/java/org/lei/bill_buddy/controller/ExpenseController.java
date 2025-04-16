@@ -30,10 +30,6 @@ public class ExpenseController {
     public ResponseEntity<?> createExpense(@Valid @RequestBody ExpenseCreateRequest request) {
         Long currentUserId = userService.getCurrentUser().getId();
 
-        if (!groupService.isMemberOfGroup(currentUserId, request.getGroupId())) {
-            return ResponseEntity.status(403).body("You do not have permission to add expenses to this group.");
-        }
-
         Expense expense = expenseService.createExpense(
                 request.getGroupId(),
                 request.getPayerId() != null ? request.getPayerId() : currentUserId,
@@ -57,12 +53,6 @@ public class ExpenseController {
     public ResponseEntity<?> updateExpense(
             @PathVariable Long id,
             @Valid @RequestBody ExpenseUpdateRequest request) {
-
-        Long currentUserId = userService.getCurrentUser().getId();
-
-        if (!groupService.isMemberOfGroup(currentUserId, id)) {
-            return ResponseEntity.status(403).body("You do not have permission to update this expense.");
-        }
 
         Expense expense = expenseService.updateExpense(
                 id,

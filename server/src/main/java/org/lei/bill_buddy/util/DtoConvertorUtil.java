@@ -5,9 +5,11 @@ import lombok.RequiredArgsConstructor;
 import org.lei.bill_buddy.DTO.*;
 import org.lei.bill_buddy.model.Expense;
 import org.lei.bill_buddy.model.Group;
+import org.lei.bill_buddy.model.GroupDebt;
 import org.lei.bill_buddy.model.User;
 import org.lei.bill_buddy.service.ExpenseService;
 import org.lei.bill_buddy.service.ExpenseSummaryService;
+import org.lei.bill_buddy.service.GroupDebtService;
 import org.lei.bill_buddy.service.UserService;
 import org.springframework.stereotype.Component;
 
@@ -15,6 +17,7 @@ import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -22,6 +25,7 @@ public class DtoConvertorUtil {
     private final UserService userService;
     private final ExpenseService expenseService;
     private final ExpenseSummaryService expenseSummaryService;
+    private final GroupDebtService groupDebtService;
     private final Gson gson;
 
     public UserDTO convertUserToUserDTO(User user) {
@@ -68,27 +72,50 @@ public class DtoConvertorUtil {
     }
 
     public GroupDetailsDTO convertGroupToGroupDetailsDTO(Group group) {
-        ExpenseSummaryDTO expenseSummary =
-                expenseSummaryService.getExpenseSummary(userService.getCurrentUser().getId(), expenseService.getExpensesByGroupId(group.getId()));
+        User currentUser = userService.getCurrentUser();
+        List<GroupDebt> owesUser = groupDebtService.getByGroupAndLender(group, currentUser);
+        List<GroupDebt> userOwes = groupDebtService.getByGroupAndBorrower(group, currentUser);
+
+        Map<Long, BigDecimal> netDebts = formatDebtsMap(userOwes, owesUser);
+
+        Map<String, BigDecimal> currentUserOwes = new HashMap<>();
+        Map<String, BigDecimal> owesCurrentUser = new HashMap<>();
+
+        for (Map.Entry<Long, BigDecimal> entry : netDebts.entrySet()) {
+            Long otherUserId = entry.getKey();
+            BigDecimal netAmount = entry.getValue();
+
+            if (netAmount.compareTo(BigDecimal.ZERO) > 0) {
+                String name = userService.getUserById(otherUserId).getFullName();
+                owesCurrentUser.put(name, netAmount);
+            } else if (netAmount.compareTo(BigDecimal.ZERO) < 0) {
+                String name = userService.getUserById(otherUserId).getFullName();
+                currentUserOwes.put(name, netAmount.abs());
+            }
+        }
+
         GroupDetailsDTO dto = new GroupDetailsDTO();
         dto.setGroupId(group.getId());
         dto.setGroupName(group.getName());
         dto.setType(group.getType().name());
         dto.setDefaultCurrency(group.getDefaultCurrency().name());
-        dto.setOwesCurrentUser(formatExpenseSummary(expenseSummary.getUserIds(), expenseSummary.getOwesCurrentUser()));
-        dto.setCurrentUserOwes(formatExpenseSummary(expenseSummary.getUserIds(), expenseSummary.getCurrentUserOwes()));
+        dto.setOwesCurrentUser(owesCurrentUser);
+        dto.setCurrentUserOwes(currentUserOwes);
         return dto;
     }
 
-    private Map<String, BigDecimal> formatExpenseSummary(List<Long> userIds, Map<Long, BigDecimal> expenseSummary) {
-        Map<Long, String> nameMap = new HashMap<>();
-        Map<String, BigDecimal> formated = new HashMap<>();
-        for (User user : userService.getUsersByIds(userIds)) {
-            nameMap.put(user.getId(), user.getSimpleName());
+    private static Map<Long, BigDecimal> formatDebtsMap(List<GroupDebt> userOwes, List<GroupDebt> owesUser) {
+        Map<Long, BigDecimal> netDebts = new HashMap<>();
+
+        for (GroupDebt debt : userOwes) {
+            Long otherUserId = debt.getLender().getId();
+            netDebts.put(otherUserId, netDebts.getOrDefault(otherUserId, BigDecimal.ZERO).subtract(debt.getAmount()));
         }
-        expenseSummary.forEach((k, v) -> {
-            formated.put(nameMap.get(k), v);
-        });
-        return formated;
+
+        for (GroupDebt debt : owesUser) {
+            Long otherUserId = debt.getBorrower().getId();
+            netDebts.put(otherUserId, netDebts.getOrDefault(otherUserId, BigDecimal.ZERO).add(debt.getAmount()));
+        }
+        return netDebts;
     }
 }

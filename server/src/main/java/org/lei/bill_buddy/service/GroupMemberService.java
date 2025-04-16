@@ -22,6 +22,7 @@ public class GroupMemberService {
     private final GroupMemberRepository groupMemberRepository;
     private final UserService userService;
     private final GroupService groupService;
+    private final GroupDebtService groupDebtService;
     private final ExpenseService expenseService;
     private final FriendService friendService;
 
@@ -49,12 +50,13 @@ public class GroupMemberService {
         gm.setUser(user);
         gm.setJoinedAt(LocalDateTime.now());
         groupMemberRepository.save(gm);
-        groupService.groupUpdated(group);
 
         List<User> existingMembers = getMembersOfGroup(groupId).stream()
                 .filter(member -> !member.getId().equals(userId))
                 .toList();
         friendService.addFriends(user, existingMembers);
+        groupDebtService.addGroupDebts(group, user, existingMembers);
+        groupService.groupUpdated(group);
 
         log.info("User {} added to group {}", userId, groupId);
     }

@@ -18,6 +18,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.YearMonth;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -28,6 +29,7 @@ public class ExpenseService {
     private final ExpenseShareRepository expenseShareRepository;
     private final GroupService groupService;
     private final UserService userService;
+    private final GroupDebtService groupDebtService;
     private final ExchangeRateService exchangeRateService;
 
     @Transactional
@@ -51,21 +53,25 @@ public class ExpenseService {
                                  List<Long> participantIds,
                                  List<BigDecimal> shareAmounts) {
 
+        if (!groupService.isMemberOfGroup(userService.getCurrentUser().getId(), groupId)) {
+            log.warn("User {} is not a member of group {}", userService.getCurrentUser().getId(), groupId);
+            throw new AppException(ErrorCode.NOT_A_MEMBER);
+        }
         Group group = groupService.getGroupById(groupId);
         if (group == null) {
-            log.error("Group not found: {}", groupId);
+            log.warn("Group not found: {}", groupId);
             throw new AppException(ErrorCode.GROUP_NOT_FOUND);
         }
 
         User payer = userService.getUserById(payerId);
         if (payer == null) {
-            log.error("Payer user not found: {}", payerId);
+            log.warn("Payer user not found: {}", payerId);
             throw new AppException(ErrorCode.USER_NOT_FOUND);
         }
 
         participantIds.forEach(id -> {
             if (!groupService.isMemberOfGroup(id, groupId)) {
-                log.error("User with id {} is not a member of group {}", id, groupId);
+                log.warn("User with id {} is not a member of group {}", id, groupId);
                 throw new AppException(ErrorCode.NOT_A_MEMBER);
             }
         });
@@ -122,10 +128,19 @@ public class ExpenseService {
         expenseRepository.save(expense);
 
         List<ExpenseShare> shares = expenseShareRepository.findByExpenseIdAndDeletedFalse(expenseId);
-        shares.forEach(s -> {
-            s.setDeleted(true);
-            expenseShareRepository.save(s);
-        });
+        for (ExpenseShare share : shares) {
+            share.setDeleted(true);
+            expenseShareRepository.save(share);
+
+            if (!share.getUser().getId().equals(expense.getPayer().getId())) {
+                groupDebtService.updateGroupDebt(
+                        expense.getPayer(),
+                        share.getUser(),
+                        expense.getGroup(),
+                        share.getShareAmount().negate()
+                );
+            }
+        }
 
         groupService.groupUpdated(expense.getGroup());
         log.info("Expense deleted successfully: id={}", expenseId);
@@ -147,8 +162,47 @@ public class ExpenseService {
                                  List<BigDecimal> shareAmounts) {
 
         log.info("Updating expense: id={}", expenseId);
+
         Expense expense = expenseRepository.findById(expenseId)
                 .orElseThrow(() -> new AppException(ErrorCode.EXPENSE_NOT_FOUND));
+
+        if (!groupService.isMemberOfGroup(userService.getCurrentUser().getId(), expense.getGroup().getId())) {
+            throw new AppException(ErrorCode.NOT_A_MEMBER);
+        }
+
+        User oldPayer = expense.getPayer();
+        BigDecimal oldAmount = expense.getAmount();
+        List<ExpenseShare> oldShares = expenseShareRepository.findByExpenseIdAndDeletedFalse(expenseId);
+
+        User newPayer = (payerId != null) ? userService.getUserById(payerId) : oldPayer;
+        BigDecimal newAmount = (amount != null) ? amount : oldAmount;
+        List<Long> newParticipantIds = (participantIds != null) ? participantIds : oldShares.stream().map(s -> s.getUser().getId()).toList();
+        List<BigDecimal> newShareAmounts = new ArrayList<>(shareAmounts != null ? shareAmounts : oldShares.stream().map(ExpenseShare::getShareAmount).toList());
+
+        if (payerId != null) expense.setPayer(newPayer);
+        if (title != null && !title.isEmpty()) expense.setTitle(title);
+        String groupCurrency = expense.getGroup().getDefaultCurrency().name();
+        if (currency != null && !currency.isEmpty()) {
+            if (!currency.equalsIgnoreCase(groupCurrency)) {
+                log.info("Converting {} {} to {}", amount, currency, groupCurrency);
+                BigDecimal rate = exchangeRateService.getExchangeRate(currency, groupCurrency);
+                newAmount = exchangeRateService.convert(newAmount, rate);
+                newShareAmounts.replaceAll(share -> exchangeRateService.convert(share, rate));
+            }
+            try {
+                expense.setCurrency(Currency.valueOf(currency.toUpperCase()));
+            } catch (IllegalArgumentException e) {
+                log.warn("Unsupported currency '{}', defaulting to USD in expense updating", currency);
+                expense.setCurrency(Currency.USD);
+            }
+        }
+        if (amount != null) expense.setAmount(newAmount);
+        if (description != null && !description.isEmpty()) expense.setDescription(description);
+        if (expenseDate != null) expense.setExpenseDate(expenseDate);
+        if (isRecurring != null) expense.setIsRecurring(isRecurring);
+        if (recurrenceUnit != null) expense.setRecurrenceUnit(recurrenceUnit);
+        if (recurrenceInterval != null) expense.setRecurrenceInterval(recurrenceInterval);
+
         ExpenseType type;
         try {
             type = ExpenseType.valueOf(typeStr.toUpperCase());
@@ -156,39 +210,38 @@ public class ExpenseService {
             log.warn("Unknown expense type '{}', defaulting to OTHER", typeStr);
             type = ExpenseType.OTHER;
         }
-
-        if (payerId != null) expense.setPayer(userService.getUserById(payerId));
-        if (title != null && !title.isEmpty()) expense.setTitle(title);
-        if (amount != null) expense.setAmount(amount);
-        if (currency != null && !currency.isEmpty()) {
-            Currency currencyEnum;
-            try {
-                currencyEnum = Currency.valueOf(currency.toUpperCase());
-            } catch (IllegalArgumentException e) {
-                log.warn("Unsupported currency '{}', defaulting to USD in expense updating", currency);
-                currencyEnum = Currency.USD;
-            }
-            expense.setCurrency(currencyEnum);
-        }
-        if (description != null && !description.isEmpty()) expense.setDescription(description);
-        if (expenseDate != null) expense.setExpenseDate(expenseDate);
-        if (isRecurring != null) expense.setIsRecurring(isRecurring);
-        if (recurrenceUnit != null) expense.setRecurrenceUnit(recurrenceUnit);
-        if (recurrenceInterval != null) expense.setRecurrenceInterval(recurrenceInterval);
         expense.setType(type);
 
         Expense savedExpense = expenseRepository.save(expense);
 
-        if (participantIds != null && !participantIds.isEmpty()) {
-            List<ExpenseShare> shares = expenseShareRepository.findByExpenseIdAndDeletedFalse(expenseId);
-            expenseShareRepository.deleteAll(shares);
-            distributeShares(savedExpense, participantIds, shareAmounts, savedExpense.getAmount());
+        boolean isPayerChanged = !oldPayer.getId().equals(newPayer.getId());
+        boolean isAmountChanged = oldAmount.compareTo(newAmount) != 0;
+        boolean isParticipantsChanged = isParticipantListChanged(oldShares, newParticipantIds);
+
+        if (isPayerChanged || isAmountChanged || isParticipantsChanged) {
+            for (ExpenseShare oldShare : oldShares) {
+                if (!oldShare.getUser().getId().equals(oldPayer.getId())) {
+                    groupDebtService.updateGroupDebt(
+                            oldPayer,
+                            oldShare.getUser(),
+                            expense.getGroup(),
+                            oldShare.getShareAmount().negate()
+                    );
+                }
+            }
+
+            expenseShareRepository.deleteAll(oldShares);
+
+            distributeShares(savedExpense, newParticipantIds, newShareAmounts, newAmount);
+        } else {
+            log.info("Expense debt unchanged; skip debt update.");
         }
 
         groupService.groupUpdated(expense.getGroup());
         log.info("Expense updated: id={}", expenseId);
         return savedExpense;
     }
+
 
     @Transactional
     public void duplicateExpense(Expense original) {
@@ -252,6 +305,8 @@ public class ExpenseService {
     private void distributeShares(Expense expense, List<Long> participantIds,
                                   List<BigDecimal> shares, BigDecimal totalAmount) {
         log.info("Distributing shares for expense id={}", expense.getId());
+        log.info("participantIds={}", participantIds);
+        log.info("shares={}", shares);
         Map<Long, User> participants = new HashMap<>();
         userService.getUsersByIds(participantIds).forEach(user -> participants.put(user.getId(), user));
 
@@ -276,5 +331,19 @@ public class ExpenseService {
         share.setShareAmount(shareAmount);
         share.setDeleted(false);
         expenseShareRepository.save(share);
+        groupDebtService.updateGroupDebt(expense.getPayer(), user, expense.getGroup(), shareAmount);
     }
+
+    private boolean isParticipantListChanged(List<ExpenseShare> oldShares, List<Long> newIds) {
+        if (oldShares.size() != newIds.size()) return true;
+        List<Long> oldIds = oldShares.stream()
+                .map(s -> s.getUser().getId()).toList();
+        for (Long newId : newIds) {
+            if (!oldIds.contains(newId)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 }
