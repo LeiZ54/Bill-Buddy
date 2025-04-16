@@ -79,6 +79,7 @@ public class DtoConvertorUtil {
 
         Map<String, BigDecimal> currentUserOwes = new HashMap<>();
         Map<String, BigDecimal> owesCurrentUser = new HashMap<>();
+        BigDecimal totalDebts = BigDecimal.ZERO;
 
         for (Map.Entry<Long, BigDecimal> entry : netDebts.entrySet()) {
             Long otherUserId = entry.getKey();
@@ -87,9 +88,11 @@ public class DtoConvertorUtil {
             if (netAmount.compareTo(BigDecimal.ZERO) > 0) {
                 String name = userService.getUserById(otherUserId).getFullName();
                 owesCurrentUser.put(name, netAmount);
+                totalDebts = totalDebts.add(netAmount);
             } else if (netAmount.compareTo(BigDecimal.ZERO) < 0) {
                 String name = userService.getUserById(otherUserId).getFullName();
                 currentUserOwes.put(name, netAmount.abs());
+                totalDebts = totalDebts.add(netAmount);
             }
         }
 
@@ -98,6 +101,7 @@ public class DtoConvertorUtil {
         dto.setGroupName(group.getName());
         dto.setType(group.getType().name());
         dto.setDefaultCurrency(group.getDefaultCurrency().name());
+        dto.setTotalDebts(totalDebts);
         dto.setOwesCurrentUser(owesCurrentUser);
         dto.setCurrentUserOwes(currentUserOwes);
         return dto;

@@ -11,6 +11,7 @@ public class GroupDetailsDTO {
     private String groupName;
     private String type;
     private String defaultCurrency;
+    private BigDecimal totalDebts;
     private Map<String, BigDecimal> owesCurrentUser;
     private Map<String, BigDecimal> currentUserOwes;
 }
