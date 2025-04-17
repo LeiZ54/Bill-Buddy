@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { GroupData } from '../util/util';
 import { useGroupStore } from '../stores/groupStore';
 import useAuthStore from '../stores/authStore';
+import { useGroupDetailStore } from '../stores/groupDetailStore';
 
 const { Text } = Typography;
 
@@ -14,8 +15,9 @@ const itemVariants = {
 
 const GroupSection = ({ id, name, type, items, netBalance, currency }: GroupData) => {
     const navigate = useNavigate();
-    const { setActiveGroup, resetError } = useGroupStore();
+    const { resetError } = useGroupStore();
     const { groupType } = useAuthStore();
+    const { setActiveGroup } = useGroupDetailStore();
     return (
         <motion.section
             initial={{ opacity: 0 }}
@@ -24,7 +26,7 @@ const GroupSection = ({ id, name, type, items, netBalance, currency }: GroupData
             whileTap={{ scale: 0.98 }}
             className="flex justify-between items-start p-4 mb-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer"
             onClick={() => {
-                setActiveGroup({ id, name, type, items, netBalance, currency });
+                setActiveGroup(id);
                 navigate('detail');
                 resetError();
             }}

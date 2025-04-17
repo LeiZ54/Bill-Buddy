@@ -2,19 +2,21 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Button, List, Alert, Avatar, Spin } from 'antd';
 import { EditOutlined, UserAddOutlined, LinkOutlined, MailOutlined, LogoutOutlined, DeleteOutlined } from '@ant-design/icons';
-import { useGroupStore } from '../stores/groupStore';
 import Topbar from '../components/TopBar';
 import { useNavigate } from 'react-router-dom';
 import CreateGroupModal from '../components/CreateGroupModal';
 import EmailInviteModal from '../components/EmailInviteModal';
 import LinkInviteModal from '../components/LinkInviteModal';
 import useAuthStore from '../stores/authStore';
+import { useGroupDetailStore } from '../stores/groupDetailStore';
 
 const GroupSettingPage = () => {
 
-    const { activeGroup, isLoading, error, fetchMember, members, resetError } = useGroupStore();
+
     const { groupType } = useAuthStore();
     const navigate = useNavigate();
+    const { activeGroup, groupData, fetchMember, members } = useGroupDetailStore();
+
     if (!activeGroup) {
         return (
             <motion.div
@@ -36,10 +38,18 @@ const GroupSettingPage = () => {
     const [isUpdateModaOpen, setisUpdateModalOpen] = useState(false);
     const [isEmailModalOpen, setisEmailModalOpen] = useState(false);
     const [isLinkModalOpen, setisLinkModalOpen] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState('');
 
     useEffect(() => {
-        resetError();
-        fetchMember(activeGroup!.id);
+        try {
+            setIsLoading(true);
+            fetchMember();
+        } catch (err) {
+            setError("Failed to get data!");
+        } finally {
+            setIsLoading(false);
+        }
     }, []);
 
     return (
@@ -60,21 +70,20 @@ const GroupSettingPage = () => {
             <CreateGroupModal
                 open={isUpdateModaOpen}
                 onCancel={() => setisUpdateModalOpen(false)}
-                onSuccess={() => {
-                }}
+                onSuccess={() => {}}
                 isEdit
             />
 
             <EmailInviteModal
                 open={isEmailModalOpen}
                 onCancel={() => setisEmailModalOpen(false)}
-                groupId={activeGroup!.id}
+                groupId={activeGroup}
             />
 
             <LinkInviteModal
                 open={isLinkModalOpen}
                 onCancel={() => setisLinkModalOpen(false)}
-                groupId={activeGroup!.id}
+                groupId={activeGroup}
             />
 
 
@@ -83,11 +92,11 @@ const GroupSettingPage = () => {
                 <div className="flex justify-between gap-4 mb-4">
                     <div>
                         <Avatar
-                            src={groupType[activeGroup.type]}
+                            src={groupType[groupData!.type]}
                             size={60}
                             className="flex-shrink-0 mr-4"
                         />
-                        <span className="text-xl font-semibold">{activeGroup.name}</span>
+                        <span className="text-xl font-semibold">{groupData!.name}</span>
                     </div>
                     <Button
                         type="text"

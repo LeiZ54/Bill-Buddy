@@ -3,20 +3,11 @@ import { ExpenseDate } from '../util/util';
 
 interface ExpenseState {
     expense: ExpenseDate[];
-    getUrlByExpenseType: (type: string) => string;
     getRecurrenceLabel: (time?: { recurrenceUnit: string; recurrenceInterval: number }) => string;
 }
 
 export const useExpenseStore = create<ExpenseState>((set) => ({
     expense: [],
-    getUrlByExpenseType: (type: string): string => {
-        return {
-            trip: '/group/trip.png',
-            daily: '/group/daily.png',
-            party: '/group/party.png',
-            other: '/group/other.png'
-        }[type] || '/group/other.png';
-    },
     getRecurrenceLabel: (time?: { recurrenceUnit: string; recurrenceInterval: number }): string => {
         if (!time) return '';
         const { recurrenceUnit, recurrenceInterval } = time;
