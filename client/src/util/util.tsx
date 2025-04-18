@@ -36,7 +36,7 @@ export interface easyGroup {
     type: string;
 }
 
-export interface ExpenseSimpleDate {
+export interface ExpenseSimpleData {
     id: number;
     title: string;
     payer: Member;
@@ -45,6 +45,21 @@ export interface ExpenseSimpleDate {
     currency: string;
     expenseDate: string;
     debtsAmount: number;
+}
+export interface ExpenseData {
+    id: number;
+    title: string;
+    payer: Member;
+    description: string;
+    type: string;
+    amount: number;
+    currency: string;
+    expenseDate: string;
+    debtsAmount: number;
+    isRecurring: boolean;
+    recurrenceUnit: string;
+    recurrenceInterval: string;
+    shares: Record<string, number>;
 }
 
 export const recurrenceOptions = [
@@ -56,3 +71,10 @@ export const recurrenceOptions = [
     { label: 'Year', unit: 'YEAR', interval: 1 },
     { label: 'Custom', unit: null, interval: null },
 ];
+
+export interface ExpenseFilter {
+    title?: string;
+    payerId?: string;
+    type?: string;
+    month?: string;
+}

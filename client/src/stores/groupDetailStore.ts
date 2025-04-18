@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import api from '../util/axiosConfig';
-import { GroupData, Group, Member, ExpenseSimpleDate } from '../util/util';
+import { GroupData, Group, Member, ExpenseSimpleData, ExpenseFilter } from '../util/util';
 import { persist } from 'zustand/middleware';
 import { message } from 'antd';
 
@@ -11,14 +11,18 @@ interface GroupDetailState {
     currentPage: number;
     hasMore: boolean;
     members: Member[];
-    expenses: ExpenseSimpleDate[];
+    expenses: ExpenseSimpleData[];
+    filters: ExpenseFilter;
     // public function
     clearData: () => void;
     setActiveGroup: (id: number) => void;
+    setFilters: (filters: ExpenseFilter) => void;
     fetchMember: () => Promise<void>;
+    loadMoreExpenses: () => Promise<void>;
     getGroup: () => Promise<void>;
     editGroup: (newName: string, newType: string, defaultCurrency: string) => Promise<void>;
     fetchExpenses: () => Promise<void>;
+
 
     // private function
 }
@@ -35,13 +39,18 @@ export const useGroupDetailStore = create<GroupDetailState>()(
             hasMore: true,
             members: [],
             expenses: [],
-
+            filters: {},
 
             clearData: () => {
-                set({ groupData: null, expenses: [] });
+                set({ groupData: null, expenses: [], filters: {}, currentPage: 0, hasMore: true });
             },
+
             setActiveGroup: (id: number) => {
                 set({ activeGroup: id });
+            },
+
+            setFilters: (filters: ExpenseFilter) => {
+                set({ filters: filters });
             },
 
             editGroup: async (newName, newType, defaultCurrency) => {
@@ -89,9 +98,47 @@ export const useGroupDetailStore = create<GroupDetailState>()(
                 set({ groupData: transformedData });
             },
             fetchExpenses: async () => {
-                const { activeGroup } = get();
-                const res =  await api.get(`expenses/group/${activeGroup}`);
-                set({expenses: res.data});
+                const { activeGroup, filters } = get();
+
+                const queryParams = new URLSearchParams();
+                queryParams.append('groupId', String(activeGroup));
+                if (filters.title) queryParams.append('title', filters.title);
+                if (filters.payerId) queryParams.append('payerId', filters.payerId);
+                if (filters.type) queryParams.append('type', filters.type);
+                if (filters.month) queryParams.append('month', filters.month);
+                queryParams.append('page', String(0));
+                queryParams.append('size', String(10));
+
+                const res = await api.get(`/expenses?${queryParams.toString()}`);
+                set({
+                    expenses: res.data.content,
+                    hasMore: !res.data.last,
+                    currentPage: 1
+                });
+            },
+            loadMoreExpenses: async () => {
+                const { activeGroup, filters, currentPage, hasMore, isLoadingMore } = get();
+                if (!hasMore || isLoadingMore) return;
+                const nextPage = currentPage + 1;
+                const queryParams = new URLSearchParams();
+                queryParams.append('groupId', String(activeGroup));
+                if (filters.title) queryParams.append('title', filters.title);
+                if (filters.payerId) queryParams.append('payerId', filters.payerId);
+                if (filters.type) queryParams.append('type', filters.type);
+                if (filters.month) queryParams.append('month', filters.month);
+                queryParams.append('page', String(nextPage));
+                queryParams.append('size', String(10));
+                set({ isLoadingMore: true });
+                try {
+                    const res = await api.get(`/expenses?${queryParams.toString()}`);
+                    set(state => ({
+                        expenses: [...state.expenses, ...res.data.content],
+                        hasMore: !res.data.last,
+                        currentPage: nextPage
+                    }));
+                } finally {
+                    set({ isLoadingMore: false });
+                }
             },
         }),
         {

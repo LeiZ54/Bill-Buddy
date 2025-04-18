@@ -1,13 +1,27 @@
 import { create } from 'zustand';
-import { ExpenseDate } from '../util/util';
+import { ExpenseData } from '../util/util';
+import api from '../util/axiosConfig';
+import { persist } from 'zustand/middleware';
 
 interface ExpenseState {
-    expense: ExpenseDate[];
+    activeExpense: number | null; 
+    expenseData: ExpenseData | null;
+    setActiveExpense: (id: number) => void;
+    getExpense: () => Promise<void>;
     getRecurrenceLabel: (time?: { recurrenceUnit: string; recurrenceInterval: number }) => string;
 }
 
-export const useExpenseStore = create<ExpenseState>((set) => ({
-    expense: [],
+export const useExpenseStore = create<ExpenseState>()(
+    persist(
+    (set, get) => ({
+    activeExpense: null,
+    expenseData: null,
+
+
+    setActiveExpense: (id: number) => {
+        set({ activeExpense: id });
+    },
+
     getRecurrenceLabel: (time?: { recurrenceUnit: string; recurrenceInterval: number }): string => {
         if (!time) return '';
         const { recurrenceUnit, recurrenceInterval } = time;
@@ -24,4 +38,19 @@ export const useExpenseStore = create<ExpenseState>((set) => ({
 
         return `Every ${recurrenceInterval} ${unitLabelMap[recurrenceUnit]}${recurrenceInterval > 1 ? 's' : ''}`;
     },
-}));
+
+    getExpense: async () => {
+        const { activeExpense } = get();
+        const res = await api.get(`/expenses/${activeExpense}`);
+        set({expenseData: res.data});
+    },
+    }),
+    {
+        name: 'expense-storage', // localStorage key
+        partialize: (state) => ({
+            activeExpense: state.activeExpense,
+        }),
+    }
+)
+
+);

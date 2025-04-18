@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Button, List, Alert, Avatar, Spin } from 'antd';
+import { Button, List, Alert, Avatar } from 'antd';
 import { EditOutlined, UserAddOutlined, LinkOutlined, MailOutlined, LogoutOutlined, DeleteOutlined } from '@ant-design/icons';
 import Topbar from '../components/TopBar';
 import { useNavigate } from 'react-router-dom';
@@ -15,7 +15,7 @@ const GroupSettingPage = () => {
 
     const { groupType } = useAuthStore();
     const navigate = useNavigate();
-    const { activeGroup, groupData, fetchMember, members } = useGroupDetailStore();
+    const { activeGroup, groupData, members } = useGroupDetailStore();
 
     if (!activeGroup) {
         return (
@@ -38,17 +38,11 @@ const GroupSettingPage = () => {
     const [isUpdateModaOpen, setisUpdateModalOpen] = useState(false);
     const [isEmailModalOpen, setisEmailModalOpen] = useState(false);
     const [isLinkModalOpen, setisLinkModalOpen] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
 
     useEffect(() => {
-        try {
-            setIsLoading(true);
-            fetchMember();
-        } catch (err) {
+        if (members.length == 0) {
             setError("Failed to get data!");
-        } finally {
-            setIsLoading(false);
         }
     }, []);
 
@@ -148,20 +142,19 @@ const GroupSettingPage = () => {
 
                     {
                         error ? (
-                            < Alert message={error} type="error" className="m-4"/>
+                            < Alert message={error} type="error" className="m-4" />
                         ) : (
-                            isLoading ? <Spin/> :
-                                <List
-                                    dataSource={members}
-                                    renderItem={(member) => (
-                                        <List.Item className="!px-0">
-                                            <div className="flex justify-between w-full px-5 py-2">
-                                                <span className="font-bold">{member.fullName}</span>
-                                                <span className="text-gray-500 ml-2">{member.email}</span>
-                                            </div>
-                                        </List.Item>
-                                    )}
-                                />
+                            <List
+                                dataSource={members}
+                                renderItem={(member) => (
+                                    <List.Item className="!px-0">
+                                        <div className="flex justify-between w-full px-5 py-2">
+                                            <span className="font-bold">{member.fullName}</span>
+                                            <span className="text-gray-500 ml-2">{member.email}</span>
+                                        </div>
+                                    </List.Item>
+                                )}
+                            />
                         )
                     }
                 </div>

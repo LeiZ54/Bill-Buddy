@@ -1,16 +1,21 @@
-import {Alert, Avatar, Spin} from 'antd';
+import {Alert, Avatar, Spin, Form, Button, Select} from 'antd';
 import {motion} from 'framer-motion';
-import {useNavigate} from 'react-router-dom';
+import { useNavigate} from 'react-router-dom';
 import Topbar from '../components/TopBar';
 import {useEffect, useState} from 'react';
 import useAuthStore from '../stores/authStore';
 import {useGroupDetailStore} from '../stores/groupDetailStore';
+import { useExpenseStore } from '../stores/expenseStore';
 
 export default function GroupDetailPage() {
+    const [form] = Form.useForm();
+    const { Option } = Select;
+    const navigate = useNavigate();
     const {groupType,expenseTypes} = useAuthStore();
-    const {activeGroup, groupData, getGroup, fetchExpenses, clearData, expenses} = useGroupDetailStore();
-
+    const { activeGroup, groupData, getGroup, fetchExpenses, clearData, expenses, fetchMember, loadMoreExpenses, isLoadingMore, hasMore, filters, setFilters } = useGroupDetailStore();
+    const { setActiveExpense } = useExpenseStore();
     const [isLoading, setIsLoading] = useState(false);
+    const [isLoadingExpenses, setIsLoadingExpenses] = useState(false);
 
     useEffect(() => {
         if (activeGroup) {
@@ -19,27 +24,78 @@ export default function GroupDetailPage() {
                     clearData();
                     setIsLoading(true);
                     await getGroup();
-                    await fetchExpenses();
+                    await fetchMember();
                 } catch (err) {
-                    console.error("Failed to load group:", err);
                 } finally {
                     setIsLoading(false);
                 }
             };
             fetchData();
-
         }
     }, []);
 
+    //get expense
+    useEffect(() => {
+        if (activeGroup) {
+            const fetchData = async () => {
+                try {
+                    setIsLoadingExpenses(true);
+                    await fetchExpenses();
+                } catch (err) {
+                } finally {
+                    setIsLoadingExpenses(false);
+                }
+            };
+            fetchData();
+        }
+    }, [filters]);
 
-    const navigate = useNavigate();
+    //touch bottome to load more data;
+    useEffect(() => {
+        const scrollContainer = document.querySelector('.ant-layout-content');
+        const handleScroll = () => {
+            if (!scrollContainer) return;
+            const { scrollTop, scrollHeight, clientHeight } = scrollContainer;
+            if (scrollTop + clientHeight == scrollHeight && !isLoadingMore && hasMore) {
+                loadMoreExpenses();
+            }
+        };
+        scrollContainer?.addEventListener('scroll', handleScroll);
+        return () => scrollContainer?.removeEventListener('scroll', handleScroll);
+    }, [isLoadingMore, loadMoreExpenses]);
+
+
+    const generateYears = () => {
+        const currentYear = new Date().getFullYear();
+        const years = [];
+        for (let i = currentYear - 10; i <= currentYear + 10; i++) {
+            years.push(i);
+        }
+        return years;
+    };
+
+    const generateMonths = () => {
+        const months = [];
+        for (let i = 1; i <= 12; i++) {
+            months.push(i);
+        }
+        return months;
+    };
+    const handleApplyFilters = () => {
+        const values = form.getFieldsValue();
+        const formattedDate = `${values.year}-${String(values.month).padStart(2, '0')}`;
+        const newFilters = {
+            month: formattedDate
+        }
+        setFilters(newFilters);
+    };
 
     if (!groupData) {
         return (
             <motion.div
-                initial={{opacity: 0}}
-                animate={{opacity: 1}}
-                transition={{duration: 0.2}}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.2 }}
             >
                 <Topbar
                     leftType="back"
@@ -51,12 +107,10 @@ export default function GroupDetailPage() {
                     }}
                     className="bg-transparent shadow-none"
                 />
-                {isLoading ? (<Spin/>) : <Alert message="Something Wrong!" type="error" className="m-4"/>}
+                {(isLoading || isLoadingExpenses) ? (<Spin />) : <Alert message="Something Wrong!" type="error" className="m-4" />}
             </motion.div>
         )
     }
-
-
     return (
         <motion.div
             initial={{opacity: 0}}
@@ -100,12 +154,63 @@ export default function GroupDetailPage() {
                             </p>
                         </div>
                     </div>
+
+                    {/*  π”√ æ∑∂ */ }
+                    <div className="max-w-2xl mx-auto mt-6 space-y-4 px-4">
+                        <Form form={form} layout="vertical">
+                            <Form.Item label="Year" name="year">
+                                <Select
+                                    className="border p-2 rounded"
+                                    placeholder="Select Year"
+                                >
+                                    {generateYears().map((year) => (
+                                        <Option key={year} value={year}>
+                                            {year}
+                                        </Option>
+                                    ))}
+                                </Select>
+                            </Form.Item>
+
+                            <Form.Item label="Month" name="month">
+                                <Select
+                                    className="border p-2 rounded"
+                                    placeholder="Select Month"
+                                >
+                                    {generateMonths().map((month) => (
+                                        <Option key={month} value={month}>
+                                            {month}
+                                        </Option>
+                                    ))}
+                                </Select>
+                            </Form.Item>
+
+                            <Button
+                                type="primary"
+                                onClick={handleApplyFilters}
+                            >
+                                Apply Filters
+                            </Button>
+                        </Form>
+                    </div>
+
+                    <Button
+                        type="primary"
+                        onClick={() => {
+                            setFilters({});
+                        }}
+                    >
+                        clear filter
+                    </Button>
                     {/* expense list */}
                     <div className="mt-10">
                         {[...expenses].reverse().map(expense => (
                             <div
                                 key={expense.id}
                                 className="flex items-center justify-between py-2 border-b px-4"
+                                onClick={() => {
+                                    setActiveExpense(expense.id);
+                                    navigate('/groups/expense');
+                                }}
                             >
                                 <div className="w-12 text-center">
                                     <div className="text-xl text-gray-400">
@@ -146,5 +251,4 @@ export default function GroupDetailPage() {
             </div>
         </motion.div>
     )
-        ;
 }

@@ -6,7 +6,6 @@ import { message } from 'antd';
 
 interface GroupState {
     groups: GroupData[];
-    totalCurrentUserDebts: number | null;
     isLoading: boolean;
     isLoadingMore: boolean;
     error: string | null;
@@ -28,7 +27,6 @@ export const useGroupStore = create<GroupState>()(
     persist(
         (set, get) => ({
             groups: [],
-            totalCurrentUserDebts: null,
             isLoading: false,
             isLoadingMore: false,
             error: null,
@@ -80,7 +78,6 @@ export const useGroupStore = create<GroupState>()(
                         groups: transformedData,
                         currentPage: page,
                         hasMore: !result.groupPage.last,
-                        totalCurrentUserDebts: result.totalCurrentUserDebts,
                         isLoading: false,
                     });
                 } catch (err) {
@@ -101,7 +98,6 @@ export const useGroupStore = create<GroupState>()(
                         groups: [...state.groups, ...transformedData],
                         currentPage: nextPage,
                         hasMore: !result.groupPage.last,
-                        totalCurrentUserDebts: result.totalCurrentUserDebts,
                         isLoadingMore: false
                     }));
                 } catch (err) {
@@ -123,6 +119,7 @@ export const useGroupStore = create<GroupState>()(
                 groups: state.groups,
                 currentPage: state.currentPage,
                 hasMore: state.hasMore,
+                inviteToken: state.inviteToken,
             }),
         }
     )

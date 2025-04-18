@@ -21,7 +21,6 @@ export default function GroupsPage() {
         resetError,
         inviteToken,
         setInviteToken,
-        totalCurrentUserDebts
     } = useGroupStore();
 
     useEffect(() => {
@@ -52,9 +51,6 @@ export default function GroupsPage() {
                             <Alert message={error} type="error" className="mb-4" />
                         ) : (
                             <>
-                                <h1 className="text-xl text-center">
-                                    Overall, you owe ${totalCurrentUserDebts}
-                                </h1>
                                 {groups.map(group => (
                                     <GroupSection key={group.id} {...group} />
                                 ))}
