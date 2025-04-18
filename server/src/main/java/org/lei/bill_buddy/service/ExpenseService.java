@@ -1,5 +1,6 @@
 package org.lei.bill_buddy.service;
 
+import jakarta.persistence.criteria.Predicate;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,6 +11,9 @@ import org.lei.bill_buddy.enums.ExpenseType;
 import org.lei.bill_buddy.enums.RecurrenceUnit;
 import org.lei.bill_buddy.model.*;
 import org.lei.bill_buddy.repository.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -286,15 +290,54 @@ public class ExpenseService {
         return expense;
     }
 
-    public List<Expense> getExpensesByGroupIdAndMonth(Long groupId, String month) {
-        log.info("Getting expenses for groupId={} in month={}", groupId, month);
-        if (month != null) {
-            YearMonth ym = YearMonth.parse(month);
-            LocalDateTime start = ym.atDay(1).atStartOfDay();
-            LocalDateTime end = ym.atEndOfMonth().atTime(LocalTime.MAX);
-            return expenseRepository.findByGroupIdAndExpenseDateBetweenAndDeletedFalse(groupId, start, end);
+    public Page<Expense> getExpenses(
+            Long groupId,
+            String title,
+            Long payerId,
+            ExpenseType type,
+            String month,
+            Pageable pageable) {
+        log.info("Querying expenses with filters: groupId={}, payerId={}, type={}, month={}, title={}",
+                groupId, payerId, type, month, title);
+        if (!groupService.isMemberOfGroup(userService.getCurrentUser().getId(), groupId)) {
+            log.warn("User {} is not a member of group {} in getting expenses",
+                    userService.getCurrentUser().getId(),
+                    groupId);
+            throw new AppException(ErrorCode.NOT_A_MEMBER);
         }
-        return expenseRepository.findByGroupIdAndDeletedFalse(groupId);
+
+        Specification<Expense> spec = (root, query, cb) -> {
+            List<jakarta.persistence.criteria.Predicate> predicates = new ArrayList<>();
+
+            predicates.add(cb.isFalse(root.get("deleted")));
+
+            if (groupId != null) {
+                predicates.add(cb.equal(root.get("group").get("id"), groupId));
+            }
+
+            if (payerId != null) {
+                predicates.add(cb.equal(root.get("payer").get("id"), payerId));
+            }
+
+            if (type != null) {
+                predicates.add(cb.equal(root.get("type"), type));
+            }
+
+            if (title != null && !title.isBlank()) {
+                predicates.add(cb.like(cb.lower(root.get("title")), "%" + title.toLowerCase() + "%"));
+            }
+
+            if (month != null && !month.isBlank()) {
+                YearMonth ym = YearMonth.parse(month);
+                LocalDateTime start = ym.atDay(1).atStartOfDay();
+                LocalDateTime end = ym.atEndOfMonth().atTime(LocalTime.MAX);
+                predicates.add(cb.between(root.get("expenseDate"), start, end));
+            }
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        return expenseRepository.findAll(spec, pageable);
     }
 
     public boolean hasActiveExpensesInGroup(Long userId, Long groupId) {
@@ -346,5 +389,4 @@ public class ExpenseService {
         }
         return false;
     }
-
 }

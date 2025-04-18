@@ -3,13 +3,19 @@ package org.lei.bill_buddy.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.lei.bill_buddy.DTO.ExpenseCreateRequest;
+import org.lei.bill_buddy.DTO.ExpenseDTO;
 import org.lei.bill_buddy.DTO.ExpenseUpdateRequest;
 import org.lei.bill_buddy.annotation.RateLimit;
+import org.lei.bill_buddy.enums.ExpenseType;
 import org.lei.bill_buddy.model.Expense;
 import org.lei.bill_buddy.service.ExpenseService;
 import org.lei.bill_buddy.service.GroupService;
 import org.lei.bill_buddy.service.UserService;
 import org.lei.bill_buddy.util.DtoConvertorUtil;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -92,21 +98,28 @@ public class ExpenseController {
         return ResponseEntity.ok("Expense deleted with ID: " + id);
     }
 
-    @GetMapping("/group/{groupId}")
-    public ResponseEntity<?> getExpensesByGroupId(
-            @PathVariable Long groupId,
-            @RequestParam(required = false) String month
+    @GetMapping
+    public ResponseEntity<Page<ExpenseDTO>> getExpenses(
+            @RequestParam Long groupId,
+            @RequestParam(required = false) String title,
+            @RequestParam(required = false) Long payerId,
+            @RequestParam(required = false) ExpenseType type,
+            @RequestParam(required = false) String month,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "expenseDate") String sortBy,
+            @RequestParam(defaultValue = "desc") String direction
     ) {
-        Long currentUserId = userService.getCurrentUser().getId();
+        Sort sort = direction.equalsIgnoreCase("asc")
+                ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
 
-        if (!groupService.isMemberOfGroup(currentUserId, groupId)) {
-            return ResponseEntity.status(403).body("You do not have permission to view expenses of this group.");
-        }
+        Pageable pageable = PageRequest.of(page, size, sort);
 
-        return ResponseEntity.ok(expenseService
-                .getExpensesByGroupIdAndMonth(groupId, month)
-                .stream()
-                .map(dtoConvertor::convertExpenseToExpenseDTO)
-                .collect(Collectors.toList()));
+        Page<Expense> expensePage = expenseService.getExpenses(groupId, title, payerId, type, month, pageable);
+
+        Page<ExpenseDTO> dtoPage = expensePage.map(dtoConvertor::convertExpenseToExpenseDTO);
+
+        return ResponseEntity.ok(dtoPage);
     }
 }
