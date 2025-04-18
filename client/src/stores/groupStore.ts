@@ -1,27 +1,24 @@
 import { create } from 'zustand';
 import api from '../util/axiosConfig';
-import { GroupData, Group, Member } from '../util/util';
+import { GroupData, Group } from '../util/util';
 import { persist } from 'zustand/middleware';
+import { message } from 'antd';
 
 interface GroupState {
     groups: GroupData[];
+    totalCurrentUserDebts: number | null;
     isLoading: boolean;
     isLoadingMore: boolean;
     error: string | null;
     currentPage: number;
     hasMore: boolean;
-    activeGroup: GroupData | null;
-    members: Member[];
     inviteToken: string | null
     // public function
-    setActiveGroup: (group: GroupData) => void;
-    clearActiveGroup: () => void;
     fetchGroups: (page?: number) => Promise<void>;
     loadMoreGroups: () => Promise<void>;
     resetError: () => void;
-    fetchMember: (groupId: number) => Promise<void>;
-    updateGroup: (newGroup: GroupData) => void;
     setInviteToken: (token: string | null) => void;
+    creatGroup: (groupName: string, type: string, defaultCurrency: string) => Promise<void>;
 
     // private function
     _transformGroups: (data: Group[]) => GroupData[];
@@ -31,18 +28,19 @@ export const useGroupStore = create<GroupState>()(
     persist(
         (set, get) => ({
             groups: [],
+            totalCurrentUserDebts: null,
             isLoading: false,
             isLoadingMore: false,
             error: null,
             currentPage: 0,
             hasMore: true,
             activeGroup: null,
-            members: [],
             inviteToken: null,
 
-            setActiveGroup: (group) => set({ activeGroup: group }),
-            clearActiveGroup: () => set({ activeGroup: null }),
             setInviteToken: (token) => set({ inviteToken: token }),
+            resetError: () => {
+                set({ error: null });
+            },
 
             _transformGroups: (data: Group[]) => {
                 return data.map(group => {
@@ -77,12 +75,13 @@ export const useGroupStore = create<GroupState>()(
                     set({ groups: [], isLoading: true, error: null });
                     const response = await api.get(`/groups/detail?page=${page}&size=10`);
                     const result = response.data;
-                    const transformedData = get()._transformGroups(result.content);
+                    const transformedData = get()._transformGroups(result.groupPage.content);
                     set({
                         groups: transformedData,
                         currentPage: page,
-                        hasMore: !result.last,
-                        isLoading: false
+                        hasMore: !result.groupPage.last,
+                        totalCurrentUserDebts: result.totalCurrentUserDebts,
+                        isLoading: false,
                     });
                 } catch (err) {
                     set({ error: 'Failed to get data!', isLoading: false });
@@ -97,35 +96,26 @@ export const useGroupStore = create<GroupState>()(
                     const nextPage = currentPage + 1;
                     const response = await api.get(`/groups/detail?page=${nextPage}&size=10`);
                     const result = response.data;
-                    const transformedData = get()._transformGroups(result.content);
+                    const transformedData = get()._transformGroups(result.groupPage.content);
                     set(state => ({
                         groups: [...state.groups, ...transformedData],
                         currentPage: nextPage,
-                        hasMore: !result.last,
+                        hasMore: !result.groupPage.last,
+                        totalCurrentUserDebts: result.totalCurrentUserDebts,
                         isLoadingMore: false
                     }));
                 } catch (err) {
                     set({ error: 'Failed to load more data!', isLoadingMore: false });
                 }
             },
-
-            fetchMember: async (groupId: number) => {
-                try {
-                    set({ isLoading: true, error: null });
-                    const response = await api.get(`/groups/${groupId}/members`);
-                    set({ members: response.data, isLoading: false });
-                } catch (err) {
-                    set({ error: 'Failed to get data!', isLoading: false });
-                }
+            creatGroup: async (groupName, type, defaultCurrency) => {
+                await api.post('/groups', {
+                    groupName,
+                    type,
+                    defaultCurrency
+                });
+                message.success('Create group successfully!');
             },
-
-            updateGroup: (newGroup: GroupData) => {
-                set({ activeGroup: newGroup });
-            },
-
-            resetError: () => {
-                set({ error: null });
-            }
         }),
         {
             name: 'group-storage', // localStorage key
@@ -133,7 +123,6 @@ export const useGroupStore = create<GroupState>()(
                 groups: state.groups,
                 currentPage: state.currentPage,
                 hasMore: state.hasMore,
-                activeGroup: state.activeGroup,
             }),
         }
     )

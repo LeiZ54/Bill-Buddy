@@ -18,14 +18,13 @@ export default function GroupsPage() {
         hasMore,
         fetchGroups,
         loadMoreGroups,
-        clearActiveGroup,
         resetError,
         inviteToken,
-        setInviteToken
+        setInviteToken,
+        totalCurrentUserDebts
     } = useGroupStore();
 
     useEffect(() => {
-        clearActiveGroup();
         resetError();
         fetchGroups();
         if (inviteToken != null) {
@@ -44,10 +43,26 @@ export default function GroupsPage() {
                 rightText="Create group"
                 rightOnClick={() => setShowCreateModal(true)}
             />
-            {groups.map(group => (
-                <GroupSection key={group.id} {...group} />
-            ))}
-            {error && <Alert message={error} type="error" className="mb-4" />}
+            <>
+                {isLoading ? (
+                    <Spin />
+                ) : (
+                    <>
+                        {error ? (
+                            <Alert message={error} type="error" className="mb-4" />
+                        ) : (
+                            <>
+                                <h1 className="text-xl text-center">
+                                    Overall, you owe ${totalCurrentUserDebts}
+                                </h1>
+                                {groups.map(group => (
+                                    <GroupSection key={group.id} {...group} />
+                                ))}
+                            </>
+                        )}
+                    </>
+                )}
+            </>
 
             <CreateGroupModal
                 open={showCreateModal}
@@ -62,9 +77,6 @@ export default function GroupsPage() {
                     setShowInvitationModal(false);
                 }}
             />
-
-
-            {isLoading && <Spin />}
 
         </motion.div >
     );

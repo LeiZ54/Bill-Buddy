@@ -1,8 +1,8 @@
-import { Form, Modal, Input, Alert, Button, Radio, Grid, message, Select } from 'antd';
+import { Form, Modal, Input, Button, Radio, Grid, message, Select } from 'antd';
 import { useState, useEffect } from 'react';
-import api from '../util/axiosConfig';
 import { useGroupStore } from '../stores/groupStore';
 import useAuthStore from '../stores/authStore';
+import { useGroupDetailStore } from '../stores/groupDetailStore';
 
 const { useBreakpoint } = Grid;
 
@@ -20,24 +20,23 @@ export default function CreateGroupModal({
     isEdit = false,
 }: GroupModalProps) {
     const [form] = Form.useForm();
-    const [isCreating, setIsCreating] = useState(false);
-    const [error, setError] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
     const [formValid, setFormValid] = useState(false);
     const screens = useBreakpoint();
-    const { activeGroup, updateGroup } = useGroupStore();
+    const { creatGroup } = useGroupStore();
     const { groupType, currencies } = useAuthStore();
+    const { groupData, editGroup } = useGroupDetailStore();
 
     useEffect(() => {
         if (open) {
             if (isEdit) {
                 form.setFieldsValue({
-                    groupName: activeGroup!.name,
-                    groupType: activeGroup!.type
+                    groupName: groupData!.name,
+                    groupType: groupData!.type
                 });
             } else {
                 form.resetFields();
             }
-            setError(null);
         }
     }, [open, form, isEdit]);
 
@@ -53,34 +52,19 @@ export default function CreateGroupModal({
     const handleSubmit = async () => {
         try {
             const values = await form.validateFields();
-            setIsCreating(true);
-            setError(null);
+            setIsLoading(true);
 
             if (isEdit) {
-                await api.put(`/groups/${activeGroup!.id}`, {
-                    newName: values.groupName,
-                    newType: values.groupType,
-                    defaultCurrency: values.currency
-                });
-                activeGroup!.name = values.groupName;
-                activeGroup!.type = values.groupType;
-                activeGroup!.currency = values.currency;
-                updateGroup(activeGroup!);
-                message.success('Update group successfully!');
+                await editGroup(values.groupName, values.groupType, values.currency)
             } else {
-                await api.post('/groups', {
-                    groupName: values.groupName,
-                    type: values.groupType,
-                    defaultCurrency: values.currency
-                });
-                message.success('Create group successfully!');
+                await creatGroup(values.groupName, values.groupType, values.currency);
             }
             onSuccess();
             onCancel();
         } catch (err: any) {
             message.error(err.response?.data?.message || 'Network Error!');
         } finally {
-            setIsCreating(false);
+            setIsLoading(false);
         }
     };
 
@@ -93,9 +77,9 @@ export default function CreateGroupModal({
                 <Button
                     key="submit"
                     type="primary"
-                    loading={isCreating}
+                    loading={isLoading}
                     onClick={handleSubmit}
-                    disabled={!formValid || isCreating}
+                    disabled={!formValid || isLoading}
                 >
                     {isEdit ? 'Update' : 'Create'}
                 </Button>
@@ -156,7 +140,6 @@ export default function CreateGroupModal({
                     </Select>
                 </Form.Item>
             </Form>
-            {error && <Alert message={error} type="error" className="mb-4" />}
         </Modal>
     );
 }

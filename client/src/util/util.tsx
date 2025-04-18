@@ -5,7 +5,7 @@ export interface Group {
     defaultCurrency: string;
     owesCurrentUser: Record<string, number>;
     currentUserOwes: Record<string, number>;
-
+    totalDebts: number;
 }
 
 interface ExpenseItem {
@@ -26,6 +26,8 @@ export interface GroupData {
 export interface Member {
     id: number;
     fullName: string;
+    givenName: string;
+    familyName: string;
     email: string;
 }
 export interface easyGroup {
@@ -34,8 +36,15 @@ export interface easyGroup {
     type: string;
 }
 
-export interface ExpenseDate {
-
+export interface ExpenseSimpleDate {
+    id: number;
+    title: string;
+    payer: Member;
+    type: string;
+    amount: number;
+    currency: string;
+    expenseDate: string;
+    debtsAmount: number;
 }
 
 export const recurrenceOptions = [

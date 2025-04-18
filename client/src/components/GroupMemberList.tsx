@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useGroupStore } from '../stores/groupStore';
 import { easyGroup } from '../util/util';
+import { useGroupDetailStore } from '../stores/groupDetailStore';
 interface GroupMemberListProps {
     selectedGroup: easyGroup|undefined;
     splitMethod: 'equally' | 'unequally';
@@ -19,12 +19,20 @@ const GroupMemberList = ({
     onAmountChange
 }: GroupMemberListProps) => {
     const [loading, setLoading] = useState(true);
-    const { fetchMember, members, error } = useGroupStore();
+    const [error, setError] = useState("");
+    const { fetchMember, members } = useGroupDetailStore();
 
     useEffect(() => {
         if (selectedGroup?.groupId) {
-            fetchMember(selectedGroup.groupId);
-            setLoading(false);
+            try {
+                fetchMember();
+            } catch (err) {
+                setError("Failed to get data!");
+            } finally {
+                setLoading(false);
+            }
+        } else {
+            setLoading(true)
         }
     }, [selectedGroup]);
 

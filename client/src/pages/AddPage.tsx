@@ -9,12 +9,14 @@ import { easyGroup } from '../util/util';
 import { useExpenseStore } from '../stores/expenseStore';
 import ExpenseSplitSection from '../components/ExpenseSplitSection';
 import api from '../util/axiosConfig';
+import { useGroupDetailStore } from '../stores/groupDetailStore';
 
 
 const AddPage = () => {
     const navigate = useNavigate();
     const { groupType } = useAuthStore();
     const { getRecurrenceLabel } = useExpenseStore();
+    const { setActiveGroup } = useGroupDetailStore();
     const [hideMask, setHideMask] = useState(false);
     const [form] = Form.useForm();
     const { id, currencies } = useAuthStore();
@@ -188,6 +190,7 @@ const AddPage = () => {
                                 onSelect={(group) => {
                                     setSelectedGroup(group);
                                     form.setFieldsValue({ groupId: group.groupId });
+                                    setActiveGroup(group.groupId);
                                     setIsGroupModalOpen(false);
                                 }}
                             />
