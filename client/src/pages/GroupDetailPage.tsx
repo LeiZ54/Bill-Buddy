@@ -1,19 +1,32 @@
 import {Alert, Avatar, Spin, Form, Button, Select} from 'antd';
 import {motion} from 'framer-motion';
-import { useNavigate} from 'react-router-dom';
+import {useNavigate} from 'react-router-dom';
 import Topbar from '../components/TopBar';
 import {useEffect, useState} from 'react';
 import useAuthStore from '../stores/authStore';
 import {useGroupDetailStore} from '../stores/groupDetailStore';
-import { useExpenseStore } from '../stores/expenseStore';
+import {useExpenseStore} from '../stores/expenseStore';
 
 export default function GroupDetailPage() {
     const [form] = Form.useForm();
-    const { Option } = Select;
+    const {Option} = Select;
     const navigate = useNavigate();
-    const {groupType,expenseTypes} = useAuthStore();
-    const { activeGroup, groupData, getGroup, fetchExpenses, clearData, expenses, fetchMember, loadMoreExpenses, isLoadingMore, hasMore, filters, setFilters } = useGroupDetailStore();
-    const { setActiveExpense } = useExpenseStore();
+    const {groupType, expenseTypes} = useAuthStore();
+    const {
+        activeGroup,
+        groupData,
+        getGroup,
+        fetchExpenses,
+        clearData,
+        expenses,
+        fetchMember,
+        loadMoreExpenses,
+        isLoadingMore,
+        hasMore,
+        filters,
+        setFilters
+    } = useGroupDetailStore();
+    const {setActiveExpense} = useExpenseStore();
     const [isLoading, setIsLoading] = useState(false);
     const [isLoadingExpenses, setIsLoadingExpenses] = useState(false);
 
@@ -55,7 +68,7 @@ export default function GroupDetailPage() {
         const scrollContainer = document.querySelector('.ant-layout-content');
         const handleScroll = () => {
             if (!scrollContainer) return;
-            const { scrollTop, scrollHeight, clientHeight } = scrollContainer;
+            const {scrollTop, scrollHeight, clientHeight} = scrollContainer;
             if (scrollTop + clientHeight == scrollHeight && !isLoadingMore && hasMore) {
                 loadMoreExpenses();
             }
@@ -83,7 +96,16 @@ export default function GroupDetailPage() {
     };
     const handleApplyFilters = () => {
         const values = form.getFieldsValue();
-        const formattedDate = `${values.year}-${String(values.month).padStart(2, '0')}`;
+        let formattedDate = "";
+        if (values.year != null && values.month != null) {
+            formattedDate = `${values.year}-${String(values.month).padStart(2, '0')}`;
+        } else if (values.year != null) {
+            formattedDate = `${values.year}`;
+        } else if (values.month != null) {
+            formattedDate = `${String(values.month).padStart(2, '0')}`;
+        } else {
+            return;
+        }
         const newFilters = {
             month: formattedDate
         }
@@ -93,9 +115,9 @@ export default function GroupDetailPage() {
     if (!groupData) {
         return (
             <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.2 }}
+                initial={{opacity: 0}}
+                animate={{opacity: 1}}
+                transition={{duration: 0.2}}
             >
                 <Topbar
                     leftType="back"
@@ -107,7 +129,8 @@ export default function GroupDetailPage() {
                     }}
                     className="bg-transparent shadow-none"
                 />
-                {(isLoading || isLoadingExpenses) ? (<Spin />) : <Alert message="Something Wrong!" type="error" className="m-4" />}
+                {(isLoading || isLoadingExpenses) ? (<Spin/>) :
+                    <Alert message="Something Wrong!" type="error" className="m-4"/>}
             </motion.div>
         )
     }
@@ -155,96 +178,118 @@ export default function GroupDetailPage() {
                         </div>
                     </div>
 
-                    {/* 使用示范 */ }
-                    <div className="max-w-2xl mx-auto mt-6 space-y-4 px-4">
-                        <Form form={form} layout="vertical">
-                            <Form.Item label="Year" name="year">
-                                <Select
-                                    className="border p-2 rounded"
-                                    placeholder="Select Year"
-                                >
-                                    {generateYears().map((year) => (
-                                        <Option key={year} value={year}>
-                                            {year}
-                                        </Option>
-                                    ))}
-                                </Select>
-                            </Form.Item>
+                    {/* 使锟斤拷示锟斤拷 */}
+                    <div className="max-w-2xl mx-2 mt-4 px-0">
+                        <Form form={form} layout="vertical" className="w-full">
+                            <div className="flex  items-center justify-between">
 
-                            <Form.Item label="Month" name="month">
-                                <Select
-                                    className="border p-2 rounded"
-                                    placeholder="Select Month"
-                                >
-                                    {generateMonths().map((month) => (
-                                        <Option key={month} value={month}>
-                                            {month}
-                                        </Option>
-                                    ))}
-                                </Select>
-                            </Form.Item>
+                                <Form.Item className="w-[26%] m-0" name="year">
+                                    <Select
+                                        className="border p-2 rounded w-full"
+                                        placeholder="Year"
 
-                            <Button
-                                type="primary"
-                                onClick={handleApplyFilters}
-                            >
-                                Apply Filters
-                            </Button>
+                                    >
+                                        {generateYears().map((year) => (
+                                            <Option key={year} value={year}>
+                                                {year}
+                                            </Option>
+                                        ))}
+                                    </Select>
+                                </Form.Item>
+
+                                <Form.Item className="w-[28%] m-0" name="month">
+                                    <Select
+                                        className="border p-2 rounded w-full"
+                                        placeholder="Month"
+                                    >
+                                        {generateMonths().map((month) => (
+                                            <Option key={month} value={month}>
+                                                {month}
+                                            </Option>
+                                        ))}
+                                    </Select>
+                                </Form.Item>
+
+                                <Form.Item className="m-0">
+                                    <Button type="primary" onClick={handleApplyFilters}>
+                                        Search
+                                    </Button>
+                                </Form.Item>
+
+                                <Form.Item className="m-0">
+                                    <Button type="default"
+                                            onClick={() => {
+                                                setFilters({});
+                                                form.resetFields();
+                                            }}>
+                                        Clear
+                                    </Button>
+                                </Form.Item>
+
+                            </div>
                         </Form>
                     </div>
 
-                    <Button
-                        type="primary"
-                        onClick={() => {
-                            setFilters({});
-                        }}
-                    >
-                        clear filter
-                    </Button>
                     {/* expense list */}
-                    <div className="mt-10">
-                        {[...expenses].reverse().map(expense => (
-                            <div
-                                key={expense.id}
-                                className="flex items-center justify-between py-2 border-b px-4"
-                                onClick={() => {
-                                    setActiveExpense(expense.id);
-                                    navigate('/groups/expense');
-                                }}
-                            >
-                                <div className="w-12 text-center">
-                                    <div className="text-xl text-gray-400">
-                                        {new Date(expense.expenseDate).toLocaleString('en-US', {month: 'short'})}
-                                    </div>
-                                    <div className="text-base font-bold">
-                                        {new Date(expense.expenseDate).getDate()}
-                                    </div>
-                                </div>
-                                <div className="border-2 border-gray-300 rounded-md flex-">
-                                    <Avatar src={expenseTypes[expense.type]}/>
-                                </div>
-                                <div className="flex-1 mx-4">
-                                    <div className="font-bold text-xl">{expense.title}</div>
-                                    <div className="text-xs text-gray-500">
-                                        {expense.payer.fullName} paid {expense.currency} {expense.amount.toFixed(2)}
-                                    </div>
-                                </div>
+                    <div className="mt-6">
+                        {(() => {
+                            let lastMonth = '';
 
-                                <div className="text-right">
-                                    <p className={`text-lg  mt-2 ${expense.debtsAmount >= 0
-                                        ? 'text-green-600'
-                                        : 'text-[#FFA700]'
-                                    }`}>
-                                        {expense.debtsAmount >= 0 ? ' You lent ' : ' You owe '}
+                            return expenses.reverse().map(expense => {
+                                const dateObj = new Date(expense.expenseDate);
+                                const monthLabel = dateObj.toLocaleString('en-US', {month: 'long', year: 'numeric'});
+                                const showMonthDivider = monthLabel !== lastMonth;
+                                lastMonth = monthLabel;
 
-                                    </p>
-                                    <div className="text-xl text-[#FFA700] font-bold">
-                                        {expense.currency}{expense.debtsAmount.toFixed(2)}
+                                return (
+                                    <div key={expense.id}>
+                                        {showMonthDivider && (
+                                            <div className="text-xs text-black px-4 font-bold mt-2">{monthLabel}</div>
+                                        )}
+
+                                        <div
+                                            className="flex items-center justify-between py-2 border-b px-4"
+                                            onClick={() => {
+                                                setActiveExpense(expense.id);
+                                                navigate('/groups/expense');
+                                            }}
+                                        >
+                                            <div className="w-12 text-center">
+                                                <div className="text-xl text-gray-400">
+                                                    {dateObj.toLocaleString('en-US', {month: 'short'})}
+                                                </div>
+                                                <div className="text-base font-bold">
+                                                    {dateObj.getDate()}
+                                                </div>
+                                            </div>
+
+                                            <div className="border-2 border-gray-300 rounded-md flex-">
+                                                <Avatar src={expenseTypes[expense.type]}/>
+                                            </div>
+
+                                            <div className="flex-1 mx-4">
+                                                <div className="font-bold text-xl">{expense.title}</div>
+                                                <div className="text-xs text-gray-500">
+                                                    {expense.payer.fullName} paid {expense.currency} {expense.amount.toFixed(2)}
+                                                </div>
+                                            </div>
+
+                                            <div className="text-right">
+                                                <p className={`text-lg mt-2 ${expense.debtsAmount >= 0
+                                                    ? 'text-green-600'
+                                                    : 'text-[#FFA700]'
+                                                }`}>
+                                                    {expense.debtsAmount >= 0 ? ' You lent ' : ' You owe '}
+                                                </p>
+                                                <div className="text-xl text-[#FFA700] font-bold">
+                                                    {expense.currency}{Math.abs(expense.debtsAmount).toFixed(2)}
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                            </div>
-                        ))}
-
+                                );
+                            });
+                        })()}
                     </div>
 
                 </div>
