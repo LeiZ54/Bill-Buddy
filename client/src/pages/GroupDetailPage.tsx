@@ -1,4 +1,4 @@
-import {Alert, Avatar, Spin, Form, Button, Select} from 'antd';
+import {Alert, Avatar, Spin, Form, Button, Select, message, Input} from 'antd';
 import {motion} from 'framer-motion';
 import {useNavigate} from 'react-router-dom';
 import Topbar from '../components/TopBar';
@@ -6,6 +6,7 @@ import {useEffect, useState} from 'react';
 import useAuthStore from '../stores/authStore';
 import {useGroupDetailStore} from '../stores/groupDetailStore';
 import {useExpenseStore} from '../stores/expenseStore';
+
 
 export default function GroupDetailPage() {
     const [form] = Form.useForm();
@@ -24,11 +25,13 @@ export default function GroupDetailPage() {
         isLoadingMore,
         hasMore,
         filters,
-        setFilters
+        setFilters,
+        members
     } = useGroupDetailStore();
     const {setActiveExpense} = useExpenseStore();
     const [isLoading, setIsLoading] = useState(false);
     const [isLoadingExpenses, setIsLoadingExpenses] = useState(false);
+
 
     useEffect(() => {
         if (activeGroup) {
@@ -78,6 +81,8 @@ export default function GroupDetailPage() {
     }, [isLoadingMore, loadMoreExpenses]);
 
 
+
+
     const generateYears = () => {
         const currentYear = new Date().getFullYear();
         const years = [];
@@ -94,23 +99,34 @@ export default function GroupDetailPage() {
         }
         return months;
     };
+
     const handleApplyFilters = () => {
-        const values = form.getFieldsValue();
-        let formattedDate = "";
-        if (values.year != null && values.month != null) {
-            formattedDate = `${values.year}-${String(values.month).padStart(2, '0')}`;
-        } else if (values.year != null) {
-            formattedDate = `${values.year}`;
-        } else if (values.month != null) {
-            formattedDate = `${String(values.month).padStart(2, '0')}`;
-        } else {
+        const { payer, title, year, month } = form.getFieldsValue();
+        const newFilters: any = {};
+
+        if (payer) {
+            newFilters.payerId = payer;
+        }
+        if (title) {
+            newFilters.title = title.trim();
+        }
+        if (year && month) {
+            newFilters.month = `${year}-${month.toString().padStart(2, '0')}`;
+        } else if (year || month) {
+            message.error({
+                content: 'Please select both year and month!',
+                duration: 1,
+                key: 'date_error'
+            });
+            setTimeout(() => {
+                message.destroy();
+            }, 1000);
             return;
         }
-        const newFilters = {
-            month: formattedDate
-        }
+
         setFilters(newFilters);
     };
+
 
     if (!groupData) {
         return (
@@ -141,7 +157,7 @@ export default function GroupDetailPage() {
             transition={{duration: 0.2}}
 
         >
-            <div className="relative pb-72">
+            <div className="relative pb-40">
                 <div
                     className="w-full h-40 bg-cover bg-center"
                     style={{backgroundImage: "url('/Account/images.jpg')"}}
@@ -154,7 +170,8 @@ export default function GroupDetailPage() {
                         navigate("/groups/setting")
                     }}
                     className="bg-transparent shadow-none"
-                /></div>
+                />
+                </div>
 
 
                 <div className="max-w-2xl mx-auto mt-6">
@@ -178,57 +195,80 @@ export default function GroupDetailPage() {
                         </div>
                     </div>
 
-                    {/* ʹ��ʾ�� */}
-                    <div className="max-w-2xl mx-2 mt-4 px-0">
+
+                    <div className="max-w-2xl mx-2 px-0 mt-6">
                         <Form form={form} layout="vertical" className="w-full">
-                            <div className="flex  items-center justify-between">
+                            <div className="flex flex-col space-y-2">
+                                <div className="flex items-center space-x-2">
+                                    <Form.Item className="m-0 flex-1" name = "title">
+                                        <Input
+                                            placeholder="Search Title"
+                                            allowClear
+                                            className="border p-1 rounded w-full"
+                                        />
+                                    </Form.Item>
+                                    <Form.Item className="m-0 w-[30%]" name = "payer">
+                                        <Select
+                                            className="border p-2 rounded w-full"
+                                            placeholder="Payer"
+                                        >
+                                            {members.map((payer) => (
+                                                <Option key={payer.id} value={payer.id}>
+                                                    {payer.fullName}
+                                                </Option>
+                                            ))}
+                                        </Select>
+                                    </Form.Item>
+                                </div>
+                                <div className="flex items-center justify-between space-x-2">
+                                    <Form.Item className="w-[26%] m-0" name="year">
+                                        <Select
+                                            className="border p-2 rounded w-full "
+                                            placeholder="Year"
+                                        >
+                                            {generateYears().map((year) => (
+                                                <Option key={year} value={year}>
+                                                    {year}
+                                                </Option>
+                                            ))}
+                                        </Select>
+                                    </Form.Item>
 
-                                <Form.Item className="w-[26%] m-0" name="year">
-                                    <Select
-                                        className="border p-2 rounded w-full"
-                                        placeholder="Year"
+                                    <Form.Item className="w-[28%] m-0" name="month">
+                                        <Select
+                                            className="border p-2 rounded w-full"
+                                            placeholder="Month"
+                                        >
+                                            {generateMonths().map((month) => (
+                                                <Option key={month} value={month}>
+                                                    {month}
+                                                </Option>
+                                            ))}
+                                        </Select>
+                                    </Form.Item>
 
-                                    >
-                                        {generateYears().map((year) => (
-                                            <Option key={year} value={year}>
-                                                {year}
-                                            </Option>
-                                        ))}
-                                    </Select>
-                                </Form.Item>
+                                    <Form.Item className="m-0">
+                                        <Button type="primary" onClick={handleApplyFilters}>
+                                            Search
+                                        </Button>
+                                    </Form.Item>
 
-                                <Form.Item className="w-[28%] m-0" name="month">
-                                    <Select
-                                        className="border p-2 rounded w-full"
-                                        placeholder="Month"
-                                    >
-                                        {generateMonths().map((month) => (
-                                            <Option key={month} value={month}>
-                                                {month}
-                                            </Option>
-                                        ))}
-                                    </Select>
-                                </Form.Item>
-
-                                <Form.Item className="m-0">
-                                    <Button type="primary" onClick={handleApplyFilters}>
-                                        Search
-                                    </Button>
-                                </Form.Item>
-
-                                <Form.Item className="m-0">
-                                    <Button type="default"
+                                    <Form.Item className="m-0">
+                                        <Button
+                                            type="default"
                                             onClick={() => {
                                                 setFilters({});
                                                 form.resetFields();
-                                            }}>
-                                        Clear
-                                    </Button>
-                                </Form.Item>
-
+                                            }}
+                                        >
+                                            Clear
+                                        </Button>
+                                    </Form.Item>
+                                </div>
                             </div>
                         </Form>
                     </div>
+
 
                     {/* expense list */}
                     <div className="mt-6">
