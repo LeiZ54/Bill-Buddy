@@ -8,8 +8,12 @@ import useAuthStore from "../stores/authStore.ts";
 import useBreakpoint from "antd/es/grid/hooks/useBreakpoint";
 
 
+import { Typography } from 'antd';
+
 export default function ExpenseDetailPage() {
+    const {currencies} = useAuthStore();
     const {activeExpense, expenseData, getExpense} = useExpenseStore();
+    const { Title, Text } = Typography;
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
     const {expenseTypes} = useAuthStore();
@@ -63,18 +67,45 @@ export default function ExpenseDetailPage() {
                     leftOnClick={() => {
                         navigate("/groups/detail");
                     }}
-                    className="bg-transparent shadow-none"
+                    className="bg-transparent shadow-none border"
                 />
+                <div className="flex justify-between items-center p-4 shadow-sm ">
+                    <div className="flex items-center space-x-3">
+                        <div className="bg-gray-100 rounded p-2">
+                            <img src={expenseTypes[expenseData.type]} className="rounded w-12 h-12" alt="icon"/>
+                        </div>
+                        <div>
+                            <Text className="text-base font-medium">{expenseData.title}</Text>
+                            <Title level={4}
+                                   className="!m-0 text-xl font-bold">{expenseData.currency + currencies[expenseData.currency] + expenseData.amount.toFixed(2)}</Title>
+                            <Text type="secondary" className="text-sm">
+                                {"Added by " + expenseData.payer.fullName + " on " + expenseData.expenseDate.split('T')[0]}
+                            </Text>
+                        </div>
+                    </div>
+                </div>
+                <div className="p-6 max-w-md mx-auto space-y-2">
 
-                <Button
-                    type="default"
-                    onClick={() => {
-                        console.log(expenseData);
-                        setIsChangeTypeModalOpen(true);
-                    }}
-                >
-                    Clear
-                </Button>
+                    <div className="flex items-center space-x-2 text-xl">
+                        {/*<Avatar src={}/>*/}
+                        <Text className="text-lg">{expenseData.payer.fullName} paid {expenseData.currency + currencies[expenseData.currency] + expenseData.amount}</Text>
+                    </div>
+
+
+                    <div className="ml-6 border-l pl-4 space-y-2">
+                        {Object.entries(expenseData.shares)
+                            .filter(([name]) => name !== expenseData.payer.fullName)
+                            .map(([name, value]) => (
+                                <div key={name} className="flex items-center space-x-2">
+                                    {/* <Avatar src={`/avatars/${name}.jpg`} size={24}/> */}
+                                    <Text className="text-gray-700">
+                                        {`${name} owes ${expenseData.currency + currencies[expenseData.currency]}${value.toFixed(2)}`}
+                                    </Text>
+                                </div>
+                            ))}
+                    </div>
+                </div>
+
                 <Modal
                     open={isChangeTypeModalOpen}
                     onCancel={() => {
@@ -85,10 +116,10 @@ export default function ExpenseDetailPage() {
                             Change Type
                         </div>
                     }
-                    onOk={()=>{
+                    onOk={() => {
 
                     }}
-                    style={{ top: 20 }}
+                    style={{top: 20}}
                 >
                     <Radio.Group>
                         <div className={`grid grid-cols-2 gap-3 ${screens.xs ? '' : 'sm:grid-cols-4'}`}>

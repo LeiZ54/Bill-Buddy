@@ -17,6 +17,7 @@ const FriendsPage = () => {
             }
         };
         fetchData();
+        console.log(friends);
     }, []);
 
     //touch bottome to load more data;
@@ -37,30 +38,66 @@ const FriendsPage = () => {
 
 
         <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3, delay: 0.2 }}
+            initial={{opacity: 0}}
+            animate={{opacity: 1}}
+            transition={{duration: 0.3, delay: 0.2}}
         >
             <Topbar
                 leftType="back"
                 leftOnClick={() => {
-                  
+
                 }}
                 rightOnClick={() => {
-                   
+
                 }}
                 className="bg-transparent shadow-none"
             />
+
             <>
                 {isLoading ? (
-                    <Spin />
+                    <Spin/>
                 ) : (
                     <>
-                        {friends ? <div></div> : <Alert message={"Failed to get data!"} type="error" className="mb-4" />}
+                        {friends ? <div></div> : <Alert message={"Failed to get data!"} type="error" className="mb-4"/>}
                     </>
                 )}
             </>
+            <div className="mb-40 bg-white">
+                {friends.map((person) => (
+                    <div key={person.fullName} className="border-b px-4">
+                        <div className="flex space-x-4 py-2">
+                            {/* <Avatar src={} /> */}
+                            <div className="flex-1">
+                                <div className="flex justify-between items-center">
+                                    <div className="text-2xl font-semibold">{person.fullName}</div>
+                                    <div className="text-right leading-tight">
+                                        {person.debtsWithCurrentUser >= 0 ? (
+                                            <>
+                                                <div className="text-green-600 text-sm">You lent</div>
+                                                <div className="text-[#FFA700] font-bold text-lg">
+                                                    USD{person.debtsWithCurrentUser.toFixed(2)}
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <div className="text-orange-600 text-sm">You owe</div>
+                                                <div className="text-[#FFA700] font-bold text-lg">
+                                                    USD{Math.abs(person.debtsWithCurrentUser).toFixed(2)}
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                ))}
+
+            </div>
+
+
         </motion.div>
+
     );
 
 }

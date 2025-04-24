@@ -9,6 +9,7 @@ import {useExpenseStore} from '../stores/expenseStore';
 
 
 export default function GroupDetailPage() {
+    const {currencies} = useAuthStore();
     const [form] = Form.useForm();
     const {Option} = Select;
     const navigate = useNavigate();
@@ -186,7 +187,7 @@ export default function GroupDetailPage() {
                             <h2 className="text-4xl font-bold mt-3">{groupData.name}</h2>
                             <p className={`text-sm  mt-2 ${groupData.netBalance >= 0
                                 ? 'text-green-600'
-                                : 'text-[#FFA700]'
+                                : 'text-red-600'
                             }`}>
                                 {groupData.netBalance >= 0 ? ' You lent ' : ' You owe '}
                                 ${Math.abs(groupData.netBalance).toFixed(2)}
@@ -317,12 +318,12 @@ export default function GroupDetailPage() {
                                             <div className="text-right">
                                                 <p className={`text-lg mt-2 ${expense.debtsAmount >= 0
                                                     ? 'text-green-600'
-                                                    : 'text-[#FFA700]'
+                                                    : 'text-orange-600'
                                                 }`}>
                                                     {expense.debtsAmount >= 0 ? ' You lent ' : ' You owe '}
                                                 </p>
                                                 <div className="text-xl text-[#FFA700] font-bold">
-                                                    {expense.currency}{Math.abs(expense.debtsAmount).toFixed(2)}
+                                                    {expense.currency}{currencies[expense.currency]}{Math.abs(expense.debtsAmount).toFixed(2)}
                                                 </div>
                                             </div>
                                         </div>
