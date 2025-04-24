@@ -61,10 +61,7 @@ export default function ExpenseDetailPage() {
                 <Topbar
                     leftType="back"
                     leftOnClick={() => {
-                        navigate("/groups");
-                    }}
-                    rightOnClick={() => {
-                        navigate("/groups/setting")
+                        navigate("/groups/detail");
                     }}
                     className="bg-transparent shadow-none"
                 />

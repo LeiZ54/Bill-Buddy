@@ -157,7 +157,7 @@ export default function GroupDetailPage() {
             transition={{duration: 0.2}}
 
         >
-            <div className="relative pb-40">
+            <div className="relative pb-16">
                 <div
                     className="w-full h-40 bg-cover bg-center"
                     style={{backgroundImage: "url('/Account/images.jpg')"}}

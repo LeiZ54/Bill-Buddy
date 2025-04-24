@@ -113,7 +113,7 @@ export const useGroupDetailStore = create<GroupDetailState>()(
                 set({
                     expenses: res.data.content,
                     hasMore: !res.data.last,
-                    currentPage: 1
+                    currentPage: 0
                 });
             },
             loadMoreExpenses: async () => {
