@@ -34,7 +34,7 @@ const GroupSection = ({ id, name, type, items, netBalance, currency }: GroupData
             {/* left */}
             <Avatar
                 src={groupType[type]}
-                size={40}
+                size={60}
                 className="flex-shrink-0 mr-4"
             />
 
@@ -58,7 +58,7 @@ const GroupSection = ({ id, name, type, items, netBalance, currency }: GroupData
                         <motion.div
                             key={`${item.person}-${item.type}`}
                             variants={itemVariants}
-                            className="relative pl-6"
+                            className="relative pl-1 whitespace-nowrap"
                         >
                             <Text className="text-sm">
                                 {item.type === 'get'
@@ -78,13 +78,14 @@ const GroupSection = ({ id, name, type, items, netBalance, currency }: GroupData
 
             {/* right */}
             <div className="flex-shrink-0 ml-4 text-right">
-                <Text type="secondary" className="text-xs">
-                    {netBalance >= 0 ? 'You are owed' : 'You owe'}
+                <Text
+                    className={`text-sm block ${netBalance >= 0 ? 'text-green-600' : 'text-orange-600'}`}
+                >
+                    {netBalance >= 0 ? 'You lent' : 'You owe'}
                 </Text>
                 <Text
-                    type={netBalance >= 0 ? 'success' : 'warning'}
                     strong
-                    className="text-lg block"
+                    className="text-lg block text-[#FFA700]"
                 >
                     {currency} {Math.abs(netBalance).toFixed(2)}
                 </Text>

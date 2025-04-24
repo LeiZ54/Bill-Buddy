@@ -184,7 +184,7 @@ export default function GroupDetailPage() {
                             className="object-contain outline outline-4 outline-white rounded w-16 h-16 absolute ml-[15%]  top-[7rem] shadow-xl"
                         />
                         <div className="ml-[15%]">
-                            <h2 className="text-4xl font-bold mt-3">{groupData.name}</h2>
+                            <h2 className="text-3xl font-bold mt-3">{groupData.name}</h2>
                             <p className={`text-sm  mt-2 ${groupData.netBalance >= 0
                                 ? 'text-green-600'
                                 : 'text-red-600'
@@ -316,13 +316,13 @@ export default function GroupDetailPage() {
                                             </div>
 
                                             <div className="text-right">
-                                                <p className={`text-lg mt-2 ${expense.debtsAmount >= 0
+                                                <p className={`text-sm mt-2 ${expense.debtsAmount >= 0
                                                     ? 'text-green-600'
                                                     : 'text-orange-600'
                                                 }`}>
                                                     {expense.debtsAmount >= 0 ? ' You lent ' : ' You owe '}
                                                 </p>
-                                                <div className="text-xl text-[#FFA700] font-bold">
+                                                <div className="text-lg text-[#FFA700] font-bold">
                                                     {expense.currency}{currencies[expense.currency]}{Math.abs(expense.debtsAmount).toFixed(2)}
                                                 </div>
                                             </div>
