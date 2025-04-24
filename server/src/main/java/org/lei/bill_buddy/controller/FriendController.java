@@ -58,7 +58,7 @@ public class FriendController {
 
     private FriendsListDTO formatFriendsListDTO(Page<Friend> friends) {
         FriendsListDTO friendsListDTO = new FriendsListDTO();
-        friendsListDTO.setFriends(friends.map(f -> dtoConvertor.convertUserToUserDTO(f.getFriend())));
+        friendsListDTO.setFriends(friends.map(f -> dtoConvertor.convertUserToFriendDTO(f.getFriend())));
         friendsListDTO.setPendingRequests(friendService.getFriendRequestsByReceiverIdAndStatus(
                         userService.getCurrentUser().getId(),
                         "pending")

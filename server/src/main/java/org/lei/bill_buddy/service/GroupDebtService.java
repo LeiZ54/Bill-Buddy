@@ -20,6 +20,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class GroupDebtService {
     private final GroupDebtRepository groupDebtRepository;
+    private final UserService userService;
 
     public void addGroupDebt(User lender, User borrower, Group group) {
         GroupDebt groupDebt = new GroupDebt();
@@ -66,6 +67,30 @@ public class GroupDebtService {
 
         return othersOweMe.subtract(owesOthers);
     }
+
+    public BigDecimal getDebtsBetweenUsers(Long userAId, Long userBId) {
+        if (userAId.equals(userBId)) return BigDecimal.ZERO;
+        if (userService.getUserById(userAId) == null) {
+            log.warn("User {} not found", userAId);
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
+        }
+        if (userService.getUserById(userBId) == null) {
+            log.warn("User {} not found", userBId);
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
+        }
+        BigDecimal aLentToB = groupDebtRepository.findByLenderIdAndBorrowerIdAndDeletedFalse(userAId, userBId)
+                .stream()
+                .map(GroupDebt::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal bLentToA = groupDebtRepository.findByLenderIdAndBorrowerIdAndDeletedFalse(userBId, userAId)
+                .stream()
+                .map(GroupDebt::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        return aLentToB.subtract(bLentToA);
+    }
+
 
     public List<GroupDebt> getByGroupAndLender(Group group, User lender) {
         return groupDebtRepository.findByGroupIdAndLenderIdAndDeletedFalse(group.getId(), lender.getId());

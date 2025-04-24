@@ -118,6 +118,15 @@ public class DtoConvertorUtil {
         return dto;
     }
 
+    public FriendDTO convertUserToFriendDTO(User user) {
+        FriendDTO dto = new FriendDTO();
+        dto.setId(user.getId());
+        dto.setFullName(user.getFullName());
+        dto.setEmail(user.getEmail());
+        dto.setDebtsWithCurrentUser(groupDebtService.getDebtsBetweenUsers(userService.getCurrentUser().getId(), user.getId()));
+        return dto;
+    }
+
     private static Map<Long, BigDecimal> formatDebtsMap(List<GroupDebt> userOwes, List<GroupDebt> owesUser) {
         Map<Long, BigDecimal> netDebts = new HashMap<>();
 

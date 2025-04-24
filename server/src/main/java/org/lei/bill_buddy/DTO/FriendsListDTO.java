@@ -7,6 +7,6 @@ import java.util.List;
 
 @Data
 public class FriendsListDTO {
-    private Page<UserDTO> friends;
+    private Page<FriendDTO> friends;
     private List<FriendRequestDTO> pendingRequests;
 }

@@ -13,6 +13,8 @@ public interface GroupDebtRepository extends JpaRepository<GroupDebt, Long> {
 
     List<GroupDebt> findByGroupIdAndLenderIdAndDeletedFalse(Long groupId, Long lenderId);
 
+    List<GroupDebt> findByLenderIdAndBorrowerIdAndDeletedFalse(Long lenderId, Long borrowerId);
+
     List<GroupDebt> findByBorrowerIdAndDeletedFalse(Long borrowerId);
 
     List<GroupDebt> findByLenderIdAndDeletedFalse(Long lenderId);

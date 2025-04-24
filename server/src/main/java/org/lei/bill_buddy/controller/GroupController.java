@@ -30,7 +30,6 @@ import java.util.Map;
 public class GroupController {
     private final GroupService groupService;
     private final GroupMemberService groupMemberService;
-    private final GroupDebtService groupDebtService;
     private final UserService userService;
     private final JwtUtil jwtUtil;
     private final DtoConvertorUtil dtoConvertor;
@@ -154,12 +153,8 @@ public class GroupController {
         Pageable pageable = PageRequest.of(page, size);
         Page<GroupDetailsDTO> groupPage = groupService.getGroupsByUserId(user.getId(), pageable)
                 .map(dtoConvertor::convertGroupToGroupDetailsDTO);
-        GroupPageDTO groupPageDTO = new GroupPageDTO();
-        groupPageDTO.setTotalCurrentUserDebts(groupDebtService.getTotalUserDebts(user.getId()));
-        groupPageDTO.setGroupPage(groupPage);
 
-
-        return ResponseEntity.ok(groupPageDTO);
+        return ResponseEntity.ok(groupPage);
     }
 
     @GetMapping

@@ -16,7 +16,7 @@ public class RateLimiterUtil {
         String PREFIX = "send_email:";
         String key = PREFIX + ip;
         Boolean exists = redisTemplate.hasKey(key);
-        if (Boolean.TRUE.equals(exists)) {
+        if (exists) {
             return false;
         }
         redisTemplate.opsForValue().set(key, "1", Duration.ofSeconds(seconds));
