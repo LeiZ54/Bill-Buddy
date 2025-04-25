@@ -146,7 +146,7 @@ export default function AccountPage() {
                 </div>
 
                 <div className="mt-10 px-4">
-                    <div className="w-[100%] mx-auto border-t border-gray-200 my-0"/>
+
                     <Button
                         type="text"
                         block
@@ -157,20 +157,20 @@ export default function AccountPage() {
                     >
                         Edit Information
                     </Button>
-                    <div className="w-[100%] mx-auto border-t border-gray-200 my-0"/>
+
 
 
                     <Button
                         type="text"
                         block
-                        className="font-bold text-xl h-auto leading-none py-3"
+                        className="font-bold text-xl h-auto leading-none py-6cd"
                         onClick={() => {
                             setIsChangePasswordModalOpen(true);
                         }}
                     >
                         Change Password
                     </Button>
-                    <div className="w-[100%] mx-auto border-t border-gray-200 my-0"/>
+
 
                 </div>
 

@@ -82,8 +82,6 @@ export default function GroupDetailPage() {
     }, [isLoadingMore, loadMoreExpenses]);
 
 
-
-
     const generateYears = () => {
         const currentYear = new Date().getFullYear();
         const years = [];
@@ -102,7 +100,7 @@ export default function GroupDetailPage() {
     };
 
     const handleApplyFilters = () => {
-        const { payer, title, year, month } = form.getFieldsValue();
+        const {payer, title, year, month} = form.getFieldsValue();
         const newFilters: any = {};
 
         if (payer) {
@@ -184,16 +182,32 @@ export default function GroupDetailPage() {
                             className="object-contain outline outline-4 outline-white rounded w-16 h-16 absolute ml-[15%]  top-[7rem] shadow-xl"
                         />
                         <div className="ml-[15%]">
-                            <h2 className="text-3xl font-bold mt-3">{groupData.name}</h2>
-                            <p className={`text-sm  mt-2 ${groupData.netBalance >= 0
+                            <h2 className="text-3xl font-semibold mt-3">{groupData.name}</h2>
+                            <p className={`text-lg font-semibold ${groupData.netBalance >= 0
                                 ? 'text-green-600'
-                                : 'text-red-600'
+                                : 'text-orange-500'
                             }`}>
                                 {groupData.netBalance >= 0 ? ' You lent ' : ' You owe '}
-                                ${Math.abs(groupData.netBalance).toFixed(2)}
-
+                                {groupData.currency}{currencies[groupData.currency]}
+                                {Math.abs(groupData.netBalance).toFixed(2)}
+                                {' overall'}
                             </p>
+                            {groupData.items.map((item, index) => (
+                                <div key={index}>
+                                    <span>
+                                        {item.type === 'get' ? 'You lent' : 'You owe'} {item.person}
+                                    </span>
+                                    <span className={`${item.type === 'get'
+                                        ? 'text-green-600'
+                                        : 'text-orange-500'
+                                    }`}>
+                                        {" " + groupData.currency}{currencies[groupData.currency]}
+                                        {item.amount.toFixed(2)}
+                                    </span>
+                                </div>
+                            ))}
                         </div>
+
                     </div>
 
 
@@ -201,14 +215,14 @@ export default function GroupDetailPage() {
                         <Form form={form} layout="vertical" className="w-full">
                             <div className="flex flex-col space-y-2">
                                 <div className="flex items-center space-x-2">
-                                    <Form.Item className="m-0 flex-1" name = "title">
+                                    <Form.Item className="m-0 flex-1" name="title">
                                         <Input
                                             placeholder="Search Title"
                                             allowClear
                                             className="border p-1 rounded w-full"
                                         />
                                     </Form.Item>
-                                    <Form.Item className="m-0 w-[30%]" name = "payer">
+                                    <Form.Item className="m-0 w-[30%]" name="payer">
                                         <Select
                                             className="border p-2 rounded w-full"
                                             placeholder="Payer"
@@ -285,11 +299,11 @@ export default function GroupDetailPage() {
                                 return (
                                     <div key={expense.id}>
                                         {showMonthDivider && (
-                                            <div className="text-xs text-black px-4 font-bold mt-2">{monthLabel}</div>
+                                            <div className="text-xs text-black font-semibold px-4 mt-4 mb-2">{monthLabel}</div>
                                         )}
 
                                         <div
-                                            className="flex items-center justify-between py-2 border-b px-4"
+                                            className="flex items-center justify-between px-4"
                                             onClick={() => {
                                                 setActiveExpense(expense.id);
                                                 navigate('/groups/expense');
@@ -299,7 +313,7 @@ export default function GroupDetailPage() {
                                                 <div className="text-xl text-gray-400">
                                                     {dateObj.toLocaleString('en-US', {month: 'short'})}
                                                 </div>
-                                                <div className="text-base font-bold">
+                                                <div className="text-base text-gray-400">
                                                     {dateObj.getDate()}
                                                 </div>
                                             </div>
@@ -309,7 +323,7 @@ export default function GroupDetailPage() {
                                             </div>
 
                                             <div className="flex-1 mx-4">
-                                                <div className="font-bold text-xl">{expense.title}</div>
+                                                <div className=" text-xl">{expense.title}</div>
                                                 <div className="text-xs text-gray-500">
                                                     {expense.payer.fullName} paid {expense.currency} {expense.amount.toFixed(2)}
                                                 </div>
@@ -322,7 +336,10 @@ export default function GroupDetailPage() {
                                                 }`}>
                                                     {expense.debtsAmount >= 0 ? ' You lent ' : ' You owe '}
                                                 </p>
-                                                <div className="text-lg text-[#FFA700] font-bold">
+                                                <div className={`text-lg ${expense.debtsAmount >= 0
+                                                    ? 'text-green-600'
+                                                    : 'text-orange-600'
+                                                }`}>
                                                     {expense.currency}{currencies[expense.currency]}{Math.abs(expense.debtsAmount).toFixed(2)}
                                                 </div>
                                             </div>

@@ -22,7 +22,6 @@ export default function GroupsPage() {
         inviteToken,
         setInviteToken,
     } = useGroupStore();
-
     useEffect(() => {
         resetError();
         fetchGroups();
@@ -30,7 +29,6 @@ export default function GroupsPage() {
             setShowInvitationModal(true);
         }
     }, [fetchGroups]);
-
     return (
         <motion.div
             initial={{ opacity: 0 }}
@@ -50,11 +48,11 @@ export default function GroupsPage() {
                         {error ? (
                             <Alert message={error} type="error" className="mb-4" />
                         ) : (
-                            <>
+                            <div className="pt-4">
                                 {groups.map(group => (
                                     <GroupSection key={group.id} {...group} />
                                 ))}
-                            </>
+                            </div>
                         )}
                     </>
                 )}
