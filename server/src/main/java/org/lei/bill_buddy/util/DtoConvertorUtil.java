@@ -131,6 +131,7 @@ public class DtoConvertorUtil {
                 .toList();
         FriendDetailsDTO dto = new FriendDetailsDTO();
         dto.setId(user.getId());
+        dto.setAvatar(user.getAvatar());
         dto.setFullName(user.getFullName());
         dto.setEmail(user.getEmail());
         dto.setNetDebts(netDebts);
