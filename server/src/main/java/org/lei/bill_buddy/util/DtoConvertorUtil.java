@@ -118,12 +118,23 @@ public class DtoConvertorUtil {
         return dto;
     }
 
-    public FriendDTO convertUserToFriendDTO(User user) {
-        FriendDTO dto = new FriendDTO();
+    public FriendDetailsDTO convertUserToFriendDetailsDTO(User user) {
+        User currentUser = userService.getCurrentUser();
+
+        List<GroupDebtDTO> netDebts = groupDebtService.getNetDebtsBetweenUsers(currentUser.getId(), user.getId()).entrySet().stream()
+                .map(entry -> {
+                    GroupDebtDTO dto = new GroupDebtDTO();
+                    dto.setGroup(convertGroupToGroupDTO(entry.getKey()));
+                    dto.setDebtAmount(entry.getValue());
+                    return dto;
+                })
+                .toList();
+        FriendDetailsDTO dto = new FriendDetailsDTO();
         dto.setId(user.getId());
         dto.setFullName(user.getFullName());
         dto.setEmail(user.getEmail());
-        dto.setDebtsWithCurrentUser(groupDebtService.getDebtsBetweenUsers(userService.getCurrentUser().getId(), user.getId()));
+        dto.setNetDebts(netDebts);
+
         return dto;
     }
 

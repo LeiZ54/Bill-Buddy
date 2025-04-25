@@ -36,12 +36,6 @@ public class ExpenseService {
     private final ExchangeRateService exchangeRateService;
 
     @Transactional
-    public List<Expense> getExpensesByGroupId(Long groupId) {
-        log.info("Fetching expenses for groupId: {}", groupId);
-        return expenseRepository.findByGroupIdAndDeletedFalse(groupId);
-    }
-
-    @Transactional
     public Expense createExpense(Long groupId,
                                  Long payerId,
                                  String title,

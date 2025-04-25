@@ -43,7 +43,7 @@ public class FriendService {
             throw new AppException(ErrorCode.USER_NOT_FOUND);
         }
 
-        if (friendRepository.existsByUserAndFriendAndDeletedFalse(sender, receiver)) {
+        if (isFriend(sender.getId(), receiver.getId())) {
             log.warn("Users {} and {} are already friends", senderId, receiverId);
             throw new AppException(ErrorCode.ALREADY_FRIENDS);
         }
@@ -93,7 +93,7 @@ public class FriendService {
             throw new AppException(ErrorCode.SELF_FRIEND_REQUEST);
         }
 
-        if (friendRepository.existsByUserAndFriendAndDeletedFalse(user, friend)) {
+        if (isFriend(user.getId(), friend.getId())) {
             log.warn("Friendship already exists: user={}, friend={}", user.getId(), friend.getId());
             return;
         }
@@ -119,7 +119,7 @@ public class FriendService {
     public void addFriends(User user, List<User> friends) {
         for (User friend : friends) {
             if (!user.getId().equals(friend.getId()) &&
-                    !friendRepository.existsByUserAndFriendAndDeletedFalse(user, friend)) {
+                    !isFriend(user.getId(), friend.getId())) {
                 addFriend(user, friend);
             }
         }
@@ -139,5 +139,9 @@ public class FriendService {
     public List<FriendRequest> getFriendRequestsByReceiverIdAndStatus(Long userId, String status) {
         log.debug("Fetching friend requests for userId={} with status={}", userId, status);
         return friendRequestRepository.findByReceiverIdAndStatus(userId, status);
+    }
+
+    public Boolean isFriend(Long userAId, Long userBId) {
+        return friendRepository.existsByUserIdAndFriendIdAndDeletedFalse(userAId, userBId);
     }
 }

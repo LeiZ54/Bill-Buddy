@@ -22,6 +22,7 @@ public enum ErrorCode {
     FRIEND_REQUEST_ALREADY_SENT(HttpStatus.CONFLICT, "Friend request already sent."),
     FRIEND_REQUEST_NOT_FOUND(HttpStatus.NOT_FOUND, "Friend request not found."),
     FRIEND_REQUEST_ALREADY_HANDLED(HttpStatus.CONFLICT, "Friend request already handled."),
+    FRIEND_RELATIONSHIP_NOT_FOUND(HttpStatus.NOT_FOUND, "Friend relationship not found."),
     INVALID_GOOGLE_ID(HttpStatus.BAD_REQUEST, "Invalid Google ID."),
 
     // === Group Related ===

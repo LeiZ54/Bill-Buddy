@@ -1,8 +1,8 @@
 package org.lei.bill_buddy.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.lei.bill_buddy.DTO.FriendListDTO;
 import org.lei.bill_buddy.DTO.FriendRequestDTO;
-import org.lei.bill_buddy.DTO.FriendsListDTO;
 import org.lei.bill_buddy.annotation.RateLimit;
 import org.lei.bill_buddy.model.Friend;
 import org.lei.bill_buddy.model.FriendRequest;
@@ -55,10 +55,9 @@ public class FriendController {
         return ResponseEntity.ok(formatFriendsListDTO(friendsPage));
     }
 
-
-    private FriendsListDTO formatFriendsListDTO(Page<Friend> friends) {
-        FriendsListDTO friendsListDTO = new FriendsListDTO();
-        friendsListDTO.setFriends(friends.map(f -> dtoConvertor.convertUserToFriendDTO(f.getFriend())));
+    private FriendListDTO formatFriendsListDTO(Page<Friend> friends) {
+        FriendListDTO friendsListDTO = new FriendListDTO();
+        friendsListDTO.setFriends(friends.map(f -> dtoConvertor.convertUserToFriendDetailsDTO(f.getFriend())));
         friendsListDTO.setPendingRequests(friendService.getFriendRequestsByReceiverIdAndStatus(
                         userService.getCurrentUser().getId(),
                         "pending")

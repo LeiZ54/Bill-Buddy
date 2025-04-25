@@ -12,7 +12,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @Slf4j
@@ -91,6 +93,38 @@ public class GroupDebtService {
         return aLentToB.subtract(bLentToA);
     }
 
+    public Map<Group, BigDecimal> getNetDebtsBetweenUsers(Long userAId, Long userBId) {
+        List<GroupDebt> aLentToB = groupDebtRepository
+                .findByLenderIdAndBorrowerIdAndDeletedFalse(userAId, userBId);
+
+        List<GroupDebt> bLentToA = groupDebtRepository
+                .findByLenderIdAndBorrowerIdAndDeletedFalse(userBId, userAId);
+
+        Map<Long, BigDecimal> groupIdToAmount = new HashMap<>();
+        Map<Long, Group> groupMap = new HashMap<>();
+
+        for (GroupDebt debt : aLentToB) {
+            Long groupId = debt.getGroup().getId();
+            groupIdToAmount.merge(groupId, debt.getAmount(), BigDecimal::add);
+            groupMap.putIfAbsent(groupId, debt.getGroup());
+        }
+
+        for (GroupDebt debt : bLentToA) {
+            Long groupId = debt.getGroup().getId();
+            groupIdToAmount.merge(groupId, debt.getAmount().negate(), BigDecimal::add);
+            groupMap.putIfAbsent(groupId, debt.getGroup());
+        }
+
+        Map<Group, BigDecimal> result = new HashMap<>();
+        for (Map.Entry<Long, BigDecimal> entry : groupIdToAmount.entrySet()) {
+            BigDecimal amount = entry.getValue();
+            if (amount.compareTo(BigDecimal.ZERO) != 0) {
+                Group group = groupMap.get(entry.getKey());
+                result.put(group, amount);
+            }
+        }
+        return result;
+    }
 
     public List<GroupDebt> getByGroupAndLender(Group group, User lender) {
         return groupDebtRepository.findByGroupIdAndLenderIdAndDeletedFalse(group.getId(), lender.getId());

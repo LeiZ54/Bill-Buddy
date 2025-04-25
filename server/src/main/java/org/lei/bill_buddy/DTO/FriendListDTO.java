@@ -6,7 +6,7 @@ import org.springframework.data.domain.Page;
 import java.util.List;
 
 @Data
-public class FriendsListDTO {
-    private Page<FriendDTO> friends;
+public class FriendListDTO {
+    private Page<FriendDetailsDTO> friends;
     private List<FriendRequestDTO> pendingRequests;
 }
