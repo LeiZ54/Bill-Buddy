@@ -73,11 +73,11 @@ export const useGroupStore = create<GroupState>()(
                     set({ groups: [], isLoading: true, error: null });
                     const response = await api.get(`/groups/detail?page=${page}&size=10`);
                     const result = response.data;
-                    const transformedData = get()._transformGroups(result.groupPage.content);
+                    const transformedData = get()._transformGroups(result.content);
                     set({
                         groups: transformedData,
                         currentPage: page,
-                        hasMore: !result.groupPage.last,
+                        hasMore: !result.last,
                         isLoading: false,
                     });
                 } catch (err) {

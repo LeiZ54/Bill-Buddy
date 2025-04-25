@@ -23,6 +23,13 @@ export interface GroupData {
     currency: string,
 }
 
+export interface FriendData {
+    debtsWithCurrentUser: number;
+    email: string;
+    fullName: string;
+    id: number;
+}
+
 export interface Member {
     id: number;
     fullName: string;

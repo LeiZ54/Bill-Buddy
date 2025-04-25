@@ -16,79 +16,71 @@ const itemVariants = {
 const GroupSection = ({ id, name, type, items, netBalance, currency }: GroupData) => {
     const navigate = useNavigate();
     const { resetError } = useGroupStore();
-    const { groupType } = useAuthStore();
+    const { groupType, currencies } = useAuthStore();
     const { setActiveGroup } = useGroupDetailStore();
     return (
         <motion.section
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className="flex justify-between items-start p-4 mb-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+            initial={{opacity: 0}}
+            animate={{opacity: 1}}
+            whileHover={{scale: 1.02}}
+            whileTap={{scale: 0.98}}
             onClick={() => {
                 setActiveGroup(id);
                 navigate('detail');
                 resetError();
             }}
+            className="pt-4"
         >
-            {/* left */}
-            <Avatar
-                src={groupType[type]}
-                size={40}
-                className="flex-shrink-0 mr-4"
-            />
+            <div className="flex items-center justify-between px-4 py-2 bg-white">
+                <div className="flex items-center space-x-4">
+                    {/* icon */}
+                    <div className="flex items-center justify-center">
+                        <img src={groupType[type]} alt="icon" className="rounded-2xl w-14 h-14"/>
+                    </div>
 
-            {/* mid */}
-            <div className="flex-1 min-w-0">
-                <Text strong className="text-lg block mb-2 truncate">{name}</Text>
+                    {/* name */}
+                    <Text className={`text-xl`}> {name} </Text>
+                </div>
 
-                <motion.div
-                    className="space-y-2"
-                    initial="hidden"
-                    animate="visible"
-                    variants={{
-                        visible: {
-                            transition: {
-                                staggerChildren: 0.1
-                            }
-                        }
-                    }}
-                >
-                    {items.map((item) => (
-                        <motion.div
-                            key={`${item.person}-${item.type}`}
-                            variants={itemVariants}
-                            className="relative pl-6"
-                        >
-                            <Text className="text-sm">
-                                {item.type === 'get'
-                                    ? `${item.person} owes you `
-                                    : `You owe ${item.person} `}
-                                <Text
-                                    type={item.type === 'get' ? 'success' : 'warning'}
-                                    strong
-                                >
-                                    {currency} {item.amount.toFixed(2)}
-                                </Text>
+                {/* money */}
+                <div className="text-right">
+                    {netBalance === 0 ? (
+                        <Text className="text-sm text-gray-500">settled up</Text>
+                    ) : (
+                        <>
+                            <Text
+                                className={`text-sm block ${netBalance > 0 ? 'text-green-600' : 'text-orange-600'}`}
+                            >
+                                {netBalance > 0 ? 'You lent' : 'You owe'}
                             </Text>
-                        </motion.div>
-                    ))}
-                </motion.div>
+                            <Text
+                                className={`text-lg block ${netBalance > 0 ? 'text-green-600' : 'text-orange-600'}`}
+                            >
+                                {currency}{currencies[currency]}{Math.abs(netBalance).toFixed(2)}
+                            </Text>
+                        </>
+                    )}
+                </div>
             </div>
 
-            {/* right */}
-            <div className="flex-shrink-0 ml-4 text-right">
-                <Text type="secondary" className="text-xs">
-                    {netBalance >= 0 ? 'You are owed' : 'You owe'}
-                </Text>
-                <Text
-                    type={netBalance >= 0 ? 'success' : 'warning'}
-                    strong
-                    className="text-lg block"
-                >
-                    {currency} {Math.abs(netBalance).toFixed(2)}
-                </Text>
+            <div className="pl-20">
+                {items.map((item, index) => (
+                    <div key={`${index}`} className="relative pl-1 whitespace-nowrap">
+                        <Text className="text-sm text-gray-600">
+                            {item.type === 'get'
+                                ? `${item.person} owes you `
+                                : `You owe ${item.person} `}
+                            <Text
+                                className={item.type === 'get' ? 'text-green-600' : 'text-orange-600'}
+                            >
+                                {currency}{currencies[currency]}{item.amount.toFixed(2)}
+                            </Text>
+                        </Text>
+                    </div>
+                ))}
             </div>
+
+
         </motion.section>
     );
 };
