@@ -39,6 +39,9 @@ public class UserService {
                     log.warn("User not found for id: {}", id);
                     return new AppException(ErrorCode.USER_NOT_FOUND);
                 });
+        if (user.getAvatar() != null && !user.getAvatar().isEmpty()) {
+            existingUser.setAvatar(user.getAvatar());
+        }
 
         if (user.getEmail() != null && !user.getEmail().isEmpty()) {
             if (getUserByEmail(user.getEmail()) != null && !existingUser.getEmail().equals(user.getEmail())) {

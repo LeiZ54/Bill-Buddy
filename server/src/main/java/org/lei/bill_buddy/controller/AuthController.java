@@ -48,6 +48,7 @@ public class AuthController {
 
         return ResponseEntity.ok(new UserLoggedInDTO(
                 user.getId(),
+                user.getAvatar(),
                 user.getFullName(),
                 user.getGivenName(),
                 user.getFamilyName(),
@@ -68,6 +69,7 @@ public class AuthController {
         User loggedInUser = userService.getUserByEmail(principal.getUsername());
         return ResponseEntity.ok(new UserLoggedInDTO(
                 loggedInUser.getId(),
+                loggedInUser.getAvatar(),
                 loggedInUser.getFullName(),
                 loggedInUser.getGivenName(),
                 loggedInUser.getFamilyName(),
@@ -80,6 +82,7 @@ public class AuthController {
         var payload = googleAuthService.verifyGoogleToken(request.getGoogleId());
 
         String email = payload.getEmail();
+        String avatar = (String) payload.get("picture");
         String givenName = (String) payload.get("given_name");
         String familyName = (String) payload.get("family_name");
 
@@ -87,6 +90,7 @@ public class AuthController {
         if (user == null) {
             user = new User();
             user.setPassword("");
+            if (avatar != null) user.setAvatar(avatar);
             user.setEmail(email);
             user.setGivenName(givenName);
             user.setFamilyName(familyName);
@@ -97,6 +101,7 @@ public class AuthController {
 
         return ResponseEntity.ok(new UserLoggedInDTO(
                 user.getId(),
+                user.getAvatar(),
                 user.getFullName(),
                 user.getGivenName(),
                 user.getFamilyName(),

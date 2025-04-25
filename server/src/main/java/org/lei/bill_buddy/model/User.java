@@ -20,6 +20,9 @@ public class User implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
+    private String avatar = "https://i.ibb.co/SDVtc10F/avatar.png";
+
     @Column(nullable = false, unique = true)
     private String email;
 
@@ -43,10 +46,6 @@ public class User implements UserDetails {
 
     public String getFullName() {
         return this.givenName + " " + this.familyName;
-    }
-
-    public String getSimpleName() {
-        return this.givenName + " " + this.familyName.substring(0, 1).toUpperCase();
     }
 
     @Override
