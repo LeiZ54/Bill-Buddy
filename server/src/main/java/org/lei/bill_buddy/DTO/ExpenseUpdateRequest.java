@@ -26,7 +26,7 @@ public class ExpenseUpdateRequest {
 
     private Boolean isRecurring;
 
-    private RecurrenceUnit recurrenceUnit;
+    private String recurrenceUnit;
 
     private Integer recurrenceInterval;
 

@@ -17,6 +17,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Transactional
@@ -130,4 +133,7 @@ public class GroupService {
         return groupMemberRepository.existsByUserIdAndGroupIdAndDeletedFalse(userId, groupId);
     }
 
+    public Set<Long> getAllMemberIdsOfGroup(Long groupId) {
+        return new HashSet<>(groupMemberRepository.findUserIdsByGroupIdAndDeletedFalse(groupId));
+    }
 }

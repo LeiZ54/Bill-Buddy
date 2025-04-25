@@ -56,43 +56,6 @@ public class GroupDebtService {
         groupDebtRepository.save(gb);
     }
 
-    public BigDecimal getTotalUserDebts(Long userId) {
-        BigDecimal owesOthers = groupDebtRepository.findByBorrowerIdAndDeletedFalse(userId).stream()
-                .map(GroupDebt::getAmount)
-                .filter(amount -> amount.compareTo(BigDecimal.ZERO) > 0)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        BigDecimal othersOweMe = groupDebtRepository.findByLenderIdAndDeletedFalse(userId).stream()
-                .map(GroupDebt::getAmount)
-                .filter(amount -> amount.compareTo(BigDecimal.ZERO) > 0)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        return othersOweMe.subtract(owesOthers);
-    }
-
-    public BigDecimal getDebtsBetweenUsers(Long userAId, Long userBId) {
-        if (userAId.equals(userBId)) return BigDecimal.ZERO;
-        if (userService.getUserById(userAId) == null) {
-            log.warn("User {} not found", userAId);
-            throw new AppException(ErrorCode.USER_NOT_FOUND);
-        }
-        if (userService.getUserById(userBId) == null) {
-            log.warn("User {} not found", userBId);
-            throw new AppException(ErrorCode.USER_NOT_FOUND);
-        }
-        BigDecimal aLentToB = groupDebtRepository.findByLenderIdAndBorrowerIdAndDeletedFalse(userAId, userBId)
-                .stream()
-                .map(GroupDebt::getAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        BigDecimal bLentToA = groupDebtRepository.findByLenderIdAndBorrowerIdAndDeletedFalse(userBId, userAId)
-                .stream()
-                .map(GroupDebt::getAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        return aLentToB.subtract(bLentToA);
-    }
-
     public Map<Group, BigDecimal> getNetDebtsBetweenUsers(Long userAId, Long userBId) {
         List<GroupDebt> aLentToB = groupDebtRepository
                 .findByLenderIdAndBorrowerIdAndDeletedFalse(userAId, userBId);
@@ -125,6 +88,30 @@ public class GroupDebtService {
         }
         return result;
     }
+
+    @Transactional(readOnly = true)
+    public boolean isGroupSettled(Long groupId) {
+        List<GroupDebt> debts = groupDebtRepository.findByGroupIdAndDeletedFalse(groupId);
+
+        Map<String, BigDecimal> netDebts = new HashMap<>();
+
+        for (GroupDebt debt : debts) {
+            Long lenderId = debt.getLender().getId();
+            Long borrowerId = debt.getBorrower().getId();
+            BigDecimal amount = debt.getAmount();
+
+            long min = Math.min(lenderId, borrowerId);
+            long max = Math.max(lenderId, borrowerId);
+            String key = min + "-" + max;
+
+            BigDecimal signedAmount = lenderId < borrowerId ? amount : amount.negate();
+
+            netDebts.merge(key, signedAmount, BigDecimal::add);
+        }
+
+        return netDebts.values().stream().allMatch(val -> val.compareTo(BigDecimal.ZERO) == 0);
+    }
+
 
     public List<GroupDebt> getByGroupAndLender(Group group, User lender) {
         return groupDebtRepository.findByGroupIdAndLenderIdAndDeletedFalse(group.getId(), lender.getId());

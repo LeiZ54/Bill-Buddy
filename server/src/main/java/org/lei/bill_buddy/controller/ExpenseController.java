@@ -6,7 +6,6 @@ import org.lei.bill_buddy.DTO.ExpenseCreateRequest;
 import org.lei.bill_buddy.DTO.ExpenseDTO;
 import org.lei.bill_buddy.DTO.ExpenseUpdateRequest;
 import org.lei.bill_buddy.annotation.RateLimit;
-import org.lei.bill_buddy.enums.ExpenseType;
 import org.lei.bill_buddy.model.Expense;
 import org.lei.bill_buddy.service.ExpenseService;
 import org.lei.bill_buddy.service.GroupService;
@@ -19,7 +18,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.stream.Collectors;
 
 @RateLimit
 @RestController
@@ -103,8 +101,9 @@ public class ExpenseController {
             @RequestParam Long groupId,
             @RequestParam(required = false) String title,
             @RequestParam(required = false) Long payerId,
-            @RequestParam(required = false) ExpenseType type,
+            @RequestParam(required = false) String type,
             @RequestParam(required = false) String month,
+            @RequestParam(required = false) Boolean settled,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "expenseDate") String sortBy,
@@ -116,7 +115,7 @@ public class ExpenseController {
 
         Pageable pageable = PageRequest.of(page, size, sort);
 
-        Page<Expense> expensePage = expenseService.getExpenses(groupId, title, payerId, type, month, pageable);
+        Page<Expense> expensePage = expenseService.getExpenses(groupId, title, payerId, type, month, settled, pageable);
 
         Page<ExpenseDTO> dtoPage = expensePage.map(dtoConvertor::convertExpenseToExpenseDTO);
 

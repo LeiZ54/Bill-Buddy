@@ -43,9 +43,9 @@ public class ExpenseCreateRequest {
 
     private Boolean isRecurring = false;
 
-    private RecurrenceUnit recurrenceUnit;
+    private String recurrenceUnit = RecurrenceUnit.MONTH.name();
 
     @Min(value = 1, message = "Recurrence interval must be at least 1")
-    private Integer recurrenceInterval;
+    private Integer recurrenceInterval = 1;
 }
 

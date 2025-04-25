@@ -3,6 +3,7 @@ package org.lei.bill_buddy.repository;
 import org.lei.bill_buddy.model.Expense;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -21,5 +22,17 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long>, JpaSpec
                 AND e.deleted = false
             """)
     Long countExpensesByGroupAndPayer(@Param("groupId") Long groupId, @Param("userId") Long userId);
+
+    List<Expense> findByGroupIdAndDeletedFalse(Long groupId);
+
+    @Modifying
+    @Query("""
+    UPDATE Expense e
+    SET e.settled = true
+    WHERE e.group.id = :groupId
+    AND e.deleted = false
+    AND e.settled = false
+""")
+    void settleExpensesByGroupId(@Param("groupId") Long groupId);
 
 }

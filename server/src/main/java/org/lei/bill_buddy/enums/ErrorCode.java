@@ -29,6 +29,7 @@ public enum ErrorCode {
     GROUP_NOT_FOUND(HttpStatus.NOT_FOUND, "Group not found."),
     ALREADY_IN_GROUP(HttpStatus.CONFLICT, "User already in the group."),
     NOT_A_MEMBER(HttpStatus.FORBIDDEN, "You are not a member of the group."),
+    PARTICIPANTS_NOT_A_MEMBER(HttpStatus.FORBIDDEN, "Some participants are not a member of the group."),
     MEMBER_CAN_NOT_BE_REMOVED(HttpStatus.CONFLICT, "Member can not be removed."),
 
     // === Expense Related ===

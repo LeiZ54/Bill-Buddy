@@ -42,6 +42,9 @@ public class Expense {
     private ExpenseType type;
 
     @Column(nullable = false)
+    private Boolean settled = false;
+
+    @Column(nullable = false)
     private Boolean deleted = false;
 
     @Column

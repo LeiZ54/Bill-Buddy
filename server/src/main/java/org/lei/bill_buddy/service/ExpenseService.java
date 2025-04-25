@@ -1,7 +1,6 @@
 package org.lei.bill_buddy.service;
 
 import jakarta.persistence.criteria.Predicate;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.lei.bill_buddy.config.exception.AppException;
@@ -15,6 +14,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -22,6 +22,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.YearMonth;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -45,7 +46,7 @@ public class ExpenseService {
                                  String description,
                                  LocalDateTime expenseDate,
                                  Boolean isRecurring,
-                                 RecurrenceUnit recurrenceUnit,
+                                 String recurrenceUnit,
                                  Integer recurrenceInterval,
                                  List<Long> participantIds,
                                  List<BigDecimal> shareAmounts) {
@@ -66,33 +67,21 @@ public class ExpenseService {
             throw new AppException(ErrorCode.USER_NOT_FOUND);
         }
 
-        participantIds.forEach(id -> {
-            if (!groupService.isMemberOfGroup(id, groupId)) {
-                log.warn("User with id {} is not a member of group {}", id, groupId);
-                throw new AppException(ErrorCode.NOT_A_MEMBER);
+        Set<Long> memberIds = groupService.getAllMemberIdsOfGroup(groupId);
+        for (Long id : participantIds) {
+            if (!memberIds.contains(id)) {
+                throw new AppException(ErrorCode.PARTICIPANTS_NOT_A_MEMBER);
             }
-        });
-
-        ExpenseType type;
-        try {
-            type = ExpenseType.valueOf(typeStr.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            log.warn("Unknown expense type '{}', defaulting to OTHER in expense creating", typeStr);
-            type = ExpenseType.OTHER;
         }
+
+        ExpenseType type = parseExpenseType(typeStr);
 
         Currency groupCurrency = group.getDefaultCurrency();
-        BigDecimal finalAmount = amount;
+        BigDecimal finalAmount = convertCurrency(amount, currency, group.getDefaultCurrency().name());
 
-        if (!currency.equalsIgnoreCase(groupCurrency.name())) {
-            log.info("Converting {} {} to {}", amount, currency, groupCurrency.name());
-            BigDecimal rate = exchangeRateService.getExchangeRate(currency, groupCurrency.name());
-            finalAmount = exchangeRateService.convert(amount, rate);
-            shareAmounts.replaceAll(share -> exchangeRateService.convert(share, rate));
-        }
-
-        log.info("Creating expense: groupId={}, payerId={}, title={}, type={}, amount={}, currency={}, description={}, date={}, isRecurring={}, recurrenceUnit={}, recurrenceInterval={}, participants={}",
-                groupId, payerId, title, type, finalAmount, groupCurrency, description, expenseDate, isRecurring, recurrenceUnit, recurrenceInterval, participantIds);
+        log.info("Creating expense: groupId={}, payerId={}, amount={}, currency={}", groupId, payerId, finalAmount, groupCurrency);
+        log.debug("Full expense creation details: title={}, type={}, desc={}, date={}, recurring={}, participants={}",
+                title, type, description, expenseDate, isRecurring, participantIds);
 
         Expense expense = new Expense();
         expense.setGroup(group);
@@ -104,12 +93,15 @@ public class ExpenseService {
         expense.setDescription(description);
         expense.setExpenseDate(expenseDate);
         expense.setIsRecurring(isRecurring);
-        expense.setRecurrenceUnit(recurrenceUnit);
-        expense.setRecurrenceInterval(recurrenceInterval);
+        if (isRecurring){
+            expense.setRecurrenceUnit(parseRecurrentUnit(recurrenceUnit));
+            expense.setRecurrenceInterval(recurrenceInterval);
+        }
 
         Expense savedExpense = expenseRepository.save(expense);
         distributeShares(savedExpense, participantIds, shareAmounts, finalAmount);
         groupService.groupUpdated(group);
+        settleGroupIfNeeded(savedExpense.getGroup().getId());
 
         log.info("Expense created successfully: id={}", savedExpense.getId());
         return savedExpense;
@@ -140,6 +132,7 @@ public class ExpenseService {
         }
 
         groupService.groupUpdated(expense.getGroup());
+        settleGroupIfNeeded(expense.getGroup().getId());
         log.info("Expense deleted successfully: id={}", expenseId);
     }
 
@@ -153,7 +146,7 @@ public class ExpenseService {
                                  String description,
                                  LocalDateTime expenseDate,
                                  Boolean isRecurring,
-                                 RecurrenceUnit recurrenceUnit,
+                                 String recurrenceUnit,
                                  Integer recurrenceInterval,
                                  List<Long> participantIds,
                                  List<BigDecimal> shareAmounts) {
@@ -178,14 +171,12 @@ public class ExpenseService {
 
         if (payerId != null) expense.setPayer(newPayer);
         if (title != null && !title.isEmpty()) expense.setTitle(title);
+
         String groupCurrency = expense.getGroup().getDefaultCurrency().name();
         if (currency != null && !currency.isEmpty()) {
-            if (!currency.equalsIgnoreCase(groupCurrency)) {
-                log.info("Converting {} {} to {}", amount, currency, groupCurrency);
-                BigDecimal rate = exchangeRateService.getExchangeRate(currency, groupCurrency);
-                newAmount = exchangeRateService.convert(newAmount, rate);
-                newShareAmounts.replaceAll(share -> exchangeRateService.convert(share, rate));
-            }
+            newAmount = convertCurrency(newAmount, currency, groupCurrency);
+            newShareAmounts.replaceAll(share -> convertCurrency(share, currency, groupCurrency));
+
             try {
                 expense.setCurrency(Currency.valueOf(currency.toUpperCase()));
             } catch (IllegalArgumentException e) {
@@ -197,17 +188,9 @@ public class ExpenseService {
         if (description != null && !description.isEmpty()) expense.setDescription(description);
         if (expenseDate != null) expense.setExpenseDate(expenseDate);
         if (isRecurring != null) expense.setIsRecurring(isRecurring);
-        if (recurrenceUnit != null) expense.setRecurrenceUnit(recurrenceUnit);
+        if (recurrenceUnit != null) expense.setRecurrenceUnit(parseRecurrentUnit(recurrenceUnit));
         if (recurrenceInterval != null) expense.setRecurrenceInterval(recurrenceInterval);
-
-        ExpenseType type;
-        try {
-            type = ExpenseType.valueOf(typeStr.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            log.warn("Unknown expense type '{}', defaulting to OTHER", typeStr);
-            type = ExpenseType.OTHER;
-        }
-        expense.setType(type);
+        if (typeStr != null && !typeStr.isEmpty()) expense.setType(parseExpenseType(typeStr));
 
         Expense savedExpense = expenseRepository.save(expense);
 
@@ -235,6 +218,7 @@ public class ExpenseService {
         }
 
         groupService.groupUpdated(expense.getGroup());
+        settleGroupIfNeeded(expense.getGroup().getId());
         log.info("Expense updated: id={}", expenseId);
         return savedExpense;
     }
@@ -274,7 +258,7 @@ public class ExpenseService {
             copy.setDeleted(false);
             expenseShareRepository.save(copy);
         }
-
+        settleGroupIfNeeded(saved.getGroup().getId());
     }
 
     public Expense getExpenseById(Long id) {
@@ -284,12 +268,14 @@ public class ExpenseService {
         return expense;
     }
 
+    @Transactional(readOnly = true)
     public Page<Expense> getExpenses(
             Long groupId,
             String title,
             Long payerId,
-            ExpenseType type,
+            String type,
             String month,
+            Boolean settled,
             Pageable pageable) {
         log.info("Querying expenses with filters: groupId={}, payerId={}, type={}, month={}, title={}",
                 groupId, payerId, type, month, title);
@@ -313,8 +299,9 @@ public class ExpenseService {
                 predicates.add(cb.equal(root.get("payer").get("id"), payerId));
             }
 
-            if (type != null) {
-                predicates.add(cb.equal(root.get("type"), type));
+            if (type != null && !type.isEmpty()) {
+
+                predicates.add(cb.equal(root.get("type"), parseExpenseType(type)));
             }
 
             if (title != null && !title.isBlank()) {
@@ -326,6 +313,10 @@ public class ExpenseService {
                 LocalDateTime start = ym.atDay(1).atStartOfDay();
                 LocalDateTime end = ym.atEndOfMonth().atTime(LocalTime.MAX);
                 predicates.add(cb.between(root.get("expenseDate"), start, end));
+            }
+
+            if (settled != null) {
+                predicates.add(cb.equal(root.get("settled"), settled));
             }
 
             return cb.and(predicates.toArray(new Predicate[0]));
@@ -341,35 +332,56 @@ public class ExpenseService {
     }
 
     private void distributeShares(Expense expense, List<Long> participantIds,
-                                  List<BigDecimal> shares, BigDecimal totalAmount) {
+                                  List<BigDecimal> shareAmounts, BigDecimal totalAmount) {
         log.info("Distributing shares for expense id={}", expense.getId());
-        log.info("participantIds={}", participantIds);
-        log.info("shares={}", shares);
-        Map<Long, User> participants = new HashMap<>();
-        userService.getUsersByIds(participantIds).forEach(user -> participants.put(user.getId(), user));
+        Map<Long, User> participants = userService.getUsersByIds(participantIds)
+                .stream()
+                .collect(Collectors.toMap(User::getId, user -> user));
 
-        if (shares == null || shares.size() != participantIds.size()) {
-            BigDecimal share = totalAmount.divide(BigDecimal.valueOf(participants.size()), 2, RoundingMode.HALF_UP);
-            participants.forEach((id, u) -> createExpenseShare(expense, u, share));
+        List<ExpenseShare> sharesToSave = new ArrayList<>();
+
+        if (shareAmounts == null || shareAmounts.size() != participantIds.size()) {
+            BigDecimal averageShare = totalAmount.divide(BigDecimal.valueOf(participants.size()), 2, RoundingMode.HALF_UP);
+            for (Long userId : participantIds) {
+                ExpenseShare share = buildExpenseShare(expense, participants.get(userId), averageShare);
+                sharesToSave.add(share);
+            }
         } else {
             for (int i = 0; i < participantIds.size(); i++) {
-                createExpenseShare(expense, participants.get(participantIds.get(i)), shares.get(i));
+                ExpenseShare share = buildExpenseShare(expense, participants.get(participantIds.get(i)), shareAmounts.get(i));
+                sharesToSave.add(share);
+            }
+        }
+
+        expenseShareRepository.saveAll(sharesToSave);
+
+        for (ExpenseShare share : sharesToSave) {
+            if (!share.getUser().getId().equals(expense.getPayer().getId())) {
+                groupDebtService.updateGroupDebt(expense.getPayer(), share.getUser(), expense.getGroup(), share.getShareAmount());
             }
         }
     }
+
 
     public List<ExpenseShare> getExpenseSharesByExpenseId(Long expenseId) {
         return expenseShareRepository.findByExpenseIdAndDeletedFalse(expenseId);
     }
 
-    private void createExpenseShare(Expense expense, User user, BigDecimal shareAmount) {
+    @Transactional
+    protected void settleGroupIfNeeded(Long groupId) {
+        if (groupDebtService.isGroupSettled(groupId)) {
+            log.info("Group {} is fully settled. Marking all related expenses as settled.", groupId);
+            expenseRepository.settleExpensesByGroupId(groupId);
+        }
+    }
+
+    private ExpenseShare buildExpenseShare(Expense expense, User user, BigDecimal shareAmount) {
         ExpenseShare share = new ExpenseShare();
         share.setExpense(expense);
         share.setUser(user);
         share.setShareAmount(shareAmount);
         share.setDeleted(false);
-        expenseShareRepository.save(share);
-        groupDebtService.updateGroupDebt(expense.getPayer(), user, expense.getGroup(), shareAmount);
+        return share;
     }
 
     private boolean isParticipantListChanged(List<ExpenseShare> oldShares, List<Long> newIds) {
@@ -382,5 +394,35 @@ public class ExpenseService {
             }
         }
         return false;
+    }
+
+    private BigDecimal convertCurrency(BigDecimal amount, String fromCurrency, String toCurrency) {
+        if (fromCurrency.equalsIgnoreCase(toCurrency)) {
+            return amount;
+        }
+        BigDecimal rate = exchangeRateService.getExchangeRate(fromCurrency, toCurrency);
+        return exchangeRateService.convert(amount, rate);
+    }
+
+    private ExpenseType parseExpenseType(String type) {
+        ExpenseType expenseType;
+        try {
+            expenseType = ExpenseType.valueOf(type.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            log.warn("Unknown expense type '{}', defaulting to OTHER", type);
+            expenseType = ExpenseType.OTHER;
+        }
+        return expenseType;
+    }
+
+    private RecurrenceUnit parseRecurrentUnit(String unit) {
+        RecurrenceUnit recurrenceUnit;
+        try {
+            recurrenceUnit = RecurrenceUnit.valueOf(unit.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            log.warn("Unknown recurrentUnit '{}', defaulting to MONTH", unit);
+            recurrenceUnit = RecurrenceUnit.MONTH;
+        }
+        return recurrenceUnit;
     }
 }

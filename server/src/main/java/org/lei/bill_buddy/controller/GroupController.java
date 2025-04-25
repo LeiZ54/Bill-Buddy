@@ -3,6 +3,7 @@ package org.lei.bill_buddy.controller;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.lei.bill_buddy.DTO.*;
 import org.lei.bill_buddy.annotation.RateLimit;
 import org.lei.bill_buddy.model.Group;
@@ -23,6 +24,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @RateLimit
 @RestController
 @RequestMapping("/api/groups")
@@ -35,6 +37,7 @@ public class GroupController {
     private final DtoConvertorUtil dtoConvertor;
     private final EmailProducer emailProducer;
     private final RateLimiterUtil rateLimiter;
+    private final GroupDebtService groupDebtService;
 
     @Value("${bill-buddy.client.url}")
     private String clientUrl;
@@ -155,6 +158,15 @@ public class GroupController {
                 .map(dtoConvertor::convertGroupToGroupDetailsDTO);
 
         return ResponseEntity.ok(groupPage);
+    }
+
+    @GetMapping("/{groupId}/is-settled")
+    public ResponseEntity<?> checkIsSettled(@PathVariable Long groupId) {
+        User user = userService.getCurrentUser();
+        if (!groupService.isMemberOfGroup(user.getId(), groupId)) {
+            log.warn("User {} is not a member of group {}.", user.getId(), groupId);
+        }
+        return ResponseEntity.ok(groupDebtService.isGroupSettled(groupId));
     }
 
     @GetMapping
