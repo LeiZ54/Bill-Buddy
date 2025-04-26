@@ -2,9 +2,8 @@ package org.lei.bill_buddy.scheduler;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.lei.bill_buddy.model.Expense;
-import org.lei.bill_buddy.repository.ExpenseRepository;
-import org.lei.bill_buddy.service.ExpenseService;
+import org.lei.bill_buddy.model.RecurringExpense;
+import org.lei.bill_buddy.service.RecurringExpenseService;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -16,37 +15,40 @@ import java.util.List;
 @RequiredArgsConstructor
 public class RecurringExpenseScheduler {
 
-    private final ExpenseRepository expenseRepository;
-    private final ExpenseService expenseService;
+    private final RecurringExpenseService recurringExpenseService;
 
     @Scheduled(cron = "0 0 2 * * ?")
     public void generateRecurringExpenses() {
         log.info("Running recurring expense scheduler...");
 
-        List<Expense> recurringExpenses = expenseRepository.findByIsRecurringTrueAndDeletedFalse();
+        List<RecurringExpense> recurringExpenses = recurringExpenseService.getActiveRecurringExpenses();
 
-        for (Expense original : recurringExpenses) {
-            if (shouldGenerateNewExpense(original)) {
+        for (RecurringExpense recurring : recurringExpenses) {
+            if (shouldGenerateNewExpense(recurring)) {
                 try {
-                    expenseService.duplicateExpense(original);
-                    log.info("Created recurring expense for original ID: {}", original.getId());
+                    recurringExpenseService.generateExpenseFromRecurring(recurring);
+                    log.info("Created expense from recurring ID: {}", recurring.getId());
                 } catch (Exception e) {
-                    log.error("Failed to duplicate recurring expense ID: {}", original.getId(), e);
+                    log.error("Failed to generate expense from recurring ID: {}", recurring.getId(), e);
                 }
             }
         }
     }
 
-    private boolean shouldGenerateNewExpense(Expense expense) {
-        if (expense.getRecurrenceUnit() == null || expense.getRecurrenceInterval() == null) return false;
+    private boolean shouldGenerateNewExpense(RecurringExpense recurring) {
+        if (recurring.getRecurrenceUnit() == null || recurring.getRecurrenceInterval() == null) return false;
 
-        LocalDateTime nextDueDate = switch (expense.getRecurrenceUnit()) {
-            case WEEK -> expense.getExpenseDate().plusWeeks(expense.getRecurrenceInterval());
-            case MONTH -> expense.getExpenseDate().plusMonths(expense.getRecurrenceInterval());
-            case YEAR -> expense.getExpenseDate().plusYears(expense.getRecurrenceInterval());
-            case DAY -> expense.getExpenseDate().plusDays(expense.getRecurrenceInterval());
-        };
+        LocalDateTime nextDueDate = recurring.getStartDate();
+        while (nextDueDate.isBefore(LocalDateTime.now())) {
+            switch (recurring.getRecurrenceUnit()) {
+                case WEEK -> nextDueDate = nextDueDate.plusWeeks(recurring.getRecurrenceInterval());
+                case MONTH -> nextDueDate = nextDueDate.plusMonths(recurring.getRecurrenceInterval());
+                case YEAR -> nextDueDate = nextDueDate.plusYears(recurring.getRecurrenceInterval());
+                case DAY -> nextDueDate = nextDueDate.plusDays(recurring.getRecurrenceInterval());
+            }
+        }
 
-        return LocalDateTime.now().isAfter(nextDueDate);
+        return nextDueDate.isAfter(LocalDateTime.now().minusMinutes(5))
+                && nextDueDate.isBefore(LocalDateTime.now().plusMinutes(5));
     }
 }

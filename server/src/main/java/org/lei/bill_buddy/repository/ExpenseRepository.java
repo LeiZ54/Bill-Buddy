@@ -8,12 +8,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-
 @Repository
 public interface ExpenseRepository extends JpaRepository<Expense, Long>, JpaSpecificationExecutor<Expense> {
 
-    List<Expense> findByIsRecurringTrueAndDeletedFalse();
 
     @Query("""
                 SELECT COUNT(e) FROM Expense e
@@ -22,8 +19,6 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long>, JpaSpec
                 AND e.deleted = false
             """)
     Long countExpensesByGroupAndPayer(@Param("groupId") Long groupId, @Param("userId") Long userId);
-
-    List<Expense> findByGroupIdAndDeletedFalse(Long groupId);
 
     @Modifying
     @Query("""

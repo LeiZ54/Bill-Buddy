@@ -2,13 +2,19 @@ package org.lei.bill_buddy.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.lei.bill_buddy.DTO.ExpenseCreateRequest;
 import org.lei.bill_buddy.DTO.ExpenseDTO;
 import org.lei.bill_buddy.DTO.ExpenseUpdateRequest;
+import org.lei.bill_buddy.DTO.RecurringExpenseDTO;
 import org.lei.bill_buddy.annotation.RateLimit;
+import org.lei.bill_buddy.config.exception.AppException;
+import org.lei.bill_buddy.enums.ErrorCode;
 import org.lei.bill_buddy.model.Expense;
+import org.lei.bill_buddy.model.RecurringExpense;
 import org.lei.bill_buddy.service.ExpenseService;
 import org.lei.bill_buddy.service.GroupService;
+import org.lei.bill_buddy.service.RecurringExpenseService;
 import org.lei.bill_buddy.service.UserService;
 import org.lei.bill_buddy.util.DtoConvertorUtil;
 import org.springframework.data.domain.Page;
@@ -18,7 +24,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 
+@Slf4j
 @RateLimit
 @RestController
 @RequestMapping("/api/expenses")
@@ -26,6 +34,7 @@ import org.springframework.web.bind.annotation.*;
 public class ExpenseController {
 
     private final ExpenseService expenseService;
+    private final RecurringExpenseService recurringExpenseService;
     private final UserService userService;
     private final GroupService groupService;
     private final DtoConvertorUtil dtoConvertor;
@@ -34,6 +43,10 @@ public class ExpenseController {
     public ResponseEntity<?> createExpense(@Valid @RequestBody ExpenseCreateRequest request) {
         Long currentUserId = userService.getCurrentUser().getId();
 
+        if (!groupService.isMemberOfGroup(userService.getCurrentUser().getId(), request.getGroupId())) {
+            log.warn("User {} is not a member of group {}", userService.getCurrentUser().getId(), request.getGroupId());
+            throw new AppException(ErrorCode.NOT_A_MEMBER);
+        }
         Expense expense = expenseService.createExpense(
                 request.getGroupId(),
                 request.getPayerId() != null ? request.getPayerId() : currentUserId,
@@ -74,9 +87,6 @@ public class ExpenseController {
                 request.getCurrency(),
                 request.getDescription(),
                 request.getExpenseDate(),
-                request.getIsRecurring(),
-                request.getRecurrenceUnit(),
-                request.getRecurrenceInterval(),
                 request.getParticipants(),
                 request.getShares()
         );
@@ -121,4 +131,41 @@ public class ExpenseController {
 
         return ResponseEntity.ok(dtoPage);
     }
+
+    @GetMapping("/{groupId}/recurring")
+    public ResponseEntity<?> getRecurringExpensesByGroup(
+            @PathVariable Long groupId
+    ) {
+        if (!groupService.isMemberOfGroup(userService.getCurrentUser().getId(), groupId)) {
+            throw new AppException(ErrorCode.NOT_A_MEMBER);
+        }
+        List<RecurringExpenseDTO> recurringExpenses = recurringExpenseService.getRecurringExpensesByGroup(groupId)
+                .stream()
+                .map(dtoConvertor::convertRecurringExpenseToRecurringExpenseDTO)
+                .toList();
+
+        return ResponseEntity.ok(recurringExpenses);
+    }
+
+    @GetMapping("/recurring/{id}")
+    public ResponseEntity<?> getRecurringExpensesByRecurringId(@PathVariable Long id) {
+        RecurringExpense recurringExpense = recurringExpenseService.getRecurringExpenseById(id);
+        if (!groupService.isMemberOfGroup(userService.getCurrentUser().getId(), recurringExpense.getGroup().getId())) {
+            throw new AppException(ErrorCode.NOT_A_MEMBER);
+        }
+        return ResponseEntity.ok(dtoConvertor.convertRecurringExpenseToRecurringExpenseDetailsDTO(recurringExpense));
+    }
+
+    @DeleteMapping("/recurring/{id}")
+    public ResponseEntity<?> deleteRecurringExpense(@PathVariable Long id) {
+        RecurringExpense recurring = recurringExpenseService.getRecurringExpenseById(id);
+
+        if (!groupService.isMemberOfGroup(userService.getCurrentUser().getId(), recurring.getGroup().getId())) {
+            throw new AppException(ErrorCode.NOT_A_MEMBER);
+        }
+        recurringExpenseService.deleteRecurringExpense(id);
+
+        return ResponseEntity.ok("Recurring Expense deleted with ID: " + id);
+    }
+
 }

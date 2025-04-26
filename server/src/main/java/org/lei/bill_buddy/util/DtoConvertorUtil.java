@@ -12,6 +12,7 @@ import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -37,7 +38,7 @@ public class DtoConvertorUtil {
         dto.setId(expense.getId());
         dto.setTitle(expense.getTitle());
         dto.setAmount(expense.getAmount());
-        dto.setCurrency(expense.getCurrency().name());
+        dto.setCurrency(expense.getGroup().getDefaultCurrency().name());
         dto.setPayer(convertUserToUserDTO(expense.getPayer()));
         dto.setExpenseDate(expense.getExpenseDate());
         dto.setType(expense.getType());
@@ -56,13 +57,36 @@ public class DtoConvertorUtil {
         dto.setTitle(expense.getTitle());
         dto.setAmount(expense.getAmount());
         dto.setDescription(expense.getDescription());
-        dto.setCurrency(expense.getCurrency().name());
+        dto.setCurrency(expense.getGroup().getDefaultCurrency().name());
         dto.setPayer(convertUserToUserDTO(expense.getPayer()));
         dto.setDebtsAmount(calculateExpenseDebtsAmount(currentUser.getId(), expense));
         dto.setShares(shares);
         dto.setExpenseDate(expense.getExpenseDate());
         dto.setType(expense.getType());
-        dto.setIsRecurring(expense.getIsRecurring());
+        return dto;
+    }
+
+    public RecurringExpenseDTO convertRecurringExpenseToRecurringExpenseDTO(RecurringExpense expense) {
+        RecurringExpenseDTO dto = new RecurringExpenseDTO();
+        dto.setId(expense.getId());
+        dto.setTitle(expense.getTitle());
+        dto.setType(expense.getType());
+        return dto;
+    }
+
+    public RecurringExpenseDetailsDTO convertRecurringExpenseToRecurringExpenseDetailsDTO(RecurringExpense expense) {
+        RecurringExpenseDetailsDTO dto = new RecurringExpenseDetailsDTO();
+        dto.setId(expense.getId());
+        dto.setTitle(expense.getTitle());
+        dto.setType(expense.getType());
+        dto.setDescription(expense.getDescription());
+        dto.setAmount(expense.getAmount());
+        dto.setPayer(convertUserToUserDTO(expense.getPayer()));
+        List<UserDTO> participants = userService.getUsersByIds(expense.getParticipantIds()).stream().map(this::convertUserToUserDTO).toList();
+        dto.setParticipants(participants);
+        dto.setShareAmounts(expense.getShareAmounts());
+        dto.setCreatedAt(expense.getCreatedAt());
+        dto.setStartDate(expense.getStartDate());
         dto.setRecurrenceUnit(expense.getRecurrenceUnit());
         dto.setRecurrenceInterval(expense.getRecurrenceInterval());
         return dto;
