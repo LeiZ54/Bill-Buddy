@@ -3,9 +3,7 @@ package org.lei.bill_buddy.model;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import org.lei.bill_buddy.enums.Currency;
 import org.lei.bill_buddy.enums.ExpenseType;
-import org.lei.bill_buddy.enums.RecurrenceUnit;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -33,10 +31,6 @@ public class Expense {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal amount;
 
-    @Column(nullable = false, length = 10)
-    @Enumerated(EnumType.STRING)
-    private Currency currency = Currency.USD;
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ExpenseType type;
@@ -52,16 +46,6 @@ public class Expense {
 
     @Column(name = "expense_date", nullable = false)
     private LocalDateTime expenseDate;
-
-    @Column(name = "is_recurring", nullable = false)
-    private Boolean isRecurring = false;
-
-    @Column(name = "recurrence_unit")
-    @Enumerated(EnumType.STRING)
-    private RecurrenceUnit recurrenceUnit;
-
-    @Column(name = "recurrence_interval")
-    private Integer recurrenceInterval;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
