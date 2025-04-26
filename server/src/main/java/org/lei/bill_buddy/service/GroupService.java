@@ -19,7 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Transactional
@@ -124,9 +123,9 @@ public class GroupService {
     }
 
     @Transactional(readOnly = true)
-    public Page<Group> getGroupsByUserId(Long userId, Pageable pageable) {
-        log.debug("Getting groups for user: {}", userId);
-        return groupRepository.findAllByUserIdAndSortedByGroupUpdatedAt(userId, pageable);
+    public Page<Group> getGroupsByUserIdAndGroupName(Long userId, String groupName, Pageable pageable) {
+        log.debug("Getting groups for user: {}, and group name contains: {}", userId, groupName);
+        return groupRepository.findAllByUserIdAndGroupNameContaining(userId, groupName, pageable);
     }
 
     public boolean isMemberOfGroup(Long userId, Long groupId) {

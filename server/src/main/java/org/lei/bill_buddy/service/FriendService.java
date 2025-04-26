@@ -126,9 +126,9 @@ public class FriendService {
     }
 
     @Transactional(readOnly = true)
-    public Page<Friend> getFriendsByUserId(Long userId, Pageable pageable) {
-        log.debug("Fetching friends for userId={} with pagination", userId);
-        return friendRepository.findAllByUserIdAndDeletedFalse(userId, pageable);
+    public Page<Friend> getFriendsByUserIdAndSearch(Long userId, String search, Pageable pageable) {
+        log.debug("Fetching friends for userId={}, search condition is {}", userId, search);
+        return friendRepository.findFriendsByUserIdAndNameOrEmail(userId, search.trim(), pageable);
     }
 
     public FriendRequest getFriendRequestByRequestId(Long requestId) {

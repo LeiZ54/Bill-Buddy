@@ -150,11 +150,12 @@ public class GroupController {
     @GetMapping("/detail")
     public ResponseEntity<?> getDetailedGroups(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String groupName) {
 
         User user = userService.getCurrentUser();
         Pageable pageable = PageRequest.of(page, size);
-        Page<GroupDetailsDTO> groupPage = groupService.getGroupsByUserId(user.getId(), pageable)
+        Page<GroupDetailsDTO> groupPage = groupService.getGroupsByUserIdAndGroupName(user.getId(), groupName, pageable)
                 .map(dtoConvertor::convertGroupToGroupDetailsDTO);
 
         return ResponseEntity.ok(groupPage);
@@ -170,11 +171,14 @@ public class GroupController {
     }
 
     @GetMapping
-    public ResponseEntity<?> getGroups(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
+    public ResponseEntity<?> getGroups(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String groupName) {
 
         User user = userService.getCurrentUser();
         Pageable pageable = PageRequest.of(page, size);
-        Page<Group> groupPage = groupService.getGroupsByUserId(user.getId(), pageable);
+        Page<Group> groupPage = groupService.getGroupsByUserIdAndGroupName(user.getId(), groupName, pageable);
 
         return ResponseEntity.ok(groupPage.map(dtoConvertor::convertGroupToGroupDTO));
     }

@@ -47,11 +47,12 @@ public class FriendController {
     @GetMapping
     public ResponseEntity<?> getFriends(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String search
     ) {
         Long currentUserId = userService.getCurrentUser().getId();
         Pageable pageable = PageRequest.of(page, size);
-        Page<Friend> friendsPage = friendService.getFriendsByUserId(currentUserId, pageable);
+        Page<Friend> friendsPage = friendService.getFriendsByUserIdAndSearch(currentUserId, search, pageable);
         return ResponseEntity.ok(formatFriendsListDTO(friendsPage));
     }
 

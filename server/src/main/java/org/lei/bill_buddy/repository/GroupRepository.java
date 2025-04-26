@@ -16,23 +16,28 @@ public interface GroupRepository extends JpaRepository<Group, Long> {
 
     @Query(
             value = """
-        SELECT g.* FROM groups_table g
+        SELECT g.*\s
+        FROM groups_table g
         JOIN group_members gm ON gm.group_id = g.id AND gm.deleted = false
         WHERE (gm.user_id = :userId OR g.created_by = :userId)
           AND g.deleted = false
+          AND (:groupName IS NULL OR g.name LIKE %:groupName%)
         GROUP BY g.id
         ORDER BY g.updated_at DESC
-        """,
+       \s""",
             countQuery = """
-        SELECT COUNT(DISTINCT g.id) FROM groups_table g
+        SELECT COUNT(DISTINCT g.id) 
+        FROM groups_table g
         JOIN group_members gm ON gm.group_id = g.id AND gm.deleted = false
         WHERE (gm.user_id = :userId OR g.created_by = :userId)
           AND g.deleted = false
+          AND (:groupName IS NULL OR g.name LIKE %:groupName%)
         """,
             nativeQuery = true
     )
-    Page<Group> findAllByUserIdAndSortedByGroupUpdatedAt(
+    Page<Group> findAllByUserIdAndGroupNameContaining(
             @Param("userId") Long userId,
+            @Param("groupName") String groupName,
             Pageable pageable
     );
 
