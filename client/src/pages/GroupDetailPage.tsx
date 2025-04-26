@@ -303,7 +303,7 @@ export default function GroupDetailPage() {
                             (() => {
                                 let lastMonth = '';
 
-                                return expenses.reverse().map(expense => {
+                                return expenses.map(expense => {
                                     const dateObj = new Date(expense.expenseDate);
                                     const monthLabel = dateObj.toLocaleString('en-US', { month: 'long', year: 'numeric' });
                                     const showMonthDivider = monthLabel !== lastMonth;

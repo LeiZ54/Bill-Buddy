@@ -25,7 +25,7 @@ const Topbar = ({
         <motion.div
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className={`relative flex items-center justify-between h-12`}
+            className={`relative flex items-center justify-between h-12 px-1`}
         >
             {/* left */}
             <div className="flex">

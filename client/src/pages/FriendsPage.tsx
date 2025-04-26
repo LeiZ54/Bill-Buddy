@@ -2,10 +2,12 @@ import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { useFriendStore } from '../stores/friendStore';
 import Topbar from '../components/TopBar';
-import { Alert, Spin } from 'antd';
+import {Alert, Avatar, Spin} from 'antd';
+import useAuthStore from "../stores/authStore.ts";
 const FriendsPage = () => {
     const [isLoading, setIsLoading] = useState(false);
     const {fetchFriends, isLoadingMore, loadMoreFriends, hasMore, friends } = useFriendStore();
+    const {currencies} = useAuthStore();
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -59,37 +61,35 @@ const FriendsPage = () => {
                     </>
                 )}
             </>
-            <div className="mb-40 bg-white">
+            <div className="mb-40 bg-white mt-2">
                 {friends.map((person) => (
-                    <div key={person.fullName} className="border-b px-4">
-                        <div className="flex space-x-4 py-2">
-                            {/* <Avatar src={} /> */}
-                            <div className="flex-1">
-                                <div className="flex justify-between items-center">
-                                    <div className="text-2xl font-semibold">{person.fullName}</div>
-                                    <div className="text-right leading-tight">
-                                        {person.debtsWithCurrentUser >= 0 ? (
-                                            <>
-                                                <div className="text-green-600 text-sm">You lent</div>
-                                                <div className="text-[#FFA700] font-bold text-lg">
-                                                    USD{person.debtsWithCurrentUser.toFixed(2)}
+                    <div key={person.fullName} className="border-b px-6 py-4">
+                        <div className="flex items-start space-x-4">
+                            <Avatar src={person.avatar} size={40}/>
+
+                            <div className="flex flex-col items-start">
+                                <div className="text-2xl font-semibold">{person.fullName}</div>
+
+                                {person.netDebts && person.netDebts.length > 0 && (
+                                    <div className="mt-2 flex flex-col ">
+                                        {person.netDebts
+                                            .filter(debt => debt.debtAmount !== 0)
+                                            .map((debt, index) => (
+                                                <div
+                                                    key={index}
+                                                    className={`text-sm ${debt.debtAmount > 0 ? 'text-green-600' : 'text-orange-500'}`}
+                                                >
+                                                    {person.fullName} {debt.debtAmount > 0 ? 'owes you' : 'lent you'}{' '}
+                                                    {debt.group.defaultCurrency}{currencies[debt.group.defaultCurrency]}
+                                                    {Math.abs(debt.debtAmount).toFixed(2)} in {debt.group.groupName}
                                                 </div>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <div className="text-orange-600 text-sm">You owe</div>
-                                                <div className="text-[#FFA700] font-bold text-lg">
-                                                    USD{Math.abs(person.debtsWithCurrentUser).toFixed(2)}
-                                                </div>
-                                            </>
-                                        )}
+                                            ))}
                                     </div>
-                                </div>
+                                )}
                             </div>
                         </div>
                     </div>
                 ))}
-
             </div>
 
 
