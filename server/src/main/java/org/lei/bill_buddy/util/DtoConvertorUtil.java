@@ -1,11 +1,9 @@
 package org.lei.bill_buddy.util;
 
-import com.google.gson.Gson;
 import lombok.RequiredArgsConstructor;
 import org.lei.bill_buddy.DTO.*;
 import org.lei.bill_buddy.model.*;
 import org.lei.bill_buddy.service.ExpenseService;
-import org.lei.bill_buddy.service.ExpenseSummaryService;
 import org.lei.bill_buddy.service.GroupDebtService;
 import org.lei.bill_buddy.service.UserService;
 import org.springframework.stereotype.Component;
@@ -20,13 +18,12 @@ import java.util.Map;
 public class DtoConvertorUtil {
     private final UserService userService;
     private final ExpenseService expenseService;
-    private final ExpenseSummaryService expenseSummaryService;
     private final GroupDebtService groupDebtService;
-    private final Gson gson;
 
     public UserDTO convertUserToUserDTO(User user) {
         UserDTO dto = new UserDTO();
         dto.setId(user.getId());
+        dto.setAvatar(user.getAvatar());
         dto.setFullName(user.getFullName());
         dto.setGivenName(user.getGivenName());
         dto.setFamilyName(user.getFamilyName());
