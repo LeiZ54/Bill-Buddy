@@ -81,10 +81,8 @@ public class GroupDebtService {
         Map<Group, BigDecimal> result = new HashMap<>();
         for (Map.Entry<Long, BigDecimal> entry : groupIdToAmount.entrySet()) {
             BigDecimal amount = entry.getValue();
-            if (amount.compareTo(BigDecimal.ZERO) != 0) {
-                Group group = groupMap.get(entry.getKey());
-                result.put(group, amount);
-            }
+            Group group = groupMap.get(entry.getKey());
+            result.put(group, amount);
         }
         return result;
     }

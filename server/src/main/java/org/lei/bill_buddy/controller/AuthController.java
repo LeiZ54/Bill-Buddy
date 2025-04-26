@@ -82,7 +82,6 @@ public class AuthController {
         var payload = googleAuthService.verifyGoogleToken(request.getGoogleId());
 
         String email = payload.getEmail();
-        String avatar = (String) payload.get("picture");
         String givenName = (String) payload.get("given_name");
         String familyName = (String) payload.get("family_name");
 
@@ -90,7 +89,6 @@ public class AuthController {
         if (user == null) {
             user = new User();
             user.setPassword("");
-            if (avatar != null) user.setAvatar(avatar);
             user.setEmail(email);
             user.setGivenName(givenName);
             user.setFamilyName(familyName);

@@ -6,6 +6,8 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.lei.bill_buddy.annotation.RateLimit;
+import org.lei.bill_buddy.config.exception.AppException;
+import org.lei.bill_buddy.enums.ErrorCode;
 import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Method;
@@ -26,21 +28,19 @@ public class RateLimitAspect {
         Method method = ((MethodSignature) joinPoint.getSignature()).getMethod();
         Class<?> declaringClass = method.getDeclaringClass();
 
-        // 先取方法注解
         RateLimit methodAnnotation = method.getAnnotation(RateLimit.class);
 
-        // 再取类注解（如果方法注解不存在）
         RateLimit classAnnotation = declaringClass.getAnnotation(RateLimit.class);
 
         if (methodAnnotation == null && classAnnotation == null) {
-            return joinPoint.proceed(); // 没有限流
+            return joinPoint.proceed();
         }
 
         RateLimit config = methodAnnotation != null ? methodAnnotation : classAnnotation;
         int maxRequests = config.maxRequests();
         int timeWindowSeconds = config.timeWindowSeconds();
 
-        String key = declaringClass.getName() + "#" + method.getName(); // 也可以加上用户 IP 等做粒度控制
+        String key = declaringClass.getName() + "#" + method.getName();
 
         long now = System.currentTimeMillis();
         Deque<Long> timestamps = requestHistory.computeIfAbsent(key, k -> new ArrayDeque<>());
@@ -50,7 +50,7 @@ public class RateLimitAspect {
                 timestamps.pollFirst();
             }
             if (timestamps.size() >= maxRequests) {
-                throw new RuntimeException("Too many requests. Please try again later.");
+                throw new AppException(ErrorCode.TOO_MANY_REQUESTS);
             }
             timestamps.addLast(now);
         }
