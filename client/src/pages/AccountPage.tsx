@@ -1,11 +1,12 @@
 import {Steps, Avatar, Button, Input, Modal, message, Form, Alert, Spin, Row, Col} from 'antd';
-import {LockOutlined, LogoutOutlined, MailOutlined, SafetyOutlined} from '@ant-design/icons';
+import { LockOutlined, LogoutOutlined, MailOutlined, SafetyOutlined } from '@ant-design/icons';
 import useAuthStore from '../stores/authStore';
 import {useNavigate} from 'react-router-dom';
 import {motion} from 'framer-motion';
 import {useEffect, useState} from 'react';
 import api from "../util/axiosConfig.ts";
 import {Typography} from 'antd';
+import Upload from 'antd/es/upload/Upload';
 
 
 export default function AccountPage() {
@@ -13,7 +14,7 @@ export default function AccountPage() {
     const [passwordForm] = Form.useForm();
     const [isInforFormValid, setIsInforFormValid] = useState(false);
     const [isPasswordFormValid, setIsPasswordFormValid] = useState(false);
-    const {logout, familyName, givenName, email, updateUserInfo} = useAuthStore();
+    const {logout, familyName, givenName, email, updateUserInfo, uploadImg, avatar} = useAuthStore();
     const navigate = useNavigate();
     const {Text} = Typography;
 
@@ -27,6 +28,8 @@ export default function AccountPage() {
     const [token, setToken] = useState('');
     const [errorPassword, setErrorPassword] = useState('');
     const [countdown, setCountdown] = useState(0);
+
+    const [loadingImgUp, setLoadingImgUp] = useState(false);
 
     const {Step} = Steps;
 
@@ -123,6 +126,25 @@ export default function AccountPage() {
             setIsLoadingEdit(false);
         }
     };
+
+    const beforeUpload = (file: any) => {
+        const isImage = file.type.startsWith("image/");
+        if (!isImage) {
+            message.error("Please upload a image!");
+            return;
+        }
+        if (file) {
+            setLoadingImgUp(true);
+            try {
+                uploadImg(file);
+            } catch (err: any) {
+                message.error('Upload failed!');
+            } finally {
+                setLoadingImgUp(false);
+            }
+        }
+    };
+
     return (
         <motion.div
             initial={{opacity: 0}}
@@ -134,10 +156,17 @@ export default function AccountPage() {
                     src="/Account/images.jpg"
                     className="w-full h-64 object-cover"
                 />
-                <Avatar
-                    src="/Account/images.jpg"
-                    className="w-24 h-24 rounded-full ring-4 ring-gray-200 absolute left-1/2 -translate-x-1/2 top-[11rem] shadow-xl"
-                />
+                <Upload
+                    showUploadList={false}
+                    beforeUpload={beforeUpload}
+                >
+                    <div className="w-24 h-24 cursor-pointer group  absolute left-1/2 -translate-x-1/2 top-[11rem]">
+                        <Avatar
+                            src={avatar}
+                            className="w-24 h-24 rounded-full ring-4 ring-gray-200 shadow-xl"
+                        />
+                    </div>
+                </Upload>
                 <div className="mt-10 text-center">
                     <Text className="text-4xl font-bold text-gray-800">{familyName+" "+givenName || 'Guest User'}</Text>
                 </div>

@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Avatar, Typography } from 'antd';
+import {  Typography } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { GroupData } from '../util/util';
 import { useGroupStore } from '../stores/groupStore';
@@ -8,10 +8,6 @@ import { useGroupDetailStore } from '../stores/groupDetailStore';
 
 const { Text } = Typography;
 
-const itemVariants = {
-    hidden: { opacity: 0, y: 10 },
-    visible: { opacity: 1, y: 0 }
-};
 
 const GroupSection = ({ id, name, type, items, netBalance, currency }: GroupData) => {
     const navigate = useNavigate();

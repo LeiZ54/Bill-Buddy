@@ -25,25 +25,22 @@ const Topbar = ({
         <motion.div
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className={`relative flex items-center justify-between h-12 ${className}`}
+            className={`relative flex items-center justify-between h-12`}
         >
             {/* left */}
             <div className="flex">
                 {leftType && (
                     <motion.div whileHover={{ scale: 1.05 }}>
-                        <Button
-                            type="text"
+                        <div
                             onClick={leftOnClick}
-                            shape="circle"
-                            className="flex items-center justify-center w-8 h-8"
-                            icon={
-                                leftType === 'back' ? (
-                                    <LeftOutlined className="text-lg" />
-                                ) : (
-                                    <SearchOutlined className="text-lg" />
-                                )
-                            }
-                        />
+                            className="flex items-center justify-center w-8 h-8 cursor-pointer"
+                        >
+                            {leftType === 'back' ? (
+                                <LeftOutlined className={`text-3xl ${className}`} />
+                            ) : (
+                                <SearchOutlined className={`text-3xl ${className}`} />
+                            )}
+                        </div>
                     </motion.div>
                 )}
             </div>
@@ -51,7 +48,6 @@ const Topbar = ({
             {/* mid */}
             {title && (
                 <motion.div
-                    key={title}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     className="absolute left-1/2 -translate-x-1/2 text-lg font-semibold text-gray-800 truncate max-w-[70%]"
@@ -65,21 +61,19 @@ const Topbar = ({
                 {(rightText || rightOnClick) && (
                     <motion.div whileHover={{ scale: 1.05 }}>
                         {rightText ? (
-                            <Button
-                                type="link"
+                            <div
                                 onClick={rightOnClick}
                                 className="font-medium"
                             >
-                                <div className="text-blue-500">{rightText}</div>
-                            </Button>
+                                <div className="text-blue-500 text-lg">{rightText}</div>
+                            </div>
                         ) : (
-                            <Button
-                                type="text"
-                                onClick={rightOnClick}
-                                shape="circle"
-                                className="flex items-center justify-center w-8 h-8"
-                                icon={<SettingOutlined className="text-lg" />}
-                            />
+                                <div
+                                    onClick={rightOnClick}
+                                    className="flex items-center justify-center w-12 h-12 cursor-pointer"
+                                >
+                                    <SettingOutlined className={`text-3xl ${className}`} />
+                                </div>
                         )}
                     </motion.div>
                 )}

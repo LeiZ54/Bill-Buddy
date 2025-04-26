@@ -2,10 +2,11 @@
   "ExpandedNodes": [
     "",
     "\\src",
+    "\\src\\components",
     "\\src\\pages",
     "\\src\\stores",
     "\\src\\util"
   ],
-  "SelectedNode": "\\src\\stores\\friendStore.ts",
+  "SelectedNode": "\\src\\components\\AddModal.tsx",
   "PreviewInSolutionExplorer": false
 }

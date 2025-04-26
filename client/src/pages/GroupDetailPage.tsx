@@ -2,10 +2,11 @@ import {Alert, Avatar, Spin, Form, Button, Select, message, Input} from 'antd';
 import {motion} from 'framer-motion';
 import {useNavigate} from 'react-router-dom';
 import Topbar from '../components/TopBar';
-import {useEffect, useState} from 'react';
+import {useEffect, useMemo, useState} from 'react';
 import useAuthStore from '../stores/authStore';
 import {useGroupDetailStore} from '../stores/groupDetailStore';
-import {useExpenseStore} from '../stores/expenseStore';
+import { useExpenseStore } from '../stores/expenseStore';
+import { debounce } from 'lodash';
 
 
 export default function GroupDetailPage() {
@@ -21,7 +22,6 @@ export default function GroupDetailPage() {
         fetchExpenses,
         clearData,
         expenses,
-        fetchMember,
         loadMoreExpenses,
         isLoadingMore,
         hasMore,
@@ -41,7 +41,6 @@ export default function GroupDetailPage() {
                     clearData();
                     setIsLoading(true);
                     await getGroup();
-                    await fetchMember();
                 } catch (err) {
                 } finally {
                     setIsLoading(false);
@@ -54,18 +53,27 @@ export default function GroupDetailPage() {
     //get expense
     useEffect(() => {
         if (activeGroup) {
-            const fetchData = async () => {
-                try {
-                    setIsLoadingExpenses(true);
-                    await fetchExpenses();
-                } catch (err) {
-                } finally {
-                    setIsLoadingExpenses(false);
-                }
+            let loadingTimer = setTimeout(() => {
+                setIsLoadingExpenses(true);
+            }, 200); 
+            debouncedFetchExpenses();
+            const timer = setTimeout(() => {
+                setIsLoadingExpenses(false);
+            }, 500);
+
+            return () => {
+                clearTimeout(timer);
+                clearTimeout(loadingTimer);
+                debouncedFetchExpenses.cancel();
             };
-            fetchData();
         }
     }, [filters]);
+
+    const debouncedFetchExpenses = useMemo(() => {
+        return debounce(() => {
+            fetchExpenses();
+        }, 500);
+    }, [fetchExpenses]);
 
     //touch bottome to load more data;
     useEffect(() => {
@@ -168,7 +176,7 @@ export default function GroupDetailPage() {
                     rightOnClick={() => {
                         navigate("/groups/setting")
                     }}
-                    className="bg-transparent shadow-none"
+                    className="text-white"
                 />
                 </div>
 
@@ -287,68 +295,71 @@ export default function GroupDetailPage() {
 
                     {/* expense list */}
                     <div className="mt-6">
-                        {(() => {
-                            let lastMonth = '';
+                        {isLoadingExpenses ? (
+                            <div className="flex justify-center py-10">
+                                <Spin size="large" tip="Loading..." />
+                            </div>
+                        ) : (
+                            (() => {
+                                let lastMonth = '';
 
-                            return expenses.reverse().map(expense => {
-                                const dateObj = new Date(expense.expenseDate);
-                                const monthLabel = dateObj.toLocaleString('en-US', {month: 'long', year: 'numeric'});
-                                const showMonthDivider = monthLabel !== lastMonth;
-                                lastMonth = monthLabel;
+                                return expenses.reverse().map(expense => {
+                                    const dateObj = new Date(expense.expenseDate);
+                                    const monthLabel = dateObj.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+                                    const showMonthDivider = monthLabel !== lastMonth;
+                                    lastMonth = monthLabel;
 
-                                return (
-                                    <div key={expense.id}>
-                                        {showMonthDivider && (
-                                            <div className="text-xs text-black font-semibold px-4 mt-4 mb-2">{monthLabel}</div>
-                                        )}
+                                    return (
+                                        <div key={expense.id}>
+                                            {showMonthDivider && (
+                                                <div className="text-black font-semibold px-4 mt-4 mb-2">{monthLabel}</div>
+                                            )}
 
-                                        <div
-                                            className="flex items-center justify-between px-4"
-                                            onClick={() => {
-                                                setActiveExpense(expense.id);
-                                                navigate('/groups/expense');
-                                            }}
-                                        >
-                                            <div className="w-12 text-center">
-                                                <div className="text-xl text-gray-400">
-                                                    {dateObj.toLocaleString('en-US', {month: 'short'})}
+                                            <div
+                                                className="flex items-center justify-between px-4 pt-2"
+                                                onClick={() => {
+                                                    setActiveExpense(expense.id);
+                                                    navigate('/groups/expense');
+                                                }}
+                                            >
+                                                <div className="flex flex-col items-center text-gray-400 mr-4">
+                                                    <div>{dateObj.toLocaleString('en-US', { month: 'short' })}</div>
+                                                    <div className="text-lg">{dateObj.getDate()}</div>
                                                 </div>
-                                                <div className="text-base text-gray-400">
-                                                    {dateObj.getDate()}
+
+                                                <div>
+                                                    <Avatar shape="square" src={expenseTypes[expense.type]} className="w-12 h-12" />
                                                 </div>
-                                            </div>
 
-                                            <div className="border-2 border-gray-300 rounded-md flex-">
-                                                <Avatar src={expenseTypes[expense.type]}/>
-                                            </div>
-
-                                            <div className="flex-1 mx-4">
-                                                <div className=" text-xl">{expense.title}</div>
-                                                <div className="text-xs text-gray-500">
-                                                    {expense.payer.fullName} paid {expense.currency} {expense.amount.toFixed(2)}
+                                                <div className="flex-1 mx-4">
+                                                    <div className=" text-lg leading-none">{expense.title}</div>
+                                                    <div className="text-xs text-gray-500 pt-1">
+                                                        {expense.payer.fullName} paid {expense.currency} {expense.amount.toFixed(2)}
+                                                    </div>
                                                 </div>
-                                            </div>
 
-                                            <div className="text-right">
-                                                <p className={`text-sm mt-2 ${expense.debtsAmount >= 0
-                                                    ? 'text-green-600'
-                                                    : 'text-orange-600'
-                                                }`}>
-                                                    {expense.debtsAmount >= 0 ? ' You lent ' : ' You owe '}
-                                                </p>
-                                                <div className={`text-lg ${expense.debtsAmount >= 0
-                                                    ? 'text-green-600'
-                                                    : 'text-orange-600'
-                                                }`}>
-                                                    {expense.currency}{currencies[expense.currency]}{Math.abs(expense.debtsAmount).toFixed(2)}
+                                                <div className="text-right">
+                                                    <p className={`text-xs pb-1 ${expense.debtsAmount >= 0
+                                                        ? 'text-green-600'
+                                                        : 'text-orange-600'
+                                                        }`}>
+                                                        {expense.debtsAmount >= 0 ? ' You lent ' : ' You owe '}
+                                                    </p>
+                                                    <div className={`text-lg leading-none ${expense.debtsAmount >= 0
+                                                        ? 'text-green-600'
+                                                        : 'text-orange-600'
+                                                        }`}>
+                                                        {expense.currency}{currencies[expense.currency]}{Math.abs(expense.debtsAmount).toFixed(2)}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
-                                );
-                            });
-                        })()}
+                                    );
+                                });
+                            })()
+                        )}
                     </div>
+
 
                 </div>
             </div>

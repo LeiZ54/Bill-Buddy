@@ -43,11 +43,8 @@ const FriendsPage = () => {
             transition={{duration: 0.3, delay: 0.2}}
         >
             <Topbar
-                leftType="back"
+                leftType="search"
                 leftOnClick={() => {
-
-                }}
-                rightOnClick={() => {
 
                 }}
                 className="bg-transparent shadow-none"

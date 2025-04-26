@@ -24,10 +24,23 @@ export interface GroupData {
 }
 
 export interface FriendData {
-    debtsWithCurrentUser: number;
+    netDebts: NetDebts;
     email: string;
     fullName: string;
     id: number;
+    avatar: string;
+
+}
+interface NetDebts {
+    group: NetDebts_Group;
+    debtAmount: number;
+}
+
+interface NetDebts_Group {
+    groupId: number;
+    groupName: string;
+    type: string;
+    defaultCurrency: string;
 }
 
 export interface Member {
@@ -36,6 +49,7 @@ export interface Member {
     givenName: string;
     familyName: string;
     email: string;
+    avatar: string;
 }
 export interface easyGroup {
     groupId: number;

@@ -11,12 +11,11 @@ import ExpenseSplitSection from '../components/ExpenseSplitSection';
 import api from '../util/axiosConfig';
 import { useGroupDetailStore } from '../stores/groupDetailStore';
 
-
 const AddPage = () => {
     const navigate = useNavigate();
     const { groupType } = useAuthStore();
     const { getRecurrenceLabel } = useExpenseStore();
-    const { setActiveGroup } = useGroupDetailStore();
+    const { activeGroup, groupData } = useGroupDetailStore();
     const [hideMask, setHideMask] = useState(false);
     const [form] = Form.useForm();
     const { id, currencies } = useAuthStore();
@@ -124,6 +123,12 @@ const AddPage = () => {
       
     }, [form, values]);
 
+    useEffect(() => {
+        if (activeGroup) {
+            setSelectedGroup({ groupId: groupData!.id, groupName: groupData!.name, type: groupData!.type });
+        }
+    }, []);
+
     return (
         <div className="relative w-full h-full min-h-screen overflow-hidden bg-white">
             {!hideMask && (
@@ -190,7 +195,6 @@ const AddPage = () => {
                                 onSelect={(group) => {
                                     setSelectedGroup(group);
                                     form.setFieldsValue({ groupId: group.groupId });
-                                    setActiveGroup(group.groupId);
                                     setIsGroupModalOpen(false);
                                 }}
                             />

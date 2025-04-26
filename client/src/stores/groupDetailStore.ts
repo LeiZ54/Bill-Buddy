@@ -50,7 +50,7 @@ export const useGroupDetailStore = create<GroupDetailState>()(
             },
 
             setFilters: (filters: ExpenseFilter) => {
-                set({ filters: filters });
+                set({ filters: filters, expenses:[] });
             },
 
             editGroup: async (newName, newType, defaultCurrency) => {

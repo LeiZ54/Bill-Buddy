@@ -1,13 +1,14 @@
 import {create} from 'zustand';
 import {persist} from 'zustand/middleware';
 import api from '../util/axiosConfig';
-
+import axios from 'axios';
 import {jwtDecode} from 'jwt-decode';
 import {message} from "antd";
 
 interface AuthState {
     token: string | null;
     email: string | null;
+    avatar: string;
     id: number | null;
     name: string | null;
     exp: number | null;
@@ -25,7 +26,8 @@ interface AuthState {
     register: (email: string, password: string, givenName: string, familyName: string) => Promise<boolean>;
     logout: () => void;
     resetError: () => void;
-    updateUserInfo: (familyName: string, givenName: string, email: string) => void;
+    updateUserInfo: (familyName: string, givenName: string, email: string) => Promise<void>;
+    uploadImg: (img: any) => Promise<void>;
 }
 
 const useAuthStore = create<AuthState>()(
@@ -33,6 +35,7 @@ const useAuthStore = create<AuthState>()(
         (set, get) => ({
             token: null,
             email: null,
+            avatar: 'https://i.ibb.co/SDVtc10F/avatar.png',
             id: null,
             name: null,
             familyName: null,
@@ -48,9 +51,9 @@ const useAuthStore = create<AuthState>()(
                 try {
                     set({isLoading: true, error: null});
                     let res = await api.post('/auth/login', {email: loginEmail, password: loginPassword});
-                    const {token, email, id, name, familyName, givenName} = res.data;
+                    const { token, email, avatar, id, name, familyName, givenName} = res.data;
                     const {exp} = jwtDecode(token);
-                    set({token, email, id, name, familyName, givenName, exp});
+                    set({ token, email, avatar, id, name, familyName, givenName, exp});
                     res = await api.get('/common/group-types');
                     set({groupType: res.data});
                     res = await api.get('/common/currencies');
@@ -74,9 +77,9 @@ const useAuthStore = create<AuthState>()(
                 try {
                     set({isLoading: true, error: null});
                     let res = await api.post("/auth/google", {googleId});
-                    const {token, email, id, name, familyName, givenName} = res.data;
+                    const { token, email, avatar, id, name, familyName, givenName} = res.data;
                     const exp = jwtDecode(token).exp;
-                    set({token, email, id, name, familyName, givenName, exp});
+                    set({ token, email, avatar, id, name, familyName, givenName, exp});
                     res = await api.get('/common/group-types');
                     set({groupType: res.data});
                     res = await api.get('/common/currencies');
@@ -101,9 +104,9 @@ const useAuthStore = create<AuthState>()(
                         givenName: registerGivenName,
                         familyName: registerFamilyName
                     });
-                    const {token, email, id, name, familyName, givenName} = res.data;
+                    const { token, email, avatar, id, name, familyName, givenName} = res.data;
                     const exp = jwtDecode(token).exp;
-                    set({token, email, id, name, familyName, givenName, exp});
+                    set({ token, email, avatar, id, name, familyName, givenName, exp });
                     res = await api.get('/common/group-types');
                     set({groupType: res.data});
                     res = await api.get('/common/currencies');
@@ -125,7 +128,7 @@ const useAuthStore = create<AuthState>()(
             updateUserInfo: async (newFamilyName, newGivenName, newEmail) => {
                 const { familyName, givenName, email, id } = get();
                 if (familyName != newFamilyName || givenName != newGivenName || email != newEmail) {
-                    const res = await api.post(`/users/${id}`, {
+                    const res = await api.put(`/users/${id}`, {
                         email: newEmail,
                         givenName: newGivenName,
                         familyName: newFamilyName
@@ -136,10 +139,33 @@ const useAuthStore = create<AuthState>()(
                     message.success('User Information updated successfully!');
                 }
             },
+            uploadImg: async (file) => {
+                const { id } = get();
+                const apiKey = '1523e50e1102802c71f7ac35fe49d0b5';
+                const formData = new FormData();
+                formData.append('image', file);
+                let url;
+                try {
+                    const res = await axios.post(
+                        `https://api.imgbb.com/1/upload?key=${apiKey}`,
+                        formData
+                    );
+                    url = res.data.data.url;
+                } catch (err) {
+                    message.error('Upload failed!');
+                }
+                await api.put(`users/avatar/${id}`, {
+                    avatar: url
+                });
+                set({avatar: url});
+                message.success('Upload successfully!');
+            },
+
             logout: () => {
                 set({
                     token: null,
                     email: null,
+                    avatar: 'https://i.ibb.co/SDVtc10F/avatar.png',
                     id: null,
                     name: null,
                     familyName: null,
@@ -158,6 +184,7 @@ const useAuthStore = create<AuthState>()(
             partialize: (state) => ({
                 token: state.token,
                 email: state.email,
+                avatar: state.avatar,
                 id: state.id,
                 name: state.name,
                 familyName: state.familyName,
