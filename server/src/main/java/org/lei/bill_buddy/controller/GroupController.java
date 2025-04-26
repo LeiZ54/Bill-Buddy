@@ -151,7 +151,7 @@ public class GroupController {
     public ResponseEntity<?> getDetailedGroups(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) String groupName) {
+            @RequestParam(required = false, defaultValue = "") String groupName) {
 
         User user = userService.getCurrentUser();
         Pageable pageable = PageRequest.of(page, size);
@@ -174,7 +174,7 @@ public class GroupController {
     public ResponseEntity<?> getGroups(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) String groupName) {
+            @RequestParam(required = false, defaultValue = "") String groupName) {
 
         User user = userService.getCurrentUser();
         Pageable pageable = PageRequest.of(page, size);

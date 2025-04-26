@@ -125,7 +125,7 @@ public class GroupService {
     @Transactional(readOnly = true)
     public Page<Group> getGroupsByUserIdAndGroupName(Long userId, String groupName, Pageable pageable) {
         log.debug("Getting groups for user: {}, and group name contains: {}", userId, groupName);
-        return groupRepository.findAllByUserIdAndGroupNameContaining(userId, groupName, pageable);
+        return groupRepository.findAllByUserIdAndGroupNameContaining(userId, groupName.trim(), pageable);
     }
 
     public boolean isMemberOfGroup(Long userId, Long groupId) {
