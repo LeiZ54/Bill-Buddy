@@ -10,7 +10,7 @@ const navItems = [
     { key: 'friends', path: 'friends', icon: <TeamOutlined />, label: 'Friends' },
     { key: 'groups', path: 'groups', icon: <HomeFilled />, label: 'Groups' },
     { key: 'add', path: 'add', icon: <PlusOutlined />, special: true },
-    { key: 'history', path: 'history', icon: <HistoryOutlined />, label: 'History' },
+    { key: 'activity', path: 'activity', icon: <HistoryOutlined />, label: 'Activity' },
     { key: 'account', path: 'account', icon: <UserOutlined />, label: 'Account' }
 ];
 
@@ -39,7 +39,7 @@ export default function HomePage() {
     const [indicatorWidth, setIndicatorWidth] = useState(0);
     const [indicatorLeft, setIndicatorLeft] = useState(0);
     const [lastGroupsPath, setLastGroupsPath] = useState('/groups');
-
+    const [lastFriendsPath, setLastFriendsPath] = useState('/friends');
 
     const getActiveIndex = () => {
         const currentPath = location.pathname;
@@ -61,12 +61,17 @@ export default function HomePage() {
         if (location.pathname.startsWith('/groups')) {
             setLastGroupsPath(location.pathname);
         }
+        if (location.pathname.startsWith('/friends')) {
+            setLastFriendsPath(location.pathname);
+        }
     }, [location]);
 
     const handleTabClick = (path: string, index: number) => {
         if (path === 'groups') {
             navigate(lastGroupsPath);
-        } else {
+        } else if (path === 'friends') {
+            navigate(lastFriendsPath);
+        }else {
             navigate(path);
         }
         const itemWidth = 100 / navItems.length;

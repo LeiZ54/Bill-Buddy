@@ -149,7 +149,7 @@ const GroupSettingPage = () => {
 
                     {isLoading ? (
                         <div className="flex justify-center py-10">
-                            <Spin size="large" tip="Loading..." />
+                            <Spin size="large" />
                         </div>
                     ) : error ? (
                         <div className="m-4 text-red-500">{error}</div>

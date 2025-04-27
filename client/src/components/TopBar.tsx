@@ -5,6 +5,7 @@ import { ReactNode, useState } from "react";
 interface TopbarProps {
     leftType?: 'back' | 'search';
     leftOnClick?: () => void;
+    searchFunction?: (value: string) => void;
     title?: ReactNode;
     rightText?: string;
     rightOnClick?: () => void;
@@ -14,6 +15,7 @@ interface TopbarProps {
 const Topbar = ({
     leftType,
     leftOnClick,
+    searchFunction,
     title,
     rightText,
     rightOnClick,
@@ -24,15 +26,16 @@ const Topbar = ({
 
     const handleSearchClick = () => {
         if (leftType === 'search') {
+            setSearchValue("");
             setShowSearchInput(true);
         }
-        leftOnClick?.();
     };
 
     const handleBackClick = () => {
         if (showSearchInput) {
             setShowSearchInput(false);
             setSearchValue("");
+            searchFunction?.("");
         } else {
             leftOnClick?.();
         }
@@ -48,7 +51,7 @@ const Topbar = ({
             <div className="flex z-10">
                 <motion.div whileHover={{ scale: 1.05 }}>
                     <div
-                        onClick={showSearchInput ? handleBackClick : handleSearchClick}
+                        onClick={showSearchInput ? handleBackClick : (leftType === 'back' ? handleBackClick : handleSearchClick)}
                         className="flex items-center justify-center w-8 h-8 cursor-pointer"
                     >
                         {showSearchInput ? (
@@ -75,7 +78,10 @@ const Topbar = ({
                             exit={{ width: 0, opacity: 0 }}
                             transition={{ type: "spring", stiffness: 300, damping: 30 }}
                             value={searchValue}
-                            onChange={(e) => setSearchValue(e.target.value)}
+                            onChange={(e) => {
+                                setSearchValue(e.target.value);
+                                searchFunction!(e.target.value);
+                            }}
                             autoFocus
                             placeholder="search..."
                             className="h-8 px-3 py-1 rounded-md border border-gray-300 text-base outline-none"

@@ -1,31 +1,47 @@
 import { motion } from 'framer-motion';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useFriendStore } from '../stores/friendStore';
 import Topbar from '../components/TopBar';
 import {Alert, Avatar, Spin} from 'antd';
 import useAuthStore from "../stores/authStore.ts";
 import { FriendData } from '../util/util.tsx';
 import { useNavigate } from 'react-router-dom';
+import { debounce } from 'lodash';
 const FriendsPage = () => {
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
-    const {fetchFriends, isLoadingMore, loadMoreFriends, hasMore, friends, setActiveFriend, clearData } = useFriendStore();
+    const {fetchFriends, isLoadingMore, loadMoreFriends, hasMore, friends, setActiveFriend, clearData, filters, setFilters } = useFriendStore();
     const { currencies } = useAuthStore();
     const [error, setError] = useState("");
+
     useEffect(() => {
-        const fetchData = async () => {
+        setFilters("");
+        return () => {
+            clearData();
+        }
+    }, [])
+    useEffect(() => {
+        debouncedFetchFriends();
+        return () => {
+            debouncedFetchFriends.cancel();
+        };
+    }, [filters]);
+
+
+    const debouncedFetchFriends = useMemo(() => {
+        return debounce(async () => {
             try {
+                setError("")
                 clearData();
                 setIsLoading(true);
                 await fetchFriends();
             } catch (err) {
-                setError("Failed to get data!")
+                setError("Failed to get data!");
             } finally {
                 setIsLoading(false);
             }
-        };
-        fetchData();
-    }, []);
+        }, 500);
+    }, [fetchFriends]);
 
     //touch bottome to load more data;
     useEffect(() => {
@@ -49,15 +65,16 @@ const FriendsPage = () => {
         >
             <Topbar
                 leftType="search"
-                leftOnClick={() => {
-
+                searchFunction={(value) => {
+                    setFilters(value);
                 }}
-                className="bg-transparent shadow-none"
             />
 
             <>
                 {isLoading ? (
-                    <Spin/>
+                    <div className="flex justify-center py-10">
+                        <Spin size="large" />
+                    </div>
                 ) : (
                     <>
                         {error && <Alert message={"Failed to get data!"} type="error" className="mb-4"/>}

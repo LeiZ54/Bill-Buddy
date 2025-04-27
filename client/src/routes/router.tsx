@@ -8,7 +8,7 @@ import RegisterPage from '../pages/RegisterPage';
 import ForgotPasswordPage from '../pages/ForgotPasswordPage';
 import FriendsPage from '../pages/FriendsPage';
 import GroupsPage from '../pages/GroupsPage';
-import HistoryPage from '../pages/HistoryPage';
+import ActivityPage from '../pages/ActivityPage';
 import AccountPage from '../pages/AccountPage';
 import GroupDetailPage from '../pages/GroupDetailPage';
 import GroupSettingPage from '../pages/GroupSettingPage';
@@ -43,7 +43,7 @@ export const router = createBrowserRouter([
                                     { path: "expense", element: <ExpenseDetailPage /> }
                                 ]
                             },
-                            { path: "history", element: <HistoryPage /> },
+                            { path: "activity", element: <ActivityPage /> },
                             { path: "account", element: <AccountPage /> }
                         ]
                     },
