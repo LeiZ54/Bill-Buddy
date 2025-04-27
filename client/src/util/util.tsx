@@ -43,6 +43,17 @@ interface NetDebts_Group {
     defaultCurrency: string;
 }
 
+export interface ActivityData {
+    id: number;
+    userId: 1;
+    objectType: string;
+    objectId: 5;
+    action: string;
+    descriptionHtml: string;
+    accessible: boolean;
+    createdAt: Date;
+}
+
 export interface Member {
     id: number;
     fullName: string;

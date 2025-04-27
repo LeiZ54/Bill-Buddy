@@ -8,12 +8,14 @@ interface FriendState {
     isLoadingMore: boolean;
     currentPage: number;
     hasMore: boolean;
+    filters: string;
 
     // public function
     clearData: () => void;
     fetchFriends: () => Promise<void>;
     loadMoreFriends: () => Promise<void>;
     setActiveFriend: (friend: FriendData) => void;
+    setFilters: (filters: string) => void;
 }
 
 export const useFriendStore = create<FriendState>()(
@@ -24,9 +26,14 @@ export const useFriendStore = create<FriendState>()(
             isLoadingMore: false,
             currentPage: 0,
             hasMore: true,
+            filters:"",
 
             clearData: () => {
-                set({ activeFriend: null, friends: [], currentPage: 0, hasMore: true });
+                set({ friends: [], currentPage: 0, hasMore: true });
+            },
+
+            setFilters: (filters: string) => {
+                set({ filters: filters });
             },
 
             setActiveFriend: (friend: FriendData) => {
@@ -34,7 +41,8 @@ export const useFriendStore = create<FriendState>()(
             },
 
             fetchFriends: async () => {
-                const res = await api.get(`/friends?page=0&size=10`);
+                const { filters } = get();
+                const res = await api.get(`/friends?page=0&size=10&search=${filters}`);
                 set({
                     friends: res.data.friends.content,
                     hasMore: !res.data.last,
@@ -43,12 +51,12 @@ export const useFriendStore = create<FriendState>()(
             },
 
             loadMoreFriends: async () => {
-                const { currentPage, hasMore, isLoadingMore } = get();
+                const { currentPage, hasMore, isLoadingMore, filters } = get();
                 if (!hasMore || isLoadingMore) return;
                 const nextPage = currentPage + 1;
                 set({ isLoadingMore: true });
                 try {
-                    const res = await api.get(`/friends?page=${nextPage}&size=10`);
+                    const res = await api.get(`/friends?page=${nextPage}&size=10&search=${filters}`);
                     set(state => ({
                         friends: [...state.friends, ...res.data.friends.content],
                         hasMore: !res.data.last,

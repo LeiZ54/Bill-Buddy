@@ -4,13 +4,14 @@ import {useNavigate} from 'react-router-dom';
 import {useFriendStore} from '../stores/friendStore';
 import {Avatar} from "antd";
 import useAuthStore from "../stores/authStore.ts";
+import { useGroupDetailStore } from '../stores/groupDetailStore.ts';
 
 
 export default function FriendDetailPage() {
     const navigate = useNavigate();
     const {activeFriend} = useFriendStore();
-    const {currencies} = useAuthStore();
-    const {groupType} = useAuthStore();
+    const { currencies, groupType } = useAuthStore();
+    const { setActiveGroup } = useGroupDetailStore();
     return (
         <motion.div
             initial={{opacity: 0}}
@@ -26,9 +27,6 @@ export default function FriendDetailPage() {
                     leftType="back"
                     leftOnClick={() => {
                         navigate("/friends");
-                    }}
-                    rightOnClick={() => {
-                        navigate("")
                     }}
                     className="text-white"
                 />
@@ -72,7 +70,8 @@ export default function FriendDetailPage() {
                                 className="flex items-center justify-between px-4 pt-3"
                                 key={index}
                                 onClick={() => {
-                                    navigate('');
+                                    setActiveGroup(debt.group.groupId);
+                                    navigate('/groups/detail');
                                 }}
                             >
 

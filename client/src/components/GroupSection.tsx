@@ -2,7 +2,6 @@ import { motion } from 'framer-motion';
 import {  Typography } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { GroupData } from '../util/util';
-import { useGroupStore } from '../stores/groupStore';
 import useAuthStore from '../stores/authStore';
 import { useGroupDetailStore } from '../stores/groupDetailStore';
 
@@ -11,7 +10,6 @@ const { Text } = Typography;
 
 const GroupSection = ({ id, name, type, items, netBalance, currency }: GroupData) => {
     const navigate = useNavigate();
-    const { resetError } = useGroupStore();
     const { groupType, currencies } = useAuthStore();
     const { setActiveGroup } = useGroupDetailStore();
     return (
@@ -23,7 +21,6 @@ const GroupSection = ({ id, name, type, items, netBalance, currency }: GroupData
             onClick={() => {
                 setActiveGroup(id);
                 navigate('detail');
-                resetError();
             }}
             className="pt-4"
         >

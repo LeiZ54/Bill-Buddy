@@ -1,4 +1,4 @@
-import {Alert, Avatar, Spin, Form, Button, Select, message, Input} from 'antd';
+import {Alert, Avatar, Spin, Form, Select, Input} from 'antd';
 import {motion} from 'framer-motion';
 import {useNavigate} from 'react-router-dom';
 import Topbar from '../components/TopBar';
@@ -7,8 +7,6 @@ import useAuthStore from '../stores/authStore';
 import {useGroupDetailStore} from '../stores/groupDetailStore';
 import { useExpenseStore } from '../stores/expenseStore';
 import { debounce } from 'lodash';
-import {ExpenseSimpleData} from "../util/util.tsx";
-
 
 
 export default function GroupDetailPage() {
@@ -24,7 +22,6 @@ export default function GroupDetailPage() {
         fetchExpenses,
         clearData,
         expenses,
-
         loadMoreExpenses,
         isLoadingMore,
         hasMore,
@@ -36,7 +33,7 @@ export default function GroupDetailPage() {
     const {setActiveExpense} = useExpenseStore();
     const [isLoading, setIsLoading] = useState(false);
     const [isLoadingExpenses, setIsLoadingExpenses] = useState(false);
-
+    const [error, setError] = useState("");
 
     useEffect(() => {
         if (activeGroup) {
@@ -58,26 +55,25 @@ export default function GroupDetailPage() {
     //get expense
     useEffect(() => {
         if (activeGroup) {
-            let loadingTimer = setTimeout(() => {
-                setIsLoadingExpenses(true);
-            }, 200); 
+            setIsLoadingExpenses(true);
             debouncedFetchExpenses();
-            const timer = setTimeout(() => {
-                setIsLoadingExpenses(false);
-            }, 500);
-
             return () => {
-                clearTimeout(timer);
-                clearTimeout(loadingTimer);
                 debouncedFetchExpenses.cancel();
             };
         }
     }, [filters]);
 
     const debouncedFetchExpenses = useMemo(() => {
-        return debounce(() => {
-            fetchExpenses();
-        }, 500);
+        return debounce(async () => {
+            try {
+                setError("");
+                await fetchExpenses();
+            } catch (error) {
+                setError("Failed to get data!");
+            } finally {
+                setIsLoadingExpenses(false);
+            }
+        }, 1000);
     }, [fetchExpenses]);
 
     //touch bottome to load more data;
@@ -93,10 +89,10 @@ export default function GroupDetailPage() {
         scrollContainer?.addEventListener('scroll', handleScroll);
         return () => scrollContainer?.removeEventListener('scroll', handleScroll);
     }, [isLoadingMore, loadMoreExpenses]);
-    const generateMonthsFromLatestExpense = (expenses: ExpenseSimpleData[], count: number): string[] => {
+    const generateMonthsFromLatestExpense = (count: number): string[] => {
 
 
-        let latestDate = new Date(Math.max(...expenses.map(e => new Date(e.expenseDate).getTime())));
+        let latestDate = new Date();
 
         let year = latestDate.getFullYear();
         let month = latestDate.getMonth() + 1;
@@ -154,7 +150,8 @@ export default function GroupDetailPage() {
                     }}
                     className="bg-transparent shadow-none"
                 />
-                {(isLoading || isLoadingExpenses) ? (<Spin/>) :
+                {(isLoading || isLoadingExpenses) ? (<></>
+                ) :
                     <Alert message="Something Wrong!" type="error" className="m-4"/>}
             </motion.div>
         )
@@ -233,7 +230,7 @@ export default function GroupDetailPage() {
                                             onChange={() =>{ handleApplyFilters();}}
                                         />
                                     </Form.Item>
-                                    <Form.Item className="m-0 w-[28%]" name="payer">
+                                    <Form.Item className="m-0 w-[28%]" name="payer" initialValue="">
                                         <Select
                                             className=" rounded w-full !p-0"
                                             placeholder="Payer"
@@ -248,7 +245,7 @@ export default function GroupDetailPage() {
                                         </Select>
                                     </Form.Item>
 
-                                    <Form.Item className="w-[34%] m-0" name="yearMonth">
+                                    <Form.Item className="w-[34%] m-0" name="yearMonth" initialValue="">
                                         <Select
                                             className="rounded w-full !p-0"
                                             placeholder="YYYY-MM"
@@ -257,8 +254,8 @@ export default function GroupDetailPage() {
                                         >
                                             <Option value="">All</Option>
 
-                                            {generateMonthsFromLatestExpense(expenses,60).map((yearMonth) => (
-                                                <Option key={yearMonth} value={yearMonth}>
+                                            {generateMonthsFromLatestExpense(60).map((yearMonth,index) => (
+                                                <Option key={index} value={yearMonth}>
                                                     {yearMonth}
                                                 </Option>
                                             ))}
@@ -277,7 +274,15 @@ export default function GroupDetailPage() {
                     <div className="mt-6">
                         {isLoadingExpenses ? (
                             <div className="flex justify-center py-10">
-                                <Spin size="large" tip="Loading..." />
+                                <Spin size="large" />
+                            </div>
+                        ) : error ? (
+                            <div className="text-red-500 text-center py-10">
+                                {error}
+                            </div>
+                        ) : expenses.length === 0 ? (
+                            <div className="text-gray-500 text-center py-10">
+                                There is no expense
                             </div>
                         ) : (
                             (() => {
@@ -339,6 +344,7 @@ export default function GroupDetailPage() {
                             })()
                         )}
                     </div>
+
 
 
                 </div>

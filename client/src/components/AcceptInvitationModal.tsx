@@ -73,7 +73,7 @@ const AcceptInvitationModal = ({ visible, onCancel }: InvitationModalProps) => {
             <div className="p-4">
                 {loading ? (
                     <div className="text-center">
-                        <Spin tip="Checking invitation..." />
+                        <Spin />
                     </div>
                 ) : error ? (
                     <Alert message={error} type="error" />
