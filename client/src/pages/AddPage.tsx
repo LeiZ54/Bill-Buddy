@@ -126,6 +126,7 @@ const AddPage = () => {
     useEffect(() => {
         if (activeGroup) {
             setSelectedGroup({ groupId: groupData!.id, groupName: groupData!.name, type: groupData!.type });
+            form.setFieldsValue({ groupId: groupData!.id });
         }
     }, []);
 

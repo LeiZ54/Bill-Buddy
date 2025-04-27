@@ -4,9 +4,10 @@
     "\\src",
     "\\src\\components",
     "\\src\\pages",
+    "\\src\\routes",
     "\\src\\stores",
     "\\src\\util"
   ],
-  "SelectedNode": "\\src\\components\\AddModal.tsx",
+  "SelectedNode": "\\src\\pages\\GroupsPage.tsx",
   "PreviewInSolutionExplorer": false
 }

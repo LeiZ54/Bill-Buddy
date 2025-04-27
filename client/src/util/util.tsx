@@ -24,7 +24,7 @@ export interface GroupData {
 }
 
 export interface FriendData {
-    netDebts: NetDebts;
+    netDebts: NetDebts[];
     email: string;
     fullName: string;
     id: number;

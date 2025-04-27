@@ -4,22 +4,27 @@ import { useFriendStore } from '../stores/friendStore';
 import Topbar from '../components/TopBar';
 import {Alert, Avatar, Spin} from 'antd';
 import useAuthStore from "../stores/authStore.ts";
+import { FriendData } from '../util/util.tsx';
+import { useNavigate } from 'react-router-dom';
 const FriendsPage = () => {
+    const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
-    const {fetchFriends, isLoadingMore, loadMoreFriends, hasMore, friends } = useFriendStore();
-    const {currencies} = useAuthStore();
+    const {fetchFriends, isLoadingMore, loadMoreFriends, hasMore, friends, setActiveFriend, clearData } = useFriendStore();
+    const { currencies } = useAuthStore();
+    const [error, setError] = useState("");
     useEffect(() => {
         const fetchData = async () => {
             try {
+                clearData();
                 setIsLoading(true);
                 await fetchFriends();
             } catch (err) {
+                setError("Failed to get data!")
             } finally {
                 setIsLoading(false);
             }
         };
         fetchData();
-        console.log(friends);
     }, []);
 
     //touch bottome to load more data;
@@ -37,8 +42,6 @@ const FriendsPage = () => {
     }, [isLoadingMore, loadMoreFriends]);
 
     return (
-
-
         <motion.div
             initial={{opacity: 0}}
             animate={{opacity: 1}}
@@ -57,13 +60,17 @@ const FriendsPage = () => {
                     <Spin/>
                 ) : (
                     <>
-                        {friends ? <div></div> : <Alert message={"Failed to get data!"} type="error" className="mb-4"/>}
+                        {error && <Alert message={"Failed to get data!"} type="error" className="mb-4"/>}
                     </>
                 )}
             </>
             <div className="mb-40 bg-white mt-2">
-                {friends.map((person) => (
-                    <div key={person.fullName} className="border-b px-6 py-4">
+                {friends.map((person: FriendData) => (
+                    <div key={person.fullName} className="border-b px-6 py-4"
+                        onClick={() => {
+                            navigate("detail");
+                            setActiveFriend(person);
+                        }}>
                         <div className="flex items-start space-x-4">
                             <Avatar src={person.avatar} size={40}/>
 
