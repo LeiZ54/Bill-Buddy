@@ -27,7 +27,8 @@ export default function GroupDetailPage() {
         hasMore,
         filters,
         setFilters,
-        members
+        members,
+        fetchMember
     } = useGroupDetailStore();
     const {setActiveExpense} = useExpenseStore();
     const [isLoading, setIsLoading] = useState(false);
@@ -41,6 +42,7 @@ export default function GroupDetailPage() {
                     clearData();
                     setIsLoading(true);
                     await getGroup();
+                    await fetchMember();
                 } catch (err) {
                 } finally {
                     setIsLoading(false);

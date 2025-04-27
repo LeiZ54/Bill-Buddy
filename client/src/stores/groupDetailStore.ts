@@ -53,16 +53,16 @@ export const useGroupDetailStore = create<GroupDetailState>()(
                 set({ filters: filters, expenses:[] });
             },
 
-            editGroup: async (newName, newType, defaultCurrency) => {
+            editGroup: async (newName, newType, newDefaultCurrency) => {
                 const { groupData } = get();
                 await api.put(`/groups/${groupData!.id}`, {
                     newName,
                     newType,
-                    defaultCurrency
+                    newDefaultCurrency
                 });
                 groupData!.name = newName;
                 groupData!.type = newType;
-                groupData!.currency = defaultCurrency;
+                groupData!.currency = newDefaultCurrency;
                 message.success('Update group successfully!');
             },
 

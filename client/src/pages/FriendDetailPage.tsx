@@ -4,7 +4,6 @@ import {useNavigate} from 'react-router-dom';
 import {useFriendStore} from '../stores/friendStore';
 import {Avatar} from "antd";
 import useAuthStore from "../stores/authStore.ts";
-import {useExpenseStore} from "../stores/expenseStore.ts";
 
 
 export default function FriendDetailPage() {
@@ -12,8 +11,6 @@ export default function FriendDetailPage() {
     const {activeFriend} = useFriendStore();
     const {currencies} = useAuthStore();
     const {groupType} = useAuthStore();
-    console.log(activeFriend);
-
     return (
         <motion.div
             initial={{opacity: 0}}
@@ -45,9 +42,12 @@ export default function FriendDetailPage() {
                         <div className="ml-[15%]">
                             <h2 className="text-3xl font-semibold mt-3">{activeFriend?.fullName}</h2>
                             <div className="mt-5">
-                                {activeFriend?.netDebts.map((debt, index) => (
+                                {activeFriend?.netDebts
+                                    .filter(debt => debt.debtAmount !== 0)
+                                    .map((debt, index) => (
                                     <div key={index}>
                                     <span>
+                                        {activeFriend?.fullName + " "}
                                         {debt.debtAmount > 0 ? 'owes you' : 'lent you'}
                                     </span>
                                         <span className={`${debt.debtAmount > 0

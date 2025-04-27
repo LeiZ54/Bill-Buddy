@@ -32,7 +32,8 @@ export default function CreateGroupModal({
             if (isEdit) {
                 form.setFieldsValue({
                     groupName: groupData!.name,
-                    groupType: groupData!.type
+                    groupType: groupData!.type,
+                    currencies: groupData!.currency
                 });
             } else {
                 form.resetFields();
