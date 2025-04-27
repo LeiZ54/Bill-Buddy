@@ -7,6 +7,8 @@ import useAuthStore from '../stores/authStore';
 import {useGroupDetailStore} from '../stores/groupDetailStore';
 import { useExpenseStore } from '../stores/expenseStore';
 import { debounce } from 'lodash';
+import {ExpenseSimpleData} from "../util/util.tsx";
+
 
 
 export default function GroupDetailPage() {
@@ -22,6 +24,7 @@ export default function GroupDetailPage() {
         fetchExpenses,
         clearData,
         expenses,
+
         loadMoreExpenses,
         isLoadingMore,
         hasMore,
@@ -90,27 +93,34 @@ export default function GroupDetailPage() {
         scrollContainer?.addEventListener('scroll', handleScroll);
         return () => scrollContainer?.removeEventListener('scroll', handleScroll);
     }, [isLoadingMore, loadMoreExpenses]);
+    const generateMonthsFromLatestExpense = (expenses: ExpenseSimpleData[], count: number): string[] => {
 
 
-    const generateYears = () => {
-        const currentYear = new Date().getFullYear();
-        const years = [];
-        for (let i = currentYear - 10; i <= currentYear + 10; i++) {
-            years.push(i);
+        let latestDate = new Date(Math.max(...expenses.map(e => new Date(e.expenseDate).getTime())));
+
+        let year = latestDate.getFullYear();
+        let month = latestDate.getMonth() + 1;
+
+        const result: string[] = [];
+
+        for (let i = 0; i < count; i++) {
+            const monthStr = String(month).padStart(2, '0');
+            result.push(`${year}-${monthStr}`);
+
+            month--;
+            if (month === 0) {
+                month = 12;
+                year--;
+            }
         }
-        return years;
+
+        return result;
     };
 
-    const generateMonths = () => {
-        const months = [];
-        for (let i = 1; i <= 12; i++) {
-            months.push(i);
-        }
-        return months;
-    };
+
 
     const handleApplyFilters = () => {
-        const {payer, title, year, month} = form.getFieldsValue();
+        const {payer, title, yearMonth} = form.getFieldsValue();
         const newFilters: any = {};
 
         if (payer) {
@@ -119,18 +129,8 @@ export default function GroupDetailPage() {
         if (title) {
             newFilters.title = title.trim();
         }
-        if (year && month) {
-            newFilters.month = `${year}-${month.toString().padStart(2, '0')}`;
-        } else if (year || month) {
-            message.error({
-                content: 'Please select both year and month!',
-                duration: 1,
-                key: 'date_error'
-            });
-            setTimeout(() => {
-                message.destroy();
-            }, 1000);
-            return;
+        if (yearMonth) {
+            newFilters.month = yearMonth;
         }
 
         setFilters(newFilters);
@@ -221,7 +221,7 @@ export default function GroupDetailPage() {
                     </div>
 
 
-                    <div className="max-w-2xl mx-2 px-0 mt-6">
+                    <div className="max-w-2xl mx-4 px-0 mt-6">
                         <Form form={form} layout="vertical" className="w-full">
                             <div className="flex flex-col space-y-2">
                                 <div className="flex items-center space-x-2">
@@ -230,13 +230,16 @@ export default function GroupDetailPage() {
                                             placeholder="Search Title"
                                             allowClear
                                             className="border p-1 rounded w-full"
+                                            onChange={() =>{ handleApplyFilters();}}
                                         />
                                     </Form.Item>
-                                    <Form.Item className="m-0 w-[30%]" name="payer">
+                                    <Form.Item className="m-0 w-[28%]" name="payer">
                                         <Select
-                                            className="border p-2 rounded w-full"
+                                            className=" rounded w-full !p-0"
                                             placeholder="Payer"
+                                            onSelect={() => { handleApplyFilters(); }}
                                         >
+                                            <Option value="">All</Option>
                                             {members.map((payer) => (
                                                 <Option key={payer.id} value={payer.id}>
                                                     {payer.fullName}
@@ -244,52 +247,27 @@ export default function GroupDetailPage() {
                                             ))}
                                         </Select>
                                     </Form.Item>
-                                </div>
-                                <div className="flex items-center justify-between space-x-2">
-                                    <Form.Item className="w-[26%] m-0" name="year">
+
+                                    <Form.Item className="w-[34%] m-0" name="yearMonth">
                                         <Select
-                                            className="border p-2 rounded w-full "
-                                            placeholder="Year"
+                                            className="rounded w-full !p-0"
+                                            placeholder="YYYY-MM"
+                                            onSelect={handleApplyFilters}
+                                            allowClear
                                         >
-                                            {generateYears().map((year) => (
-                                                <Option key={year} value={year}>
-                                                    {year}
+                                            <Option value="">All</Option>
+
+                                            {generateMonthsFromLatestExpense(expenses,60).map((yearMonth) => (
+                                                <Option key={yearMonth} value={yearMonth}>
+                                                    {yearMonth}
                                                 </Option>
                                             ))}
                                         </Select>
                                     </Form.Item>
-
-                                    <Form.Item className="w-[28%] m-0" name="month">
-                                        <Select
-                                            className="border p-2 rounded w-full"
-                                            placeholder="Month"
-                                        >
-                                            {generateMonths().map((month) => (
-                                                <Option key={month} value={month}>
-                                                    {month}
-                                                </Option>
-                                            ))}
-                                        </Select>
-                                    </Form.Item>
-
-                                    <Form.Item className="m-0">
-                                        <Button type="primary" onClick={handleApplyFilters}>
-                                            Search
-                                        </Button>
-                                    </Form.Item>
-
-                                    <Form.Item className="m-0">
-                                        <Button
-                                            type="default"
-                                            onClick={() => {
-                                                setFilters({});
-                                                form.resetFields();
-                                            }}
-                                        >
-                                            Clear
-                                        </Button>
-                                    </Form.Item>
                                 </div>
+
+
+
                             </div>
                         </Form>
                     </div>
