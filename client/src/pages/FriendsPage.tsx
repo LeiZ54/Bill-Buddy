@@ -92,11 +92,14 @@ const FriendsPage = () => {
                             <Avatar src={person.avatar} size={40}/>
 
                             <div className="flex flex-col items-start">
-                                <div className="text-2xl font-semibold">{person.fullName}</div>
+                                <div className="flex items-end space-x-3">
+                                    <div className="text-2xl font-semibold">{person.fullName}</div>
+                                    <div className="text-sm text-gray-500">{person.email}</div>
+                                </div>
 
                                 {person.netDebts && person.netDebts.length > 0 && (
                                     <div className="mt-2 flex flex-col ">
-                                        {person.netDebts
+                                    {person.netDebts
                                             .filter(debt => debt.debtAmount !== 0)
                                             .map((debt, index) => (
                                                 <div
