@@ -24,12 +24,6 @@ public class ExpenseUpdateRequest {
 
     private LocalDateTime expenseDate;
 
-    private Boolean isRecurring;
-
-    private String recurrenceUnit;
-
-    private Integer recurrenceInterval;
-
     private List<Long> participants;
 
     private List<BigDecimal> shares;

@@ -85,6 +85,13 @@ public class UserService {
         return user;
     }
 
+    public User getUserByIdIncludeDeleted(Long id) {
+        log.debug("Fetching user by id: {}", id);
+        User user = userRepository.findById(id).orElse(null);
+        if (user == null) log.warn("User not found for id: {}", id);
+        return user;
+    }
+
     public User getUserByEmail(String email) {
         log.debug("Fetching user by email: {}", email);
         return userRepository.findByEmailAndDeletedFalse(email).orElse(null);

@@ -4,10 +4,8 @@ import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.lei.bill_buddy.config.exception.AppException;
+import org.lei.bill_buddy.enums.*;
 import org.lei.bill_buddy.enums.Currency;
-import org.lei.bill_buddy.enums.ErrorCode;
-import org.lei.bill_buddy.enums.ExpenseType;
-import org.lei.bill_buddy.enums.RecurrenceUnit;
 import org.lei.bill_buddy.model.*;
 import org.lei.bill_buddy.repository.*;
 import org.springframework.data.domain.Page;
@@ -36,6 +34,7 @@ public class ExpenseService {
     private final UserService userService;
     private final GroupDebtService groupDebtService;
     private final ExchangeRateService exchangeRateService;
+    private final ActivityService activityService;
 
     @Transactional
     public Expense createExpense(Long groupId,
@@ -80,6 +79,12 @@ public class ExpenseService {
         log.debug("Full expense creation details: title={}, type={}, desc={}, date={}, recurring={}, participants={}",
                 title, type, description, expenseDate, isRecurring, participantIds);
 
+        if (shareAmounts != null
+                && participantIds.size() == shareAmounts.size()) {
+            finalAmount = shareAmounts.stream()
+                    .filter(Objects::nonNull)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+        }
         Expense expense = new Expense();
         expense.setGroup(group);
         expense.setPayer(payer);
@@ -105,6 +110,20 @@ public class ExpenseService {
         }
         Expense savedExpense = expenseRepository.save(expense);
         distributeShares(savedExpense, participantIds, shareAmounts, finalAmount);
+
+        Map<String, Object> params = new HashMap<>();
+        params.put("userId", userService.getCurrentUser().getId().toString());
+        params.put("expenseId", savedExpense.getId().toString());
+        params.put("groupId", group.getId().toString());
+
+        activityService.log(
+                ActionType.CREATE,
+                ObjectType.EXPENSE,
+                savedExpense.getId(),
+                "user_added_expense_to_group",
+                params
+        );
+
         groupService.groupUpdated(group);
         settleGroupIfNeeded(savedExpense.getGroup().getId());
 
@@ -136,6 +155,19 @@ public class ExpenseService {
             }
         }
 
+        Map<String, Object> params = new HashMap<>();
+        params.put("userId", userService.getCurrentUser().getId().toString());
+        params.put("expenseId", expense.getId().toString());
+        params.put("groupId", expense.getGroup().getId().toString());
+
+        activityService.log(
+                ActionType.CREATE,
+                ObjectType.EXPENSE,
+                expense.getId(),
+                "user_deleted_expense",
+                params
+        );
+
         groupService.groupUpdated(expense.getGroup());
         settleGroupIfNeeded(expense.getGroup().getId());
         log.info("Expense deleted successfully: id={}", expenseId);
@@ -155,8 +187,8 @@ public class ExpenseService {
 
         log.info("Updating expense: id={}", expenseId);
 
-        Expense expense = expenseRepository.findById(expenseId)
-                .orElseThrow(() -> new AppException(ErrorCode.EXPENSE_NOT_FOUND));
+        Expense expense = getExpenseById(expenseId);
+        if (expense == null) throw new AppException(ErrorCode.EXPENSE_NOT_FOUND);
 
         if (!groupService.isMemberOfGroup(userService.getCurrentUser().getId(), expense.getGroup().getId())) {
             throw new AppException(ErrorCode.NOT_A_MEMBER);
@@ -164,33 +196,80 @@ public class ExpenseService {
 
         User oldPayer = expense.getPayer();
         BigDecimal oldAmount = expense.getAmount();
+        Currency groupCurrency = expense.getGroup().getDefaultCurrency();
         List<ExpenseShare> oldShares = expenseShareRepository.findByExpenseIdAndDeletedFalse(expenseId);
+        List<Long> oldParticipantIds = oldShares.stream().map(s -> s.getUser().getId()).toList();
 
         User newPayer = (payerId != null) ? userService.getUserById(payerId) : oldPayer;
         BigDecimal newAmount = (amount != null) ? amount : oldAmount;
-        List<Long> newParticipantIds = (participantIds != null) ? participantIds : oldShares.stream().map(s -> s.getUser().getId()).toList();
-        List<BigDecimal> newShareAmounts = new ArrayList<>(shareAmounts != null ? shareAmounts : oldShares.stream().map(ExpenseShare::getShareAmount).toList());
+        List<Long> newParticipantIds = oldParticipantIds;
+        if (participantIds != null) {
+            Set<Long> memberIds = groupService.getAllMemberIdsOfGroup(expense.getGroup().getId());
+            for (Long id : participantIds) {
+                if (!memberIds.contains(id)) {
+                    throw new AppException(ErrorCode.PARTICIPANTS_NOT_A_MEMBER);
+                }
+            }
+            newParticipantIds = participantIds;
+        }
+        List<BigDecimal> newShareAmounts = (shareAmounts != null)
+                ? new ArrayList<>(shareAmounts)
+                : oldShares.stream().map(ExpenseShare::getShareAmount).collect(Collectors.toList());
+
+        Currency newCurrency;
+        boolean currencyChanged = false;
+        if (currency != null && !currency.isEmpty()) {
+            newCurrency = parseCurrency(currency);
+            if (!groupCurrency.equals(newCurrency)) {
+                currencyChanged = true;
+                newAmount = convertCurrency(newAmount, newCurrency.name(), groupCurrency.name());
+                newShareAmounts.replaceAll(share -> convertCurrency(share, newCurrency.name(), groupCurrency.name()));
+            }
+        } else {
+            newCurrency = groupCurrency;
+        }
+
+        List<Map<String, String>> changes = new ArrayList<>();
+
+        if (!oldPayer.getId().equals(newPayer.getId())) {
+            changes.add(Map.of(
+                    "field", "payer",
+                    "before", oldPayer.getFullName(),
+                    "after", newPayer.getFullName()
+            ));
+        }
+
+        boolean amountChanged = oldAmount.compareTo(newAmount) != 0;
+
+        if (currencyChanged || amountChanged) {
+            changes.add(Map.of(
+                    "field", "amount",
+                    "before", formatCurrencyAmount(groupCurrency, oldAmount),
+                    "after", formatCurrencyAmount(newCurrency, amount != null ? amount : oldAmount)
+                            + (currencyChanged ? " (" + formatCurrencyAmount(groupCurrency, newAmount) + ")" : "")
+            ));
+        }
+
+        changes.addAll(detectParticipantChanges(oldParticipantIds, newParticipantIds));
 
         if (payerId != null) expense.setPayer(newPayer);
         if (title != null && !title.isEmpty()) expense.setTitle(title);
-
-        String groupCurrency = expense.getGroup().getDefaultCurrency().name();
-        if (currency != null && !currency.isEmpty()) {
-            newAmount = convertCurrency(newAmount, currency, groupCurrency);
-            newShareAmounts.replaceAll(share -> convertCurrency(share, currency, groupCurrency));
-        }
-        if (amount != null) expense.setAmount(newAmount);
         if (description != null && !description.isEmpty()) expense.setDescription(description);
         if (expenseDate != null) expense.setExpenseDate(expenseDate);
         if (typeStr != null && !typeStr.isEmpty()) expense.setType(parseExpenseType(typeStr));
+        if (shareAmounts != null
+                && newParticipantIds.size() == shareAmounts.size()) {
+            newAmount = shareAmounts.stream()
+                    .filter(Objects::nonNull)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+        }
+        expense.setAmount(newAmount);
 
         Expense savedExpense = expenseRepository.save(expense);
 
-        boolean isPayerChanged = !oldPayer.getId().equals(newPayer.getId());
-        boolean isAmountChanged = oldAmount.compareTo(newAmount) != 0;
-        boolean isParticipantsChanged = isParticipantListChanged(oldShares, newParticipantIds);
+        boolean sharesChanged = isSharesChanged(oldShares, newParticipantIds, newShareAmounts);
 
-        if (isPayerChanged || isAmountChanged || isParticipantsChanged) {
+        if (currencyChanged || amountChanged || sharesChanged || !oldPayer.getId().equals(newPayer.getId())) {
             for (ExpenseShare oldShare : oldShares) {
                 if (!oldShare.getUser().getId().equals(oldPayer.getId())) {
                     groupDebtService.updateGroupDebt(
@@ -203,24 +282,40 @@ public class ExpenseService {
             }
 
             expenseShareRepository.deleteAll(oldShares);
-
             distributeShares(savedExpense, newParticipantIds, newShareAmounts, newAmount);
         } else {
             log.info("Expense debt unchanged; skip debt update.");
         }
 
+        Map<String, String> baseParams = Map.of(
+                "userId", userService.getCurrentUser().getId().toString(),
+                "expenseId", savedExpense.getId().toString(),
+                "groupId", expense.getGroup().getId().toString()
+        );
+
+        Map<String, Object> fullParams = new HashMap<>(baseParams);
+        fullParams.put("changes", changes);
+
+        activityService.log(
+                ActionType.UPDATE,
+                ObjectType.EXPENSE,
+                savedExpense.getId(),
+                "user_updated_expense",
+                fullParams
+        );
+
         groupService.groupUpdated(expense.getGroup());
         settleGroupIfNeeded(expense.getGroup().getId());
-        log.info("Expense updated: id={}", expenseId);
+        log.info("Expense updated successfully: id={}", expenseId);
         return savedExpense;
     }
 
-
     public Expense getExpenseById(Long id) {
-        Expense expense = expenseRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.EXPENSE_NOT_FOUND));
-        if (!groupService.isMemberOfGroup(userService.getCurrentUser().getId(), expense.getGroup().getId()))
-            throw new AppException(ErrorCode.NOT_A_MEMBER);
-        return expense;
+        return expenseRepository.findExpenseByIdAndDeletedFalse(id).orElse(null);
+    }
+
+    public Expense getExpenseByIdIncludeDeleted(Long id) {
+        return expenseRepository.findById(id).orElse(null);
     }
 
     @Transactional(readOnly = true)
@@ -289,6 +384,7 @@ public class ExpenseService {
     private void distributeShares(Expense expense, List<Long> participantIds,
                                   List<BigDecimal> shareAmounts, BigDecimal totalAmount) {
         log.info("Distributing shares for expense id={}", expense.getId());
+        BigDecimal finalAmount = BigDecimal.ZERO;
         Map<Long, User> participants = userService.getUsersByIds(participantIds)
                 .stream()
                 .collect(Collectors.toMap(User::getId, user -> user));
@@ -305,6 +401,7 @@ public class ExpenseService {
             for (int i = 0; i < participantIds.size(); i++) {
                 ExpenseShare share = buildExpenseShare(expense, participants.get(participantIds.get(i)), shareAmounts.get(i));
                 sharesToSave.add(share);
+                finalAmount = finalAmount.add(share.getShareAmount());
             }
         }
 
@@ -339,17 +436,39 @@ public class ExpenseService {
         return share;
     }
 
-    private boolean isParticipantListChanged(List<ExpenseShare> oldShares, List<Long> newIds) {
-        if (oldShares.size() != newIds.size()) return true;
-        List<Long> oldIds = oldShares.stream()
-                .map(s -> s.getUser().getId()).toList();
-        for (Long newId : newIds) {
-            if (!oldIds.contains(newId)) {
+    private boolean isSharesChanged(List<ExpenseShare> shares, List<Long> participantIds, List<BigDecimal> shareAmounts) {
+        if (shares == null || participantIds == null || shareAmounts == null) {
+            return true;
+        }
+
+        if (shares.size() != participantIds.size() || participantIds.size() != shareAmounts.size()) {
+            return true;
+        }
+
+        Map<Long, BigDecimal> existingMap = shares.stream()
+                .collect(Collectors.toMap(
+                        share -> share.getUser().getId(),
+                        ExpenseShare::getShareAmount
+                ));
+
+        for (int i = 0; i < participantIds.size(); i++) {
+            Long participantId = participantIds.get(i);
+            BigDecimal newShareAmount = shareAmounts.get(i);
+
+            BigDecimal existingShareAmount = existingMap.get(participantId);
+            if (existingShareAmount == null) {
+                return true;
+            }
+
+            if (existingShareAmount.setScale(2, RoundingMode.HALF_UP)
+                    .compareTo(newShareAmount.setScale(2, RoundingMode.HALF_UP)) != 0) {
                 return true;
             }
         }
+
         return false;
     }
+
 
     private BigDecimal convertCurrency(BigDecimal amount, String fromCurrency, String toCurrency) {
         try {
@@ -386,4 +505,57 @@ public class ExpenseService {
         }
         return recurrenceUnit;
     }
+
+    private Currency parseCurrency(String currency) {
+        Currency currencyEnum;
+        try {
+            currencyEnum = Currency.valueOf(currency.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            log.warn("Unknown currency '{}', defaulting to USD", currency);
+            currencyEnum = Currency.USD;
+        }
+        return currencyEnum;
+    }
+
+    private List<Map<String, String>> detectParticipantChanges(List<Long> oldIds, List<Long> newIds) {
+        List<Map<String, String>> changes = new ArrayList<>();
+
+        Set<Long> oldSet = new HashSet<>(oldIds);
+        Set<Long> newSet = new HashSet<>(newIds);
+
+        Set<Long> added = new HashSet<>(newSet);
+        added.removeAll(oldSet);
+
+        if (!added.isEmpty()) {
+            changes.add(Map.of(
+                    "field", "participant_added",
+                    "value", joinIds(new ArrayList<>(added))
+            ));
+        }
+
+        Set<Long> removed = new HashSet<>(oldSet);
+        removed.removeAll(newSet);
+
+        if (!removed.isEmpty()) {
+            changes.add(Map.of(
+                    "field", "participant_removed",
+                    "value", joinIds(new ArrayList<>(removed))
+            ));
+        }
+
+        return changes;
+    }
+
+    private String joinIds(List<Long> ids) {
+        return ids.stream()
+                .sorted()
+                .map(String::valueOf)
+                .collect(Collectors.joining(","));
+    }
+
+    private String formatCurrencyAmount(Currency currency, BigDecimal amount) {
+        if (currency == null || amount == null) return "";
+        return currency.name() + " " + amount.setScale(2, RoundingMode.HALF_UP).toPlainString();
+    }
+
 }

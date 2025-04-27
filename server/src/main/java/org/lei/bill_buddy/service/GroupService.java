@@ -3,9 +3,7 @@ package org.lei.bill_buddy.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.lei.bill_buddy.config.exception.AppException;
-import org.lei.bill_buddy.enums.Currency;
-import org.lei.bill_buddy.enums.ErrorCode;
-import org.lei.bill_buddy.enums.GroupType;
+import org.lei.bill_buddy.enums.*;
 import org.lei.bill_buddy.model.Group;
 import org.lei.bill_buddy.model.GroupMember;
 import org.lei.bill_buddy.model.User;
@@ -17,7 +15,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 @Slf4j
@@ -27,6 +27,8 @@ import java.util.Set;
 public class GroupService {
     private final GroupRepository groupRepository;
     private final GroupMemberRepository groupMemberRepository;
+    private final ActivityService activityService;
+    private final UserService userService;
 
     public void groupUpdated(Group group) {
         group.setUpdatedAt(LocalDateTime.now());
@@ -65,14 +67,31 @@ public class GroupService {
         gm.setJoinedAt(LocalDateTime.now());
         groupMemberRepository.save(gm);
 
+        Map<String, Object> params = new HashMap<>();
+        params.put("userId", creator.getId().toString());
+        params.put("groupId", savedGroup.getId().toString());
+
+        activityService.log(
+                ActionType.CREATE,
+                ObjectType.GROUP,
+                savedGroup.getId(),
+                "user_created_group",
+                params
+        );
+
         log.info("Group created successfully: {}", savedGroup.getId());
         return savedGroup;
     }
 
     @Transactional(readOnly = true)
     public Group getGroupById(Long groupId) {
-        log.debug("Fetching group by ID: {}", groupId);
         return groupRepository.findByIdAndDeletedFalse(groupId)
+                .orElse(null);
+    }
+
+    @Transactional(readOnly = true)
+    public Group getGroupByIdIncludeDeleted(Long groupId) {
+        return groupRepository.findById(groupId)
                 .orElse(null);
     }
 
@@ -80,47 +99,88 @@ public class GroupService {
         log.info("Updating group {} with name: {}, type: {}", groupId, newName, newType);
         Group group = getGroupById(groupId);
         if (group == null) {
-            log.warn("Can not update group {} because it does not exit", groupId);
+            log.warn("Cannot update group {} because it does not exist", groupId);
             throw new AppException(ErrorCode.GROUP_NOT_FOUND);
         }
-        if (newName != null && !newName.isEmpty()) {
+
+        boolean changed = false;
+        if (newName != null && !newName.isEmpty() && !newName.equals(group.getName())) {
             group.setName(newName);
+            changed = true;
         }
         if (newType != null && !newType.isEmpty()) {
-            GroupType type;
             try {
-                type = GroupType.valueOf(newType.toUpperCase());
+                GroupType type = GroupType.valueOf(newType.toUpperCase());
+                if (type != group.getType()) {
+                    group.setType(type);
+                    changed = true;
+                }
             } catch (IllegalArgumentException e) {
                 log.warn("Unknown group type '{}', defaulting to OTHER in group updating", newType);
-                type = GroupType.OTHER;
+                group.setType(GroupType.OTHER);
+                changed = true;
             }
-            group.setType(type);
         }
         if (defaultCurrency != null && !defaultCurrency.isEmpty()) {
-            Currency currencyEnum;
             try {
-                currencyEnum = Currency.valueOf(defaultCurrency.toUpperCase());
+                Currency currencyEnum = Currency.valueOf(defaultCurrency.toUpperCase());
+                if (currencyEnum != group.getDefaultCurrency()) {
+                    group.setDefaultCurrency(currencyEnum);
+                    changed = true;
+                }
             } catch (IllegalArgumentException e) {
                 log.warn("Unsupported currency '{}', defaulting to USD in group updating", defaultCurrency);
-                currencyEnum = Currency.USD;
+                group.setDefaultCurrency(Currency.USD);
+                changed = true;
             }
-            group.setDefaultCurrency(currencyEnum);
         }
-        return groupRepository.save(group);
+
+        Group savedGroup = groupRepository.save(group);
+
+        if (changed) {
+            Map<String, Object> params = new HashMap<>();
+            params.put("userId", userService.getCurrentUser().getId().toString());
+            params.put("groupId", savedGroup.getId().toString());
+
+            activityService.log(
+                    ActionType.UPDATE,
+                    ObjectType.GROUP,
+                    savedGroup.getId(),
+                    "user_updated_group",
+                    params
+            );
+        }
+
+        return savedGroup;
     }
+
 
     public void deleteGroup(Long groupId) {
         log.warn("Deleting group with id: {}", groupId);
         if (!groupRepository.existsById(groupId)) {
-            log.warn("Can not delete group {} because it does not exit", groupId);
+            log.warn("Cannot delete group {} because it does not exist", groupId);
             throw new AppException(ErrorCode.GROUP_NOT_FOUND);
         }
+
         Group group = getGroupById(groupId);
         groupMemberRepository.softDeleteAllByGroup(group);
         group.setDeleted(true);
         groupRepository.save(group);
         log.info("Group {} marked as deleted.", groupId);
+
+        Map<String, Object> params = new HashMap<>();
+        params.put("userId", userService.getCurrentUser().getId().toString());
+        params.put("groupId", group.getId().toString());
+
+        activityService.log(
+                ActionType.DELETE,
+                ObjectType.GROUP,
+                group.getId(),
+                "user_deleted_group",
+                params
+        );
     }
+
 
     @Transactional(readOnly = true)
     public Page<Group> getGroupsByUserIdAndGroupName(Long userId, String groupName, Pageable pageable) {

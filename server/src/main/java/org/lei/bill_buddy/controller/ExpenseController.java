@@ -70,6 +70,10 @@ public class ExpenseController {
     @GetMapping("/{id}")
     public ResponseEntity<?> getExpenseById(@PathVariable Long id) {
         Expense expense = expenseService.getExpenseById(id);
+        if (expense == null)
+            throw new AppException(ErrorCode.EXPENSE_NOT_FOUND);
+        if (!groupService.isMemberOfGroup(userService.getCurrentUser().getId(), expense.getGroup().getId()))
+            throw new AppException(ErrorCode.NOT_A_MEMBER);
         return ResponseEntity.ok(dtoConvertor.convertExpenseToExpenseDetailsDTO(expense));
     }
 

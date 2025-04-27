@@ -1,10 +1,12 @@
 package org.lei.bill_buddy.util;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.lei.bill_buddy.DTO.*;
 import org.lei.bill_buddy.model.*;
 import org.lei.bill_buddy.service.ExpenseService;
 import org.lei.bill_buddy.service.GroupDebtService;
+import org.lei.bill_buddy.service.GroupService;
 import org.lei.bill_buddy.service.UserService;
 import org.springframework.stereotype.Component;
 
@@ -12,14 +14,16 @@ import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class DtoConvertorUtil {
     private final UserService userService;
     private final ExpenseService expenseService;
     private final GroupDebtService groupDebtService;
+    private final ActivityFormatUtil activityFormatUtil;
+    private final GroupService groupService;
 
     public UserDTO convertUserToUserDTO(User user) {
         UserDTO dto = new UserDTO();
@@ -157,6 +161,25 @@ public class DtoConvertorUtil {
         dto.setEmail(user.getEmail());
         dto.setNetDebts(netDebts);
 
+        return dto;
+    }
+
+    public ActivityDTO convertActivityToActivityDTO(Activity activity) {
+        ActivityDTO dto = new ActivityDTO();
+        dto.setId(activity.getId());
+        dto.setUserId(activity.getUserId());
+        dto.setObjectType(activity.getObjectType());
+        dto.setObjectId(activity.getObjectId());
+        Object obj = null;
+        switch (activity.getObjectType()) {
+            case GROUP -> obj = groupService.getGroupById(activity.getObjectId());
+            case EXPENSE -> obj = expenseService.getExpenseById(activity.getObjectId());
+        }
+        if (obj == null)
+            dto.setAccessible(false);
+        dto.setAction(activity.getAction());
+        dto.setCreatedAt(activity.getCreatedAt());
+        dto.setDescriptionHtml(activityFormatUtil.formatActivityDescriptionAsHtml(activity.getTemplate(), activity.getParams()));
         return dto;
     }
 

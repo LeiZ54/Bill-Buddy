@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public interface ExpenseRepository extends JpaRepository<Expense, Long>, JpaSpecificationExecutor<Expense> {
 
@@ -30,4 +32,5 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long>, JpaSpec
 """)
     void settleExpensesByGroupId(@Param("groupId") Long groupId);
 
+    Optional<Expense> findExpenseByIdAndDeletedFalse(Long id);
 }
