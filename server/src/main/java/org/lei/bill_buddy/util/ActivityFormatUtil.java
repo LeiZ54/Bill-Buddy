@@ -13,8 +13,6 @@ import org.lei.bill_buddy.service.UserService;
 import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Type;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -55,13 +53,13 @@ public class ActivityFormatUtil {
 
 
     private String formatUserCreatedGroup(Map<String, Object> params) {
-        String creatorName = formatUserName(getLong(params, "creatorId"));
+        String creatorName = formatUserName(getLong(params, "userId"));
         String groupName = formatGroupName(getLong(params, "groupId"));
         return String.format("<b>%s</b> created group <b>%s</b>", creatorName, groupName);
     }
 
     private String formatUserDeletedGroup(Map<String, Object> params) {
-        String creatorName = formatUserName(getLong(params, "creatorId"));
+        String creatorName = formatUserName(getLong(params, "userId"));
         String groupName = formatGroupName(getLong(params, "groupId"));
         return String.format("<b>%s</b> deleted group <b>%s</b>", creatorName, groupName);
     }

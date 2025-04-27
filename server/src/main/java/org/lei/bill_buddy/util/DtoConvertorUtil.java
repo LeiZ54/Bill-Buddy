@@ -3,6 +3,8 @@ package org.lei.bill_buddy.util;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.lei.bill_buddy.DTO.*;
+import org.lei.bill_buddy.enums.ExpenseType;
+import org.lei.bill_buddy.enums.GroupType;
 import org.lei.bill_buddy.model.*;
 import org.lei.bill_buddy.service.ExpenseService;
 import org.lei.bill_buddy.service.GroupDebtService;
@@ -167,17 +169,27 @@ public class DtoConvertorUtil {
     public ActivityDTO convertActivityToActivityDTO(Activity activity) {
         ActivityDTO dto = new ActivityDTO();
         dto.setId(activity.getId());
-        dto.setUserId(activity.getUserId());
+        dto.setUserAvatar(userService.getUserById(activity.getUserId()).getAvatar());
         dto.setObjectType(activity.getObjectType());
-        dto.setObjectId(activity.getObjectId());
-        Object obj = null;
+        boolean accessible = true;
+        String objectPicture = "";
+
         switch (activity.getObjectType()) {
-            case GROUP -> obj = groupService.getGroupById(activity.getObjectId());
-            case EXPENSE -> obj = expenseService.getExpenseById(activity.getObjectId());
+            case GROUP -> {
+                Group group = groupService.getGroupByIdIncludeDeleted(activity.getObjectId());
+                accessible = !(group == null || Boolean.TRUE.equals(group.getDeleted()));
+                objectPicture = (group != null) ? group.getType().getImageUrl() : GroupType.OTHER.getImageUrl();
+            }
+            case EXPENSE -> {
+                Expense expense = expenseService.getExpenseByIdIncludeDeleted(activity.getObjectId());
+                accessible = !(expense == null || Boolean.TRUE.equals(expense.getDeleted()));
+                objectPicture = (expense != null) ? expense.getType().getImageUrl() : ExpenseType.OTHER.getImageUrl();
+            }
         }
-        if (obj == null)
-            dto.setAccessible(false);
-        dto.setAction(activity.getAction());
+
+        dto.setObjectId(activity.getObjectId());
+        dto.setAccessible(accessible);
+        dto.setObjectPicture(objectPicture);
         dto.setCreatedAt(activity.getCreatedAt());
         dto.setDescriptionHtml(activityFormatUtil.formatActivityDescriptionAsHtml(activity.getTemplate(), activity.getParams()));
         return dto;

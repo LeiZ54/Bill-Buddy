@@ -1,7 +1,6 @@
 package org.lei.bill_buddy.DTO;
 
 import lombok.Data;
-import org.lei.bill_buddy.enums.ActionType;
 import org.lei.bill_buddy.enums.ObjectType;
 
 import java.time.LocalDateTime;
@@ -11,13 +10,13 @@ public class ActivityDTO {
 
     private Long id;
 
-    private Long userId;
+    private String userAvatar;
+
+    private String objectPicture;
 
     private ObjectType objectType;
 
     private Long objectId;
-
-    private ActionType action;
 
     private String descriptionHtml;
 
