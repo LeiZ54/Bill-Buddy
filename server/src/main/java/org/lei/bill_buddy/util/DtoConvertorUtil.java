@@ -167,6 +167,7 @@ public class DtoConvertorUtil {
     }
 
     public ActivityDTO convertActivityToActivityDTO(Activity activity) {
+        User currentUser = userService.getCurrentUser();
         ActivityDTO dto = new ActivityDTO();
         dto.setId(activity.getId());
         dto.setUserAvatar(userService.getUserById(activity.getUserId()).getAvatar());
@@ -184,6 +185,15 @@ public class DtoConvertorUtil {
                 Expense expense = expenseService.getExpenseByIdIncludeDeleted(activity.getObjectId());
                 accessible = !(expense == null || Boolean.TRUE.equals(expense.getDeleted()));
                 objectPicture = (expense != null) ? expense.getType().getImageUrl() : ExpenseType.OTHER.getImageUrl();
+                if (expense != null) {
+                    ExpenseShare share = expenseService.getExpenseShareByUserIdAndExpenseIdIncludeDeleted(currentUser.getId(), expense.getId());
+                    if (share != null) {
+                        dto.setDebtAmount(
+                                expense.getPayer().getId().equals(currentUser.getId()) ?
+                                        expense.getAmount().subtract(share.getShareAmount())
+                                        : share.getShareAmount().negate());
+                    }
+                }
             }
         }
 

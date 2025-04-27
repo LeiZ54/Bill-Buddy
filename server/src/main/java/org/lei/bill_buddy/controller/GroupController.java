@@ -6,6 +6,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.lei.bill_buddy.DTO.*;
 import org.lei.bill_buddy.annotation.RateLimit;
+import org.lei.bill_buddy.config.exception.AppException;
+import org.lei.bill_buddy.enums.ActionType;
+import org.lei.bill_buddy.enums.ErrorCode;
+import org.lei.bill_buddy.enums.ObjectType;
 import org.lei.bill_buddy.model.Group;
 import org.lei.bill_buddy.model.User;
 import org.lei.bill_buddy.service.*;
@@ -38,6 +42,8 @@ public class GroupController {
     private final EmailProducer emailProducer;
     private final RateLimiterUtil rateLimiter;
     private final GroupDebtService groupDebtService;
+    private final FriendService friendService;
+    private final ActivityService activityService;
 
     @Value("${bill-buddy.client.url}")
     private String clientUrl;
@@ -59,7 +65,7 @@ public class GroupController {
         if (!groupService.isMemberOfGroup(userService.getCurrentUser().getId(), groupId)) {
             throw new RuntimeException("You do not have permission to update this group.");
         }
-        Group updated = groupService.updateGroup(groupId, request.getNewName(), request.getNewDefaultCurrency(), request.getNewType());
+        Group updated = groupService.updateGroup(groupId, request.getNewName(), request.getNewType());
         return ResponseEntity.ok(dtoConvertor.convertGroupToGroupDTO(updated));
     }
 
@@ -78,6 +84,28 @@ public class GroupController {
         Group group = groupService.getGroupById(groupId);
         String inviteLink = generateInvitationLink(group);
         return ResponseEntity.ok(Map.of("inviteLink", inviteLink));
+    }
+
+    @PostMapping("/{groupId}/invite/friend/{friendId}")
+    public ResponseEntity<?> inviteFriend(@PathVariable Long groupId, @PathVariable Long friendId) {
+        Group group = groupService.getGroupById(groupId);
+        User user = userService.getCurrentUser();
+        if (group == null) throw new AppException(ErrorCode.GROUP_NOT_FOUND);
+        if (!groupService.isMemberOfGroup(user.getId(), group.getId()))
+            throw new AppException(ErrorCode.NOT_A_MEMBER);
+        if (!friendService.isFriend(user.getId(), friendId))
+            throw new AppException(ErrorCode.FRIEND_RELATIONSHIP_NOT_FOUND);
+        groupMemberService.addMemberToGroup(group.getId(), friendId);
+        activityService.log(
+                ActionType.UPDATE,
+                ObjectType.GROUP,
+                groupId,
+                "user_invited_user_to_group",
+                Map.of("inviterId", user.getId().toString(),
+                        "inviteeId", friendId.toString(),
+                        "groupId", group.getId().toString())
+        );
+        return ResponseEntity.ok("Invitation accepted. Friend: " + friendId + " Group: " + groupId);
     }
 
     @RateLimit(maxRequests = 1)

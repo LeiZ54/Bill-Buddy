@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.lei.bill_buddy.config.exception.AppException;
 import org.lei.bill_buddy.enums.*;
+import org.lei.bill_buddy.enums.Currency;
 import org.lei.bill_buddy.model.Group;
 import org.lei.bill_buddy.model.GroupMember;
 import org.lei.bill_buddy.model.User;
@@ -15,10 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @Slf4j
 @Transactional
@@ -95,7 +93,7 @@ public class GroupService {
                 .orElse(null);
     }
 
-    public Group updateGroup(Long groupId, String newName, String defaultCurrency, String newType) {
+    public Group updateGroup(Long groupId, String newName, String newType) {
         log.info("Updating group {} with name: {}, type: {}", groupId, newName, newType);
         Group group = getGroupById(groupId);
         if (group == null) {
@@ -104,33 +102,29 @@ public class GroupService {
         }
 
         boolean changed = false;
+        List<Map<String, String>> changes = new ArrayList<>();
         if (newName != null && !newName.isEmpty() && !newName.equals(group.getName())) {
+            changes.add(Map.of(
+                    "field", "name",
+                    "before", group.getName(),
+                    "after", newName));
             group.setName(newName);
             changed = true;
         }
         if (newType != null && !newType.isEmpty()) {
             try {
-                GroupType type = GroupType.valueOf(newType.toUpperCase());
+                GroupType type = parseGroupType(newType);
                 if (type != group.getType()) {
+                    changes.add(Map.of(
+                            "field", "type",
+                            "before", group.getType().name(),
+                            "after", newType));
                     group.setType(type);
                     changed = true;
                 }
             } catch (IllegalArgumentException e) {
                 log.warn("Unknown group type '{}', defaulting to OTHER in group updating", newType);
                 group.setType(GroupType.OTHER);
-                changed = true;
-            }
-        }
-        if (defaultCurrency != null && !defaultCurrency.isEmpty()) {
-            try {
-                Currency currencyEnum = Currency.valueOf(defaultCurrency.toUpperCase());
-                if (currencyEnum != group.getDefaultCurrency()) {
-                    group.setDefaultCurrency(currencyEnum);
-                    changed = true;
-                }
-            } catch (IllegalArgumentException e) {
-                log.warn("Unsupported currency '{}', defaulting to USD in group updating", defaultCurrency);
-                group.setDefaultCurrency(Currency.USD);
                 changed = true;
             }
         }
@@ -141,7 +135,7 @@ public class GroupService {
             Map<String, Object> params = new HashMap<>();
             params.put("userId", userService.getCurrentUser().getId().toString());
             params.put("groupId", savedGroup.getId().toString());
-
+            params.put("changes", changes);
             activityService.log(
                     ActionType.UPDATE,
                     ObjectType.GROUP,
@@ -153,7 +147,6 @@ public class GroupService {
 
         return savedGroup;
     }
-
 
     public void deleteGroup(Long groupId) {
         log.warn("Deleting group with id: {}", groupId);
@@ -181,11 +174,21 @@ public class GroupService {
         );
     }
 
-
     @Transactional(readOnly = true)
     public Page<Group> getGroupsByUserIdAndGroupName(Long userId, String groupName, Pageable pageable) {
         log.debug("Getting groups for user: {}, and group name contains: {}", userId, groupName);
         return groupRepository.findAllByUserIdAndGroupNameContaining(userId, groupName.trim(), pageable);
+    }
+
+    private GroupType parseGroupType(String type) {
+        GroupType groupType;
+        try {
+            groupType = GroupType.valueOf(type.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            log.warn("Unknown expense type '{}', defaulting to OTHER", type);
+            groupType = GroupType.OTHER;
+        }
+        return groupType;
     }
 
     public boolean isMemberOfGroup(Long userId, Long groupId) {

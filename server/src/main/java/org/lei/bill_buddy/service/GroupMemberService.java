@@ -3,7 +3,9 @@ package org.lei.bill_buddy.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.lei.bill_buddy.config.exception.AppException;
+import org.lei.bill_buddy.enums.ActionType;
 import org.lei.bill_buddy.enums.ErrorCode;
+import org.lei.bill_buddy.enums.ObjectType;
 import org.lei.bill_buddy.model.Group;
 import org.lei.bill_buddy.model.GroupMember;
 import org.lei.bill_buddy.model.User;
@@ -13,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -25,6 +28,7 @@ public class GroupMemberService {
     private final GroupDebtService groupDebtService;
     private final ExpenseService expenseService;
     private final FriendService friendService;
+    private final ActivityService activityService;
 
     @Transactional
     public void addMemberToGroup(Long groupId, Long userId) {
@@ -50,6 +54,17 @@ public class GroupMemberService {
         gm.setUser(user);
         gm.setJoinedAt(LocalDateTime.now());
         groupMemberRepository.save(gm);
+
+        activityService.log(
+                ActionType.UPDATE,
+                ObjectType.GROUP,
+                groupId,
+                "user_joined_group",
+                Map.of(
+                        "groupId", groupId.toString(),
+                        "userId", userId.toString()
+                )
+        );
 
         List<User> existingMembers = getMembersOfGroup(groupId).stream()
                 .filter(member -> !member.getId().equals(userId))

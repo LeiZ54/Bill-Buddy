@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ExpenseShareRepository extends JpaRepository<ExpenseShare, Long> {
@@ -20,5 +21,6 @@ public interface ExpenseShareRepository extends JpaRepository<ExpenseShare, Long
             """)
     Long countSharesByGroupAndUser(@Param("groupId") Long groupId, @Param("userId") Long userId);
 
+    Optional<ExpenseShare> findByUserIdAndExpenseId(Long userId, Long expenseId);
 }
 

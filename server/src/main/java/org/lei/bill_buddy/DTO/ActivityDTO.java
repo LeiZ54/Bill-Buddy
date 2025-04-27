@@ -3,6 +3,7 @@ package org.lei.bill_buddy.DTO;
 import lombok.Data;
 import org.lei.bill_buddy.enums.ObjectType;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
@@ -19,6 +20,8 @@ public class ActivityDTO {
     private Long objectId;
 
     private String descriptionHtml;
+
+    private BigDecimal debtAmount;
 
     private Boolean accessible = true;
 

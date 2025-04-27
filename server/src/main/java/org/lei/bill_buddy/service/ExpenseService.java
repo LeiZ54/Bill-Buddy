@@ -218,6 +218,7 @@ public class ExpenseService {
 
         Currency newCurrency;
         boolean currencyChanged = false;
+        boolean titleChanged = false;
         if (currency != null && !currency.isEmpty()) {
             newCurrency = parseCurrency(currency);
             if (!groupCurrency.equals(newCurrency)) {
@@ -239,30 +240,35 @@ public class ExpenseService {
             ));
         }
 
-        boolean amountChanged = oldAmount.compareTo(newAmount) != 0;
-
-        if (currencyChanged || amountChanged) {
-            changes.add(Map.of(
-                    "field", "amount",
-                    "before", formatCurrencyAmount(groupCurrency, oldAmount),
-                    "after", formatCurrencyAmount(newCurrency, amount != null ? amount : oldAmount)
-                            + (currencyChanged ? " (" + formatCurrencyAmount(groupCurrency, newAmount) + ")" : "")
-            ));
-        }
-
         changes.addAll(detectParticipantChanges(oldParticipantIds, newParticipantIds));
 
         if (payerId != null) expense.setPayer(newPayer);
-        if (title != null && !title.isEmpty()) expense.setTitle(title);
+        if (title != null && !title.isEmpty()) {
+            if (!title.equals(expense.getTitle())) {
+                changes.add(Map.of(
+                        "field", "title",
+                        "before", expense.getTitle(),
+                        "after", title
+
+                ));
+                titleChanged = true;
+                expense.setTitle(title);
+            }
+        }
         if (description != null && !description.isEmpty()) expense.setDescription(description);
         if (expenseDate != null) expense.setExpenseDate(expenseDate);
         if (typeStr != null && !typeStr.isEmpty()) expense.setType(parseExpenseType(typeStr));
         if (shareAmounts != null
                 && newParticipantIds.size() == shareAmounts.size()) {
-            newAmount = shareAmounts.stream()
+            newAmount = newShareAmounts.stream()
+                    .filter(Objects::nonNull)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            amount = shareAmounts.stream()
                     .filter(Objects::nonNull)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
         }
+        boolean amountChanged = oldAmount.compareTo(newAmount) != 0;
+
         expense.setAmount(newAmount);
 
         Expense savedExpense = expenseRepository.save(expense);
@@ -287,27 +293,41 @@ public class ExpenseService {
             log.info("Expense debt unchanged; skip debt update.");
         }
 
-        Map<String, String> baseParams = Map.of(
-                "userId", userService.getCurrentUser().getId().toString(),
-                "expenseId", savedExpense.getId().toString(),
-                "groupId", expense.getGroup().getId().toString()
-        );
+        if (currencyChanged || amountChanged) {
+            changes.add(Map.of(
+                    "field", "amount",
+                    "before", formatCurrencyAmount(groupCurrency, oldAmount),
+                    "after", formatCurrencyAmount(newCurrency, amount != null ? amount : oldAmount)
+                            + (currencyChanged ? " (" + formatCurrencyAmount(groupCurrency, newAmount) + ")" : "")
+            ));
+        }
+        if (titleChanged || currencyChanged || amountChanged || sharesChanged || !oldPayer.getId().equals(newPayer.getId())) {
+            Map<String, String> baseParams = Map.of(
+                    "userId", userService.getCurrentUser().getId().toString(),
+                    "expenseId", savedExpense.getId().toString(),
+                    "groupId", expense.getGroup().getId().toString()
+            );
 
-        Map<String, Object> fullParams = new HashMap<>(baseParams);
-        fullParams.put("changes", changes);
+            Map<String, Object> fullParams = new HashMap<>(baseParams);
+            fullParams.put("changes", changes);
 
-        activityService.log(
-                ActionType.UPDATE,
-                ObjectType.EXPENSE,
-                savedExpense.getId(),
-                "user_updated_expense",
-                fullParams
-        );
+            activityService.log(
+                    ActionType.UPDATE,
+                    ObjectType.EXPENSE,
+                    savedExpense.getId(),
+                    "user_updated_expense",
+                    fullParams
+            );
 
-        groupService.groupUpdated(expense.getGroup());
-        settleGroupIfNeeded(expense.getGroup().getId());
+            groupService.groupUpdated(expense.getGroup());
+            settleGroupIfNeeded(expense.getGroup().getId());
+        }
         log.info("Expense updated successfully: id={}", expenseId);
         return savedExpense;
+    }
+
+    public ExpenseShare getExpenseShareByUserIdAndExpenseIdIncludeDeleted(Long userId, Long expenseId) {
+        return expenseShareRepository.findByUserIdAndExpenseId(userId,expenseId).orElse(null);
     }
 
     public Expense getExpenseById(Long id) {

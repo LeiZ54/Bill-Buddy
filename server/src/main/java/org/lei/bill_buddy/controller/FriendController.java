@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.lei.bill_buddy.DTO.FriendListDTO;
 import org.lei.bill_buddy.DTO.FriendRequestDTO;
 import org.lei.bill_buddy.annotation.RateLimit;
+import org.lei.bill_buddy.config.exception.AppException;
+import org.lei.bill_buddy.enums.ErrorCode;
 import org.lei.bill_buddy.model.Friend;
 import org.lei.bill_buddy.model.FriendRequest;
 import org.lei.bill_buddy.service.FriendService;
@@ -54,6 +56,15 @@ public class FriendController {
         Pageable pageable = PageRequest.of(page, size);
         Page<Friend> friendsPage = friendService.getFriendsByUserIdAndSearch(currentUserId, search, pageable);
         return ResponseEntity.ok(formatFriendsListDTO(friendsPage));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getFriend(@PathVariable Long id) {
+
+        if (!friendService.isFriend(userService.getCurrentUser().getId(), id)) {
+            throw new AppException(ErrorCode.FRIEND_RELATIONSHIP_NOT_FOUND, "This user is not your friend");
+        }
+        return ResponseEntity.ok(dtoConvertor.convertUserToFriendDetailsDTO(userService.getUserById(id)));
     }
 
     private FriendListDTO formatFriendsListDTO(Page<Friend> friends) {

@@ -38,8 +38,9 @@ public class ActivityFormatUtil {
             return switch (templateKey) {
                 case "user_created_group" -> formatUserCreatedGroup(params);
                 case "user_deleted_group" -> formatUserDeletedGroup(params);
-                case "user_updated_group_name" -> formatUserUpdatedGroupName(params);
+                case "user_updated_group" -> formatUserUpdatedGroup(params);
                 case "user_invited_user_to_group" -> formatUserInvitedUserToGroup(params);
+                case "user_joined_group" -> formatUserJoinedGroup(params);
                 case "user_added_expense_to_group" -> formatUserAddedExpense(params);
                 case "user_updated_expense" -> formatUserUpdatedExpense(params);
                 case "user_deleted_expense" -> formatUserDeletedExpense(params);
@@ -50,7 +51,6 @@ public class ActivityFormatUtil {
             return "Unknown Activity";
         }
     }
-
 
     private String formatUserCreatedGroup(Map<String, Object> params) {
         String creatorName = formatUserName(getLong(params, "userId"));
@@ -64,11 +64,13 @@ public class ActivityFormatUtil {
         return String.format("<b>%s</b> deleted group <b>%s</b>", creatorName, groupName);
     }
 
-    private String formatUserUpdatedGroupName(Map<String, Object> params) {
-        String updaterName = formatUserName(getLong(params, "updaterId"));
-        String oldGroupName = escapeHtml(String.valueOf(params.get("oldGroupName")));
-        String newGroupName = escapeHtml(String.valueOf(params.get("newGroupName")));
-        return String.format("<b>%s</b> renamed group from <b>%s</b> to <b>%s</b>", updaterName, oldGroupName, newGroupName);
+    private String formatUserUpdatedGroup(Map<String, Object> params) {
+        String updaterName = formatUserName(getLong(params, "userId"));
+        String groupName = formatGroupName(getLong(params, "groupId"));
+
+        String baseHtml = String.format("<b>%s</b> updated group <b>%s</b>", updaterName, groupName);
+
+        return baseHtml + buildChangeDetailsHtml(params.get("changes"));
     }
 
     private String formatUserInvitedUserToGroup(Map<String, Object> params) {
@@ -76,6 +78,12 @@ public class ActivityFormatUtil {
         String inviteeName = formatUserName(getLong(params, "inviteeId"));
         String groupName = formatGroupName(getLong(params, "groupId"));
         return String.format("<b>%s</b> invited <b>%s</b> to join group <b>%s</b>", inviterName, inviteeName, groupName);
+    }
+
+    private String formatUserJoinedGroup(Map<String, Object> params) {
+        String creatorName = formatUserName(getLong(params, "userId"));
+        String groupName = formatGroupName(getLong(params, "groupId"));
+        return String.format("<b>%s</b> joined group <b>%s</b>", creatorName, groupName);
     }
 
     private String formatUserAddedExpense(Map<String, Object> params) {
@@ -92,34 +100,7 @@ public class ActivityFormatUtil {
 
         String baseHtml = String.format("<b>%s</b> updated expense <i>\"%s\"</i> in group <b>%s</b>", userName, expenseTitle, groupName);
 
-        Object changesObj = params.get("changes");
-        if (changesObj == null) return baseHtml;
-
-        List<Map<String, String>> changes = GSON.fromJson(GSON.toJson(changesObj), CHANGES_LIST_TYPE);
-        if (changes == null || changes.isEmpty()) return baseHtml;
-
-        StringBuilder changeDetails = new StringBuilder("<ul>");
-        for (Map<String, String> change : changes) {
-            String field = change.get("field");
-            if ("participant_added".equals(field)) {
-                changeDetails.append(String.format("<li>Added participants: <i>%s</i></li>", parseParticipantNames(change.get("value"))));
-            } else if ("participant_removed".equals(field)) {
-                changeDetails.append(String.format("<li>Removed participants: <i>%s</i></li>", parseParticipantNames(change.get("value"))));
-            } else {
-                String before = change.getOrDefault("before", "");
-                String after = change.getOrDefault("after", "");
-
-                changeDetails.append(String.format(
-                        "<li>Changed <b>%s</b> from <i>%s</i> to <i>%s</i></li>",
-                        escapeHtml(field),
-                        escapeHtml(before),
-                        escapeHtml(after)
-                ));
-            }
-        }
-        changeDetails.append("</ul>");
-
-        return baseHtml + changeDetails;
+        return baseHtml + buildChangeDetailsHtml(params.get("changes"));
     }
 
     private String formatUserDeletedExpense(Map<String, Object> params) {
@@ -175,8 +156,34 @@ public class ActivityFormatUtil {
         return users.stream().map(User::getFullName).sorted().collect(Collectors.joining(", "));
     }
 
-    private String wrapStrikethrough(String text) {
-        return "<s>" + escapeHtml(text) + "</s>";
+    private String buildChangeDetailsHtml(Object changesObj) {
+        if (changesObj == null) return "";
+
+        List<Map<String, String>> changes = GSON.fromJson(GSON.toJson(changesObj), CHANGES_LIST_TYPE);
+        if (changes == null || changes.isEmpty()) return "";
+
+        StringBuilder changeDetails = new StringBuilder("<ul>");
+        for (Map<String, String> change : changes) {
+            String field = change.get("field");
+            String before = change.getOrDefault("before", "");
+            String after = change.getOrDefault("after", "");
+
+            if ("participant_added".equals(field)) {
+                changeDetails.append(String.format("<li>Added participants: <i>%s</i></li>", parseParticipantNames(before)));
+            } else if ("participant_removed".equals(field)) {
+                changeDetails.append(String.format("<li>Removed participants: <i>%s</i></li>", parseParticipantNames(before)));
+            } else {
+                changeDetails.append(String.format(
+                        "<li>Changed <b>%s</b> from <i>%s</i> to <i>%s</i></li>",
+                        escapeHtml(field),
+                        escapeHtml(before),
+                        escapeHtml(after)
+                ));
+            }
+        }
+        changeDetails.append("</ul>");
+
+        return changeDetails.toString();
     }
 
     private String escapeHtml(String text) {
