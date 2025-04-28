@@ -16,7 +16,7 @@ export default function FriendDetailPage() {
         <motion.div
             initial={{opacity: 0}}
             animate={{opacity: 1}}
-            transition={{duration: 0.2}}
+            transition={{duration: 0.2, delay: 0.2}}
             className="mb-40"
         >
             <div className="relative pb-16">
@@ -67,7 +67,7 @@ export default function FriendDetailPage() {
                         <div className="text-black font-semibold px-4">Shared groups</div>
                         {activeFriend?.netDebts.map((debt, index) => (
                             <div
-                                className="flex items-center justify-between px-4 pt-3"
+                                className="flex items-center justify-between px-4 pt-3 transition active:scale-95"
                                 key={index}
                                 onClick={() => {
                                     setActiveGroup(debt.group.groupId);

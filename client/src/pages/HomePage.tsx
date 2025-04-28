@@ -38,6 +38,7 @@ export default function HomePage() {
     const location = useLocation();
     const [indicatorWidth, setIndicatorWidth] = useState(0);
     const [indicatorLeft, setIndicatorLeft] = useState(0);
+    const [ifInGroup, setIfInGroup] = useState(false);
     const [lastGroupsPath, setLastGroupsPath] = useState('/groups');
     const [lastFriendsPath, setLastFriendsPath] = useState('/friends');
 
@@ -58,11 +59,19 @@ export default function HomePage() {
         const itemWidth = 100 / navItems.length;
         setIndicatorLeft(itemWidth * activeIndex);
         setIndicatorWidth(itemWidth);
-        if (location.pathname.startsWith('/groups')) {
-            setLastGroupsPath(location.pathname);
+        const path = location.pathname;
+        if (path.startsWith('/groups')) {
+            setLastGroupsPath(path);
+            if (path !== '/groups') {
+                setIfInGroup(true);
+            } else {
+                setIfInGroup(false);
+            }
+        } else {
+            setIfInGroup(false);
         }
-        if (location.pathname.startsWith('/friends')) {
-            setLastFriendsPath(location.pathname);
+        if (path.startsWith('/friends')) {
+            setLastFriendsPath(path);
         }
     }, [location]);
 
@@ -71,6 +80,12 @@ export default function HomePage() {
             navigate(lastGroupsPath);
         } else if (path === 'friends') {
             navigate(lastFriendsPath);
+        } else if (path === 'add') {
+            navigate('/add', {
+                state: {
+                    ifInGroup: ifInGroup,
+                },
+            });
         }else {
             navigate(path);
         }

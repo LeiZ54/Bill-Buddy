@@ -1,11 +1,10 @@
 import { motion } from 'framer-motion';
 import Topbar from '../components/TopBar';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { Form, Input, Tag, Avatar, Checkbox, Button, DatePicker, message, Select } from 'antd';
 import useAuthStore from '../stores/authStore';
-import { ExpenseTypeSelectorModal, GroupSelectorModal, RecurrenceTimeSelectorModal } from '../components/AddModal';
-import { easyGroup } from '../util/util';
+import { RecurrenceTimeSelectorModal } from '../components/AddModal';
 import { useExpenseStore } from '../stores/expenseStore';
 import ExpenseSplitSection from '../components/ExpenseSplitSection';
 import api from '../util/axiosConfig';
@@ -13,24 +12,23 @@ import { useGroupDetailStore } from '../stores/groupDetailStore';
 
 const AddPage = () => {
     const navigate = useNavigate();
-    const { groupType } = useAuthStore();
-    const { getRecurrenceLabel } = useExpenseStore();
-    const { activeGroup, groupData } = useGroupDetailStore();
+    const location = useLocation();
+    const { groupType, expenseTypes } = useAuthStore();
+    const { getRecurrenceLabel, groupList, fetchAllGroups } = useExpenseStore();
+    const { groupData } = useGroupDetailStore();
     const [hideMask, setHideMask] = useState(false);
     const [form] = Form.useForm();
     const { id, currencies } = useAuthStore();
+    const [submitting, setSubmitting] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
+
 
     const [step, setStep] = useState(1);
     const [isStep1Valid, setIsStep1Valid] = useState(false);
     const [isStep2Valid, setIsStep2Valid] = useState(false);
 
-    const [selectedGroup, setSelectedGroup] = useState<easyGroup>();
-    const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
-
-    const [selectedType, setSelectedType] = useState<string>("");
-    const [isTypeModalOpen, setIsTypeModalOpen] = useState(false);
-
+    const [selectedGroup, setSelectedGroup] = useState<number>();
     const [recurrenceTime, setRecurrenceTime] = useState<{
         recurrenceUnit: string;
         recurrenceInterval: number;
@@ -57,7 +55,7 @@ const AddPage = () => {
                 participants = selectedMembers;
             }
             const payload = {
-                groupId: selectedGroup!.groupId,
+                groupId: allValues.groupId,
                 payerId: id,
                 title: allValues.title,
                 amount: parseFloat(amount),
@@ -65,7 +63,7 @@ const AddPage = () => {
                 description: allValues.description,
                 expenseDate: allValues.date.toISOString(),
                 participants: splitMethod === 'unequally'
-                    ? participants : selectedMembers ,
+                    ? participants : selectedMembers,
                 shares: splitMethod === 'unequally'
                     ? shares : [],
                 type: allValues.type,
@@ -75,13 +73,15 @@ const AddPage = () => {
                 recurrenceInterval: allValues.isRecurring
                     ? allValues.recurrenceTime.recurrenceInterval : null,
             };
-            setLoading(true);
+            setSubmitting(true);
             await api.post('/expenses', payload);
-            setLoading(false);
+            setSubmitting(false);
             message.success("Add expense successfully!")
             navigate('/groups');
         } catch (err) {
-            setLoading(false);
+            console.log(err.response.data.error);
+        } finally {
+            setSubmitting(false);
         }
 
     };
@@ -124,10 +124,21 @@ const AddPage = () => {
     }, [form, values]);
 
     useEffect(() => {
-        if (activeGroup) {
-            setSelectedGroup({ groupId: groupData!.id, groupName: groupData!.name, type: groupData!.type });
-            form.setFieldsValue({ groupId: groupData!.id });
+        if (location.state?.ifInGroup) {
+            setSelectedGroup(groupData?.id);
+            form.setFieldsValue({ groupId: groupData?.id });
         }
+        const fetchData = async () => {
+            try {
+                setLoading(true);
+                await fetchAllGroups();
+            } catch (error) {
+                setError("Something Wrong!");
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchData();
     }, []);
 
     return (
@@ -168,37 +179,30 @@ const AddPage = () => {
                                 name="groupId"
                                 rules={[{ required: true, message: 'Please select a group!' }]}
                             >
-                                <div className="flex items-center justify-between">
-                                    <Tag
-                                        color="blue"
-                                        className="cursor-pointer rounded-full px-4 py-1 text-base h-auto  flex items-center justify-center gap-2"
-                                        onClick={() => setIsGroupModalOpen(true)}
-                                    >
-                                        {selectedGroup ? (
-                                            <>
+                                <Select
+                                    placeholder="Select a group"
+                                    optionLabelProp="label"
+                                    onChange={(value) => setSelectedGroup(value)}
+                                >
+                                    {groupList.map((group) => (
+                                        <Select.Option
+                                            key={group.groupId}
+                                            value={group.groupId}
+                                            label={group.groupName}
+                                        >
+                                            <div className="flex items-center gap-2">
                                                 <Avatar
-                                                    src={groupType[selectedGroup.type]}
-                                                    className="flex-shrink-0 mr-2"
+                                                    src={groupType[group.type]}
                                                     size={20}
+                                                    className="flex-shrink-0"
                                                 />
-                                                {selectedGroup.groupName}
-                                            </>
-                                        ) : (
-                                            <span>Please select a group</span>
-                                        )}
-                                    </Tag>
-                                </div>
+                                                <span>{group.groupName}</span>
+                                            </div>
+                                        </Select.Option>
+                                    ))}
+                                </Select>
                             </Form.Item>
 
-                            <GroupSelectorModal
-                                open={isGroupModalOpen}
-                                onCancel={() => setIsGroupModalOpen(false)}
-                                onSelect={(group) => {
-                                    setSelectedGroup(group);
-                                    form.setFieldsValue({ groupId: group.groupId });
-                                    setIsGroupModalOpen(false);
-                                }}
-                            />
 
                             {/* Expense Type */}
                             <Form.Item
@@ -206,26 +210,22 @@ const AddPage = () => {
                                 name="type"
                                 rules={[{ required: true, message: 'Please select a type!' }]}
                             >
-                                <div className="flex items-center justify-between">
-                                    <Tag
-                                        color="blue"
-                                        className="cursor-pointer rounded-full px-4 py-1 text-base h-auto"
-                                        onClick={() => setIsTypeModalOpen(true)}
-                                    >
-                                        {selectedType ? selectedType : 'Please select a type'}
-                                    </Tag>
-                                </div>
+                                <Select
+                                    placeholder="Select a type"
+                                    optionLabelProp="label"
+                                >
+                                    {Object.entries(expenseTypes).map(([type, url]) => (
+                                        <Select.Option key={type} value={type} label={type}>
+                                            <div className="flex items-center gap-2">
+                                                <Avatar src={url as string} size={20} />
+                                                <span>{type}</span>
+                                            </div>
+                                        </Select.Option>
+                                    ))}
+                                </Select>
                             </Form.Item>
 
-                            <ExpenseTypeSelectorModal
-                                open={isTypeModalOpen}
-                                onCancel={() => setIsTypeModalOpen(false)}
-                                onSelect={(type) => {
-                                    setSelectedType(type);
-                                    form.setFieldsValue({ type });
-                                }}
-                            />
-
+                            {/* Date */}
                             <Form.Item
                                 label="Date"
                                 name="date"
@@ -234,6 +234,7 @@ const AddPage = () => {
                                 <DatePicker className="w-full" />
                             </Form.Item>
 
+                            {/* Currency */}
                             <Form.Item
                                 label="Currency"
                                 name="currency"
@@ -247,7 +248,6 @@ const AddPage = () => {
                                     ))}
                                 </Select>
                             </Form.Item>
-
 
                             {/* Title */}
                             <Form.Item
@@ -314,7 +314,7 @@ const AddPage = () => {
                         <>
                             <ExpenseSplitSection
                                 setIsStep2Valid={setIsStep2Valid}
-                                selectedGroup={selectedGroup}
+                                selectedGroup={selectedGroup!}
                                 splitMethod={splitMethod}
                                 setSplitMethod={setSplitMethod}
                                 amount={amount}
@@ -329,7 +329,7 @@ const AddPage = () => {
                                 <Button
                                     type="primary"
                                     block
-                                    loading={loading}
+                                    loading={submitting}
                                     disabled={!isStep2Valid}
                                     onClick={handleSubmit}
                                 >

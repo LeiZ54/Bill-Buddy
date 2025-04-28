@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useFriendStore } from '../stores/friendStore';
 import Topbar from '../components/TopBar';
 import {Alert, Avatar, Spin} from 'antd';
@@ -40,28 +40,46 @@ const FriendsPage = () => {
             } finally {
                 setIsLoading(false);
             }
-        }, 500);
+        }, 300);
     }, [fetchFriends]);
 
     //touch bottome to load more data;
+
+    const isLoadingRef = useRef(false);
+    const hasMoreRef = useRef(true);
+    const loadMoreRef = useRef(() => { });
+
+    useEffect(() => {
+        isLoadingRef.current = isLoadingMore;
+        hasMoreRef.current = hasMore;
+        loadMoreRef.current = loadMoreFriends;
+    }, [isLoadingMore, hasMore, loadMoreFriends]);
+
     useEffect(() => {
         const scrollContainer = document.querySelector('.ant-layout-content');
+
         const handleScroll = () => {
             if (!scrollContainer) return;
+
             const { scrollTop, scrollHeight, clientHeight } = scrollContainer;
-            if (scrollTop + clientHeight == scrollHeight && !isLoadingMore && hasMore) {
-                loadMoreFriends();
+            const isBottom = scrollTop + clientHeight >= scrollHeight - 10;
+
+            if (isBottom && !isLoadingRef.current && hasMoreRef.current) {
+                loadMoreRef.current();
             }
         };
+
         scrollContainer?.addEventListener('scroll', handleScroll);
-        return () => scrollContainer?.removeEventListener('scroll', handleScroll);
-    }, [isLoadingMore, loadMoreFriends]);
+        return () => {
+            scrollContainer?.removeEventListener('scroll', handleScroll);
+        };
+    }, []);
 
     return (
         <motion.div
             initial={{opacity: 0}}
             animate={{opacity: 1}}
-            transition={{duration: 0.3, delay: 0.2}}
+            transition={{duration: 0.3, delay: 0.5}}
         >
             <Topbar
                 leftType="search"
@@ -77,47 +95,69 @@ const FriendsPage = () => {
                     </div>
                 ) : (
                     <>
-                        {error && <Alert message={"Failed to get data!"} type="error" className="mb-4"/>}
+                        {error && (
+                            <Alert message="Failed to get data!" type="error" className="mb-4" />
+                        )}
+
+                        <div className="mb-40 bg-white mt-2">
+                            {friends.length === 0 ? (
+                                <div className="text-center text-gray-500 py-10 text-lg">
+                                    There is no friends.
+                                </div>
+                            ) : (
+                                friends.map((person: FriendData) => (
+                                    <div
+                                        key={person.fullName}
+                                        className="px-6 py-4 transition active:scale-95"
+                                        onClick={() => {
+                                            navigate("detail");
+                                            setActiveFriend(person);
+                                        }}
+                                    >
+                                        <div className="flex items-start space-x-4">
+                                            <Avatar src={person.avatar} size={40} />
+
+                                            <div className="flex flex-col items-start">
+                                                <div className="flex items-end space-x-3">
+                                                    <div className="text-2xl font-semibold">
+                                                        {person.fullName}
+                                                    </div>
+                                                    <div className="text-sm text-gray-500">{person.email}</div>
+                                                </div>
+
+                                                {person.netDebts && person.netDebts.length > 0 && (
+                                                    <div className="mt-2 flex flex-col ">
+                                                        {person.netDebts
+                                                            .filter((debt) => debt.debtAmount !== 0)
+                                                            .map((debt, index) => (
+                                                                <div
+                                                                    key={index}
+                                                                    className={`text-sm ${debt.debtAmount > 0
+                                                                            ? "text-green-600"
+                                                                            : "text-orange-500"
+                                                                        }`}
+                                                                >
+                                                                    {person.fullName}{" "}
+                                                                    {debt.debtAmount > 0 ? "owes you" : "lent you"}{" "}
+                                                                    {
+                                                                        debt.group.defaultCurrency
+                                                                    }{currencies[debt.group.defaultCurrency]}
+                                                                    {Math.abs(debt.debtAmount).toFixed(2)} in{" "}
+                                                                    {debt.group.groupName}
+                                                                </div>
+                                                            ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
                     </>
                 )}
             </>
-            <div className="mb-40 bg-white mt-2">
-                {friends.map((person: FriendData) => (
-                    <div key={person.fullName} className="border-b px-6 py-4"
-                        onClick={() => {
-                            navigate("detail");
-                            setActiveFriend(person);
-                        }}>
-                        <div className="flex items-start space-x-4">
-                            <Avatar src={person.avatar} size={40}/>
 
-                            <div className="flex flex-col items-start">
-                                <div className="flex items-end space-x-3">
-                                    <div className="text-2xl font-semibold">{person.fullName}</div>
-                                    <div className="text-sm text-gray-500">{person.email}</div>
-                                </div>
-
-                                {person.netDebts && person.netDebts.length > 0 && (
-                                    <div className="mt-2 flex flex-col ">
-                                    {person.netDebts
-                                            .filter(debt => debt.debtAmount !== 0)
-                                            .map((debt, index) => (
-                                                <div
-                                                    key={index}
-                                                    className={`text-sm ${debt.debtAmount > 0 ? 'text-green-600' : 'text-orange-500'}`}
-                                                >
-                                                    {person.fullName} {debt.debtAmount > 0 ? 'owes you' : 'lent you'}{' '}
-                                                    {debt.group.defaultCurrency}{currencies[debt.group.defaultCurrency]}
-                                                    {Math.abs(debt.debtAmount).toFixed(2)} in {debt.group.groupName}
-                                                </div>
-                                            ))}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                ))}
-            </div>
 
 
         </motion.div>

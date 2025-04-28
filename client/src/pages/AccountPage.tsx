@@ -149,7 +149,7 @@ export default function AccountPage() {
         <motion.div
             initial={{opacity: 0}}
             animate={{opacity: 1}}
-            transition={{duration: 0.3, delay: 0.2}}
+            transition={{duration: 0.3, delay: 0.5}}
         >
             <div className="relative pb-72">
                 <img

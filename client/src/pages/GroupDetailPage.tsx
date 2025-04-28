@@ -2,7 +2,7 @@ import {Alert, Avatar, Spin, Form, Select, Input} from 'antd';
 import {motion} from 'framer-motion';
 import {useNavigate} from 'react-router-dom';
 import Topbar from '../components/TopBar';
-import {useEffect, useMemo, useState} from 'react';
+import {useEffect, useMemo, useRef, useState} from 'react';
 import useAuthStore from '../stores/authStore';
 import {useGroupDetailStore} from '../stores/groupDetailStore';
 import { useExpenseStore } from '../stores/expenseStore';
@@ -77,21 +77,39 @@ export default function GroupDetailPage() {
     }, [fetchExpenses]);
 
     //touch bottome to load more data;
+
+    const isLoadingRef = useRef(false);
+    const hasMoreRef = useRef(true);
+    const loadMoreRef = useRef(() => { });
+
+    useEffect(() => {
+        isLoadingRef.current = isLoadingMore;
+        hasMoreRef.current = hasMore;
+        loadMoreRef.current = loadMoreExpenses;
+    }, [isLoadingMore, hasMore, loadMoreExpenses]);
+
     useEffect(() => {
         const scrollContainer = document.querySelector('.ant-layout-content');
+
         const handleScroll = () => {
             if (!scrollContainer) return;
-            const {scrollTop, scrollHeight, clientHeight} = scrollContainer;
-            if (scrollTop + clientHeight == scrollHeight && !isLoadingMore && hasMore) {
-                loadMoreExpenses();
+
+            const { scrollTop, scrollHeight, clientHeight } = scrollContainer;
+            const isBottom = scrollTop + clientHeight >= scrollHeight - 10;
+
+            if (isBottom && !isLoadingRef.current && hasMoreRef.current) {
+                loadMoreRef.current();
             }
         };
+
         scrollContainer?.addEventListener('scroll', handleScroll);
-        return () => scrollContainer?.removeEventListener('scroll', handleScroll);
-    }, [isLoadingMore, loadMoreExpenses]);
+        return () => {
+            scrollContainer?.removeEventListener('scroll', handleScroll);
+        };
+    }, []);
+
+
     const generateMonthsFromLatestExpense = (count: number): string[] => {
-
-
         let latestDate = new Date();
 
         let year = latestDate.getFullYear();
@@ -160,7 +178,7 @@ export default function GroupDetailPage() {
         <motion.div
             initial={{opacity: 0}}
             animate={{opacity: 1}}
-            transition={{duration: 0.2}}
+            transition={{ duration: 0.2, delay: 0.2 }}
 
         >
             <div className="relative pb-16">
@@ -281,7 +299,7 @@ export default function GroupDetailPage() {
                                 {error}
                             </div>
                         ) : expenses.length === 0 ? (
-                            <div className="text-gray-500 text-center py-10">
+                            <div className="text-gray-500 text-center py-10 text-lg">
                                 There is no expense
                             </div>
                         ) : (
@@ -301,7 +319,7 @@ export default function GroupDetailPage() {
                                             )}
 
                                             <div
-                                                className="flex items-center justify-between px-4 pt-2"
+                                                className="flex items-center justify-between px-4 pt-2 transition active:scale-95"
                                                 onClick={() => {
                                                     setActiveExpense(expense.id);
                                                     navigate('/groups/expense');

@@ -1,7 +1,7 @@
 import { Spin, Alert } from 'antd';
 import Topbar from '../components/TopBar';
 import { useGroupStore } from '../stores/groupStore';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import GroupSection from '../components/GroupSection';
 import CreateGroupModal from '../components/CreateGroupModal';
@@ -53,13 +53,47 @@ export default function GroupsPage() {
             } finally {
                 setIsLoading(false);
             }
-        }, 500);
+        }, 300);
     }, [fetchGroups]);
+
+    //touch bottome to load more data;
+
+    const isLoadingRef = useRef(false);
+    const hasMoreRef = useRef(true);
+    const loadMoreRef = useRef(() => { });
+
+    useEffect(() => {
+        isLoadingRef.current = isLoadingMore;
+        hasMoreRef.current = hasMore;
+        loadMoreRef.current = loadMoreGroups;
+    }, [isLoadingMore, hasMore, loadMoreGroups]);
+
+    useEffect(() => {
+        const scrollContainer = document.querySelector('.ant-layout-content');
+
+        const handleScroll = () => {
+            if (!scrollContainer) return;
+
+            const { scrollTop, scrollHeight, clientHeight } = scrollContainer;
+            const isBottom = scrollTop + clientHeight >= scrollHeight - 10;
+
+            if (isBottom && !isLoadingRef.current && hasMoreRef.current) {
+                loadMoreRef.current();
+            }
+        };
+
+        scrollContainer?.addEventListener('scroll', handleScroll);
+        return () => {
+            scrollContainer?.removeEventListener('scroll', handleScroll);
+        };
+    }, []);
+
+
     return (
         <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.3, delay: 0.2 }}
+            transition={{ duration: 0.3, delay: 0.5 }}
         >
             <Topbar
                 leftType="search"
@@ -79,7 +113,7 @@ export default function GroupsPage() {
                         {error ? (
                             <Alert message={error} type="error" className="mb-4" />
                         ) : (
-                            <div className="pt-4">
+                            <div className="pt-4 mb-16">
                                 {groups.map(group => (
                                     <GroupSection key={group.id} {...group} />
                                 ))}

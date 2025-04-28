@@ -33,10 +33,12 @@ export default function CreateGroupModal({
                 form.setFieldsValue({
                     groupName: groupData!.name,
                     groupType: groupData!.type,
-                    currencies: groupData!.currency
                 });
             } else {
-                form.resetFields();
+                form.setFieldsValue({
+                    groupType: "OTHER",
+                    currency: "USD",
+                });
             }
         }
     }, [open, form, isEdit]);
@@ -56,7 +58,7 @@ export default function CreateGroupModal({
             setIsLoading(true);
 
             if (isEdit) {
-                await editGroup(values.groupName, values.groupType, values.currency)
+                await editGroup(values.groupName, values.groupType)
             } else {
                 await creatGroup(values.groupName, values.groupType, values.currency);
             }
@@ -87,7 +89,7 @@ export default function CreateGroupModal({
             ]}
         >
 
-            <Form form={form} initialValues={{ groupType: 'other', currency: 'USD' }} autoComplete="off">
+            <Form form={form} autoComplete="off">
                 <Form.Item
                     label="Group Type"
                     name="groupType"
@@ -127,19 +129,21 @@ export default function CreateGroupModal({
                     <Input />
                 </Form.Item>
 
-                <Form.Item
-                    label="Currency"
-                    name="currency"
-                    rules={[{ required: true, message: 'Please select a currency!' }]}
-                >
-                    <Select placeholder="Select a currency">
-                        {Object.entries(currencies).map(([code, symbol]) => (
-                            <Select.Option key={code} value={code}>
-                                {code} ({symbol})
-                            </Select.Option>
-                        ))}
-                    </Select>
-                </Form.Item>
+                {!isEdit && (
+                    <Form.Item
+                        label="Currency"
+                        name="currency"
+                        rules={[{ required: true, message: 'Please select a currency!' }]}
+                    >
+                        <Select placeholder="Select a currency">
+                            {Object.entries(currencies).map(([code, symbol]) => (
+                                <Select.Option key={code} value={code}>
+                                    {code} ({symbol})
+                                </Select.Option>
+                            ))}
+                        </Select>
+                    </Form.Item>
+                )}
             </Form>
         </Modal>
     );

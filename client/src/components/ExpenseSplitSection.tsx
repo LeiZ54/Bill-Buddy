@@ -1,11 +1,9 @@
 import React, { useEffect } from 'react';
 import GroupMemberList from './GroupMemberList';
-import { easyGroup } from '../util/util';
-
 
 interface ExpenseSplitSectionProps {
     setIsStep2Valid: (isValid: boolean) => void;
-    selectedGroup: easyGroup|undefined;
+    selectedGroup: number;
     splitMethod: 'equally' | 'unequally';
     setSplitMethod: (method: 'equally' | 'unequally') => void;
     amount: string;

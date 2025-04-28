@@ -45,10 +45,10 @@ interface NetDebts_Group {
 
 export interface ActivityData {
     id: number;
-    userId: 1;
+    userAvatar: string;
+    objectPicture: string;
     objectType: string;
     objectId: 5;
-    action: string;
     descriptionHtml: string;
     accessible: boolean;
     createdAt: Date;
@@ -79,6 +79,7 @@ export interface ExpenseSimpleData {
     debtsAmount: number;
 }
 export interface ExpenseData {
+    groupId: number;
     id: number;
     title: string;
     payer: Member;
@@ -88,10 +89,32 @@ export interface ExpenseData {
     currency: string;
     expenseDate: string;
     debtsAmount: number;
-    isRecurring: boolean;
+    shares: Record<string, number>;
+}
+
+export interface CycleExpenseSimpleData {
+    id: number;
+    title: string;
+    type: string;
+}
+
+export interface CycleExpenseData {
+    id: number;
+    title: string;
+    group: number;
+    payer: Member;
+    description: string;
+    type: string;
+    amount: number;
+    participants: Member[];
+    shareAmounts: number[];
+    currency: string;
+    expenseDate: string;
+    startDate: Date;
     recurrenceUnit: string;
     recurrenceInterval: string;
-    shares: Record<string, number>;
+    createdAt: Date;
+
 }
 
 export const recurrenceOptions = [

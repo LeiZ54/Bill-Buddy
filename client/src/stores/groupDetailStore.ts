@@ -1,8 +1,16 @@
 import { create } from 'zustand';
 import api from '../util/axiosConfig';
-import { GroupData, Group, Member, ExpenseSimpleData, ExpenseFilter } from '../util/util';
+import { GroupData, Group, Member, ExpenseSimpleData, ExpenseFilter, CycleExpenseSimpleData } from '../util/util';
 import { persist } from 'zustand/middleware';
 import { message } from 'antd';
+
+interface FriendList {
+    id: number;
+    avatar: string;
+    fullName: string;
+    emial: string;
+    inGroup: boolean;
+}
 
 interface GroupDetailState {
     activeGroup: number | null;
@@ -13,6 +21,9 @@ interface GroupDetailState {
     members: Member[];
     expenses: ExpenseSimpleData[];
     filters: ExpenseFilter;
+    ifDelete: boolean;
+    friendList: FriendList[];
+    cycleExpenses: CycleExpenseSimpleData[];
     // public function
     clearData: () => void;
     setActiveGroup: (id: number) => void;
@@ -20,8 +31,14 @@ interface GroupDetailState {
     fetchMember: () => Promise<void>;
     loadMoreExpenses: () => Promise<void>;
     getGroup: () => Promise<void>;
-    editGroup: (newName: string, newType: string, defaultCurrency: string) => Promise<void>;
+    editGroup: (newName: string, newType: string) => Promise<void>;
     fetchExpenses: () => Promise<void>;
+    fetchCycleExpenses: () => Promise<void>;
+    getIfDelete: () => Promise<void>;
+    leaveGroup: (id: number) => Promise<void>;
+    deleteGroup: () => Promise<void>;
+    getFriendList: () => Promise<void>;
+    addFrinedToGroup: (selectedIds: number[]) => Promise<void>;
 
 
     // private function
@@ -40,6 +57,9 @@ export const useGroupDetailStore = create<GroupDetailState>()(
             members: [],
             expenses: [],
             filters: {},
+            ifDelete: false,
+            friendList: [],
+            cycleExpenses: [],
 
             clearData: () => {
                 set({ groupData: null, expenses: [], filters: {}, currentPage: 0, hasMore: true });
@@ -53,16 +73,14 @@ export const useGroupDetailStore = create<GroupDetailState>()(
                 set({ filters: filters, expenses:[] });
             },
 
-            editGroup: async (newName, newType, newDefaultCurrency) => {
+            editGroup: async (newName, newType) => {
                 const { groupData } = get();
                 await api.put(`/groups/${groupData!.id}`, {
                     newName,
                     newType,
-                    newDefaultCurrency
                 });
                 groupData!.name = newName;
                 groupData!.type = newType;
-                groupData!.currency = newDefaultCurrency;
                 message.success('Update group successfully!');
             },
 
@@ -70,6 +88,33 @@ export const useGroupDetailStore = create<GroupDetailState>()(
                 const { activeGroup } = get();
                 const response = await api.get(`/groups/${activeGroup}/members`);
                 set({ members: response.data});
+            },
+
+            getIfDelete: async () => {
+                const { activeGroup } = get();
+                const response = await api.get(`/groups/${activeGroup}/is-settled`);
+                set({ ifDelete: response.data });
+            },
+
+            leaveGroup: async (id: number) => {
+                const { activeGroup } = get();
+                await api.delete(`/groups/${activeGroup}/members/${id}`);
+            },
+
+            deleteGroup: async () => {
+                const { activeGroup } = get();
+                await api.delete(`/groups/${activeGroup}`);
+            },
+
+            getFriendList: async () => {
+                const { activeGroup } = get();
+                const res = await api.get(`/groups/${activeGroup}/friends?page=0&size=100`);
+                set({friendList: res.data.content});
+            },
+
+            addFrinedToGroup: async (selectedIds:number[]) => {
+                const { activeGroup } = get();
+                await api.post(`/groups/${activeGroup}/invite/friends`, selectedIds);
             },
 
             getGroup: async () => {
@@ -116,6 +161,13 @@ export const useGroupDetailStore = create<GroupDetailState>()(
                     currentPage: 0
                 });
             },
+
+            fetchCycleExpenses: async () => {
+                const { activeGroup } = get();
+                const res = await api.get(`/expenses/${activeGroup}/recurring`);
+                set({ cycleExpenses: res.data.content });
+            },
+
             loadMoreExpenses: async () => {
                 const { activeGroup, filters, currentPage, hasMore, isLoadingMore } = get();
                 if (!hasMore || isLoadingMore) return;

@@ -9,14 +9,15 @@ import useBreakpoint from "antd/es/grid/hooks/useBreakpoint";
 
 
 import { Typography } from 'antd';
+import { useGroupDetailStore } from '../stores/groupDetailStore.ts';
 
 export default function ExpenseDetailPage() {
-    const {currencies} = useAuthStore();
-    const {activeExpense, expenseData, getExpense} = useExpenseStore();
+    const { currencies, expenseTypes } = useAuthStore();
+    const { activeExpense, expenseData, getExpense } = useExpenseStore();
+    const { setActiveGroup } = useGroupDetailStore();
     const { Title, Text } = Typography;
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
-    const {expenseTypes} = useAuthStore();
     const screens = useBreakpoint();
     const [isChangeTypeModalOpen, setIsChangeTypeModalOpen] = useState(false);
     useEffect(() => {
@@ -66,8 +67,8 @@ export default function ExpenseDetailPage() {
                     leftType="back"
                     leftOnClick={() => {
                         navigate("/groups/detail");
+                        setActiveGroup(expenseData!.groupId);
                     }}
-                    className="bg-transparent shadow-none border"
                 />
                 <div className="flex justify-between items-center p-4 shadow-sm ">
                     <div className="flex items-center space-x-3">

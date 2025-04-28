@@ -1,88 +1,10 @@
-import { useEffect, useState } from 'react';
-import { Modal, List, Spin, message, Avatar, Radio, Grid, InputNumber, Select } from 'antd';
-import api from '../util/axiosConfig';
-import { easyGroup, recurrenceOptions } from '../util/util';
+import { useState } from 'react';
+import { Modal, Avatar, Radio, Grid, InputNumber, Select } from 'antd';
+import { recurrenceOptions } from '../util/util';
 import useAuthStore from '../stores/authStore';
 
 const { useBreakpoint } = Grid;
 
-
-export const GroupSelectorModal = ({ open, onCancel, onSelect }: {
-    open: boolean;
-    onCancel: () => void;
-    onSelect: (group: easyGroup) => void;
-}) => {
-    const [groups, setGroups] = useState<easyGroup[]>([]);
-    const [loading, setLoading] = useState(false);
-    const { groupType } = useAuthStore();
-
-    const fetchAllGroups = async () => {
-        let page = 0;
-        const size = 10;
-        let allGroups: easyGroup[] = [];
-        let hasMore = true;
-
-        setLoading(true);
-        try {
-            while (hasMore) {
-                const res = await api.get(`/groups?page=${page}&size=${size}`);
-                const content = res.data.content || [];
-                allGroups = [...allGroups, ...content];
-
-                if (res.data.last) {
-                    hasMore = false;
-                } else {
-                    page += 1;
-                }
-            }
-            setGroups(allGroups);
-        } catch (err: any) {
-            message.error(err?.response?.data?.error || "Network Error!");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        if (open) {
-            fetchAllGroups();
-        }
-    }, [open]);
-
-    return (
-        <Modal
-            open={open}
-            onCancel={onCancel}
-            footer={null}
-            title="Select a Group"
-        >
-            {loading ? (
-                <div className="flex justify-center items-center py-6">
-                    <Spin />
-                </div>
-            ) : (
-                <div className="max-h-96 overflow-auto">
-                    <List
-                        dataSource={groups}
-                        renderItem={(group) => (
-                            <List.Item
-                                key={group.groupId}
-                                onClick={() => onSelect(group)}
-                                className="cursor-pointer hover:bg-gray-100 px-2 py-1 rounded"
-                            >
-                                <Avatar
-                                    src={groupType[group.type]}
-                                    className="flex-shrink-0 mr-4"
-                                />
-                                {group.groupName}
-                            </List.Item>
-                        )}
-                    />
-                </div>
-            )}
-        </Modal>
-    );
-};
 
 export const ExpenseTypeSelectorModal = ({ open, onCancel, onSelect }: {
     open: boolean;

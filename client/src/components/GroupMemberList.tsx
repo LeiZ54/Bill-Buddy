@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
-import { easyGroup } from '../util/util';
 import { useGroupDetailStore } from '../stores/groupDetailStore';
 interface GroupMemberListProps {
-    selectedGroup: easyGroup|undefined;
+    selectedGroup: number;
     splitMethod: 'equally' | 'unequally';
     selectedMembers?: number[];
     amountsByMember?: Record<number, string>;
@@ -23,7 +22,7 @@ const GroupMemberList = ({
     const { fetchMember, members } = useGroupDetailStore();
 
     useEffect(() => {
-        if (selectedGroup?.groupId) {
+        if (selectedGroup) {
             try {
                 fetchMember();
             } catch (err) {
