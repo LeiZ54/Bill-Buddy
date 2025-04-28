@@ -33,6 +33,7 @@ export default function ExpenseDetailPage() {
                 }
             };
             fetchData();
+
         }
     }, []);
 
@@ -88,7 +89,7 @@ export default function ExpenseDetailPage() {
                 <div className="p-6 max-w-md mx-auto space-y-2">
 
                     <div className="flex items-center space-x-2 text-xl">
-                        {/*<Avatar src={}/>*/}
+                        <Avatar src={expenseData.payer.avatar}/>
                         <Text className="text-lg">{expenseData.payer.fullName} paid {expenseData.currency + currencies[expenseData.currency] + expenseData.amount}</Text>
                     </div>
 
@@ -98,14 +99,25 @@ export default function ExpenseDetailPage() {
                             .filter(([name]) => name !== expenseData.payer.fullName)
                             .map(([name, value]) => (
                                 <div key={name} className="flex items-center space-x-2">
-                                    {/* <Avatar src={`/avatars/${name}.jpg`} size={24}/> */}
+                                    {/*<Avatar src={expenseData.payer.avatar}/>*/}
                                     <Text className="text-gray-700">
                                         {`${name} owes ${expenseData.currency + currencies[expenseData.currency]}${value.toFixed(2)}`}
                                     </Text>
                                 </div>
                             ))}
                     </div>
+
                 </div>
+                {expenseData?.description ? (
+                    <div className="mt-10 p-6">
+                        <div className=" text-black font-semibold">Description</div>
+                        <div className="px-2">
+                            {expenseData.description}
+                        </div>
+                    </div>
+                ) : (
+                    <></>
+                )}
 
                 <Modal
                     open={isChangeTypeModalOpen}
