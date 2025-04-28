@@ -26,7 +26,6 @@ export const AddFriendsToGroupModal = ({ open, onCancel, isGroup }: AddFriendsTo
             await fetchMember();
             onCancel();
         } catch (err: any) {
-            console.log(err);
             message.error(err.response?.data?.message || 'Network Error!');
         } finally {
             setIsLoading(false);

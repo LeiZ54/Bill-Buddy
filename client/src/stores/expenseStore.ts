@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { ExpenseData, easyGroup } from '../util/util';
+import { CycleExpenseData, ExpenseData, easyGroup } from '../util/util';
 import api from '../util/axiosConfig';
 import { persist } from 'zustand/middleware';
 
@@ -7,8 +7,12 @@ interface ExpenseState {
     activeExpense: number | null;
     expenseData: ExpenseData | null;
     groupList: easyGroup[];
+    activeCycleExpense: number | null;
+    cycleExpenseData: CycleExpenseData | null;
     setActiveExpense: (id: number) => void;
+    setActiveCycleExpense: (id: number) => void;
     getExpense: () => Promise<void>;
+    getCycleExpense: () => Promise<void>;
     fetchAllGroups: () => Promise<void>;
     getRecurrenceLabel: (time?: { recurrenceUnit: string; recurrenceInterval: number }) => string;
 }
@@ -19,8 +23,14 @@ export const useExpenseStore = create<ExpenseState>()(
             activeExpense: null,
             expenseData: null,
             groupList: [],
+            activeCycleExpense: null,
+            cycleExpenseData: null,
             setActiveExpense: (id: number) => {
                 set({ activeExpense: id });
+            },
+
+            setActiveCycleExpense: (id: number) => {
+                set({ activeCycleExpense: id });
             },
 
             getRecurrenceLabel: (time?: { recurrenceUnit: string; recurrenceInterval: number }): string => {
@@ -44,6 +54,12 @@ export const useExpenseStore = create<ExpenseState>()(
                 const { activeExpense } = get();
                 const res = await api.get(`/expenses/${activeExpense}`);
                 set({ expenseData: res.data });
+            },
+
+            getCycleExpense: async () => {
+                const { activeCycleExpense } = get();
+                const res = await api.get(`/expenses/recurring/${activeCycleExpense}`);
+                set({ cycleExpenseData: res.data });
             },
 
             fetchAllGroups: async () => {

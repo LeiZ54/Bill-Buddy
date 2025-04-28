@@ -257,7 +257,7 @@ export default function GroupDetailPage() {
                                             onSelect={() => { handleApplyFilters(); }}
                                         >
                                             <Option value="">All</Option>
-                                            {Object.entries(expenseTypes).map(([key,type],index) => (
+                                            {Object.entries(expenseTypes).map(([key],index) => (
                                                 <Option key={index} value={key}>
                                                     {key}
                                                 </Option>

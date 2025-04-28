@@ -79,7 +79,6 @@ const AddPage = () => {
             message.success("Add expense successfully!")
             navigate('/groups');
         } catch (err) {
-            console.log(err.response.data.error);
         } finally {
             setSubmitting(false);
         }

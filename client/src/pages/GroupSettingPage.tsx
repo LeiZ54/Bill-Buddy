@@ -1,6 +1,6 @@
-import {useState, useEffect} from 'react';
-import {motion} from 'framer-motion';
-import {Button, Alert, Avatar, Spin, message, Typography, Modal} from 'antd';
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { Button, Alert, Avatar, Spin, message, Typography, Modal } from 'antd';
 import {
     EditOutlined,
     UserAddOutlined,
@@ -10,18 +10,18 @@ import {
     DeleteOutlined
 } from '@ant-design/icons';
 import Topbar from '../components/TopBar';
-import {useNavigate} from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import AddFriendsToGroupModal from '../components/AddFriendsToGroupModal';
 import CreateGroupModal from '../components/CreateGroupModal';
 import EmailInviteModal from '../components/EmailInviteModal';
 import LinkInviteModal from '../components/LinkInviteModal';
 import useAuthStore from '../stores/authStore';
-import {useGroupDetailStore} from '../stores/groupDetailStore';
-import {CycleExpenseSimpleData} from "../util/util.tsx";
+import { useGroupDetailStore } from '../stores/groupDetailStore';
+import { useExpenseStore } from '../stores/expenseStore';
 
 
 const GroupSettingPage = () => {
-    const {groupType, id} = useAuthStore();
+    const { groupType, id, expenseTypes } = useAuthStore();
     const navigate = useNavigate();
     const {
         activeGroup,
@@ -36,25 +36,32 @@ const GroupSettingPage = () => {
         cycleExpenses,
         fetchCycleExpenses,
     } = useGroupDetailStore();
-    const { Text } = Typography;
-    const [cycleModal,setCycleModal] = useState(false);
-    const [selectedCycleExpense, setSelectedCycleExpense] = useState<CycleExpenseSimpleData | null>(null);
+    const { cycleExpenseData, getCycleExpense, setActiveCycleExpense } = useExpenseStore();
 
-    const handleCloseModal = () => {
-        setCycleModal(false);
-        setSelectedCycleExpense(null);
-    };
-    const handleOpenModal = (expense) => {
+    const { Text } = Typography;
+    const [cycleModal, setCycleModal] = useState(false);
+
+    const [isLoadingCycleExpense, setIsLoadingCycleExpense] = useState(false);
+    const [cycleExpenseError, setCycleExpenseError] = useState("");
+    const handleOpenModal = async (id: number) => {
         setCycleModal(true);
-        setSelectedCycleExpense(expense);
+        try {
+            setIsLoadingCycleExpense(true);
+            setActiveCycleExpense(id);
+            await getCycleExpense();
+        } catch (error) {
+            setCycleExpenseError("Failed to get data!");
+        } finally {
+            setIsLoadingCycleExpense(false);
+        }
     };
 
     if (!activeGroup) {
         return (
             <motion.div
-                initial={{opacity: 0, y: 20}}
-                animate={{opacity: 1, y: 0}}
-                transition={{duration: 0.2, delay: 0.2}}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.2, delay: 0.2 }}
             >
                 <Topbar
                     leftType="back"
@@ -63,7 +70,7 @@ const GroupSettingPage = () => {
                     }}
                     title={"Group settings"}
                 />
-                < Alert message="Something Wrong!" type="error" className="m-4"/>;
+                < Alert message="Something Wrong!" type="error" className="m-4" />;
             </motion.div>
         )
     }
@@ -76,7 +83,6 @@ const GroupSettingPage = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [leaving, setLeaving] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
-    const {expenseTypes} = useAuthStore();
     useEffect(() => {
         if (activeGroup) {
             const fetchData = async () => {
@@ -124,8 +130,8 @@ const GroupSettingPage = () => {
 
     return (
         <motion.div
-            initial={{opacity: 0, y: 20}}
-            animate={{opacity: 1, y: 0}}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
         >
             <Topbar
 
@@ -175,7 +181,7 @@ const GroupSettingPage = () => {
                     </div>
                     <Button
                         type="text"
-                        icon={<EditOutlined className="text-blue-500"/>}
+                        icon={<EditOutlined className="text-blue-500" />}
                         onClick={() => {
                             setisUpdateModalOpen(true)
                         }}
@@ -189,7 +195,7 @@ const GroupSettingPage = () => {
             <div className="px-4 mt-10 pb-16">
                 {isLoading ? (
                     <div className="flex justify-center py-10">
-                        <Spin size="large"/>
+                        <Spin size="large" />
                     </div>
                 ) : error ? (
                     <Alert
@@ -209,7 +215,7 @@ const GroupSettingPage = () => {
                                     className="flex items-center px-5 py-3 w-full text-left text-lg transition active:scale-95"
                                     onClick={() => setAddFriendsToGroupModal(true)}
                                 >
-                                    <UserAddOutlined className="mr-8 text-2xl"/>
+                                    <UserAddOutlined className="mr-8 text-2xl" />
                                     Add friends
                                 </div>
 
@@ -217,7 +223,7 @@ const GroupSettingPage = () => {
                                     className="flex items-center px-5 py-3 w-full text-left text-lg transition active:scale-95"
                                     onClick={() => setisEmailModalOpen(true)}
                                 >
-                                    <MailOutlined className="mr-8 text-2xl"/>
+                                    <MailOutlined className="mr-8 text-2xl" />
                                     Invite via email
                                 </div>
 
@@ -225,7 +231,7 @@ const GroupSettingPage = () => {
                                     className="flex items-center px-5 py-3 w-full text-left text-lg transition active:scale-95"
                                     onClick={() => setisLinkModalOpen(true)}
                                 >
-                                    <LinkOutlined className="mr-8 text-2xl"/>
+                                    <LinkOutlined className="mr-8 text-2xl" />
                                     Invite via link
                                 </div>
                             </div>
@@ -252,9 +258,9 @@ const GroupSettingPage = () => {
                             <h3 className="text-lg font-medium">Cycle expenses</h3>
                             {cycleExpenses.map((expense) => (
                                 <div key={expense.id} className="flex items-center space-x-4 px-4"
-                                onClick={()=>{
-                                    handleOpenModal(expense);
-                                }}
+                                    onClick={() => {
+                                        handleOpenModal(expense.id);
+                                    }}
                                 >
                                     <Avatar
                                         src={expenseTypes[expense.type]}
@@ -267,13 +273,22 @@ const GroupSettingPage = () => {
 
                         <Modal
                             open={cycleModal}
-                            onCancel={handleCloseModal}
-                            onOk={handleCloseModal}
-                            title="Expense Details"
+                            onCancel={() => setCycleModal(false)}
+                            title="Cycle Expense Details"
+                            footer={null}
                         >
-                            {selectedCycleExpense && (
-                                <div className="space-y-2">
-                                    <p><strong>id:</strong> {selectedCycleExpense.id}</p>
+                            {isLoadingCycleExpense ? (
+                                <div className="flex justify-center py-10">
+                                    <Spin size="large" />
+                                </div>
+                            ) : cycleExpenseError ? (
+                                <Alert
+                                    message="Failed to load cycle expense"
+                                    type="error"
+                                />
+                            ) : (
+                                <div>
+                                    <pre>{JSON.stringify(cycleExpenseData, null, 2)}</pre>
                                 </div>
                             )}
                         </Modal>
@@ -294,7 +309,7 @@ const GroupSettingPage = () => {
                                     className="flex items-center px-5 py-3 w-full text-left text-lg transition active:scale-95"
                                     onClick={handleLeave}
                                 >
-                                    <LogoutOutlined className="mr-8 text-2xl"/>
+                                    <LogoutOutlined className="mr-8 text-2xl" />
                                     {leaving ? 'Leaving...' : 'Leave group'}
                                 </div>
 
@@ -302,7 +317,7 @@ const GroupSettingPage = () => {
                                     className="flex items-center px-5 py-3 w-full text-left text-lg transition active:scale-95"
                                     onClick={handleDelete}
                                 >
-                                    <DeleteOutlined className="mr-8 text-2xl text-red-500"/>
+                                    <DeleteOutlined className="mr-8 text-2xl text-red-500" />
                                     {isDeleting ? 'Deleting...' : 'Delete group'}
                                 </div>
                             </div>
