@@ -141,6 +141,12 @@ public class FriendService {
         return friendRequestRepository.findByReceiverIdAndStatus(userId, status);
     }
 
+    public void deleteFriendRelationship(Long userAId, Long userBId) {
+        log.debug("Deleting friend relationship: userAId={}, userBId={}", userAId, userBId);
+        friendRepository.softDeleteByUserIdAndFriendId(userAId, userBId);
+        friendRepository.softDeleteByUserIdAndFriendId(userBId, userAId);
+    }
+
     public Boolean isFriend(Long userAId, Long userBId) {
         return friendRepository.existsByUserIdAndFriendIdAndDeletedFalse(userAId, userBId);
     }

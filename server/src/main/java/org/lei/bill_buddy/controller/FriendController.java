@@ -67,6 +67,15 @@ public class FriendController {
         return ResponseEntity.ok(dtoConvertor.convertUserToFriendDetailsDTO(userService.getUserById(id)));
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteFriend(@PathVariable Long id) {
+        if (!friendService.isFriend(userService.getCurrentUser().getId(), id))
+            throw new AppException(ErrorCode.FRIEND_RELATIONSHIP_NOT_FOUND, "This user is not your friend");
+
+        friendService.deleteFriendRelationship(userService.getCurrentUser().getId(), id);
+        return ResponseEntity.ok("Friend deleted successfully");
+    }
+
     private FriendListDTO formatFriendsListDTO(Page<Friend> friends) {
         FriendListDTO friendsListDTO = new FriendListDTO();
         friendsListDTO.setFriends(friends.map(f -> dtoConvertor.convertUserToFriendDetailsDTO(f.getFriend())));

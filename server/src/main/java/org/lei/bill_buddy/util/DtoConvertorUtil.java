@@ -110,6 +110,16 @@ public class DtoConvertorUtil {
         return groupDTO;
     }
 
+    public GroupForFriendDTO convertGroupToGroupForFriendDTO(Group group, Long userId) {
+        GroupForFriendDTO dto = new GroupForFriendDTO();
+        dto.setGroupId(group.getId());
+        dto.setGroupName(group.getName());
+        dto.setType(group.getType().name());
+        dto.setDefaultCurrency(group.getDefaultCurrency().name());
+        dto.setInGroup(groupService.isMemberOfGroup(group.getId(), userId));
+        return dto;
+    }
+
     public GroupDetailsDTO convertGroupToGroupDetailsDTO(Group group) {
         User currentUser = userService.getCurrentUser();
         List<GroupDebt> owesUser = groupDebtService.getByGroupAndLender(group, currentUser);

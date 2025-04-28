@@ -106,26 +106,28 @@ public class GroupController {
         return ResponseEntity.ok(Map.of("inviteLink", inviteLink));
     }
 
-    @PostMapping("/{groupId}/invite/friend/{friendId}")
-    public ResponseEntity<?> inviteFriend(@PathVariable Long groupId, @PathVariable Long friendId) {
+    @PostMapping("/{groupId}/invite/friends")
+    public ResponseEntity<?> inviteFriends(@PathVariable Long groupId, @RequestBody List<Long> ids) {
         Group group = groupService.getGroupById(groupId);
         User user = userService.getCurrentUser();
         if (group == null) throw new AppException(ErrorCode.GROUP_NOT_FOUND);
         if (!groupService.isMemberOfGroup(user.getId(), group.getId()))
             throw new AppException(ErrorCode.NOT_A_MEMBER);
-        if (!friendService.isFriend(user.getId(), friendId))
-            throw new AppException(ErrorCode.FRIEND_RELATIONSHIP_NOT_FOUND);
-        groupMemberService.addMemberToGroup(group.getId(), friendId);
-        activityService.log(
-                ActionType.UPDATE,
-                ObjectType.GROUP,
-                groupId,
-                "user_invited_user_to_group",
-                Map.of("inviterId", user.getId().toString(),
-                        "inviteeId", friendId.toString(),
-                        "groupId", group.getId().toString())
-        );
-        return ResponseEntity.ok("Invitation accepted. Friend: " + friendId + " Group: " + groupId);
+        for (Long id : ids) {
+            if (friendService.isFriend(user.getId(), id) && !groupService.isMemberOfGroup(id, groupId)) {
+                groupMemberService.addMemberToGroup(group.getId(), id);
+                activityService.log(
+                        ActionType.UPDATE,
+                        ObjectType.GROUP,
+                        groupId,
+                        "user_invited_user_to_group",
+                        Map.of("inviterId", user.getId().toString(),
+                                "inviteeId", id.toString(),
+                                "groupId", group.getId().toString())
+                );
+            }
+        }
+        return ResponseEntity.ok("Invitation accepted.");
     }
 
     @RateLimit(maxRequests = 1)
@@ -152,7 +154,6 @@ public class GroupController {
         emailProducer.sendEmail(emailDTO);
         return ResponseEntity.ok("Invitation sent to " + email);
     }
-
 
     @PostMapping("/invitations/accept")
     public ResponseEntity<?> acceptInvitation(@RequestParam String token) {
@@ -222,6 +223,21 @@ public class GroupController {
         return ResponseEntity.ok(friendService.getFriendsByUserIdAndSearch(
                         currentUser.getId(), search, pageable).
                 map(f -> dtoConvertor.convertUserToFriendListOfGroupDTO(f.getFriend(), memberIds)));
+    }
+
+    @GetMapping("/friends/{friendId}")
+    public ResponseEntity<?> getGroupListForFriend(
+            @PathVariable Long friendId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false, defaultValue = "") String groupName) {
+        User user = userService.getCurrentUser();
+        if (!friendService.isFriend(user.getId(), friendId))
+            throw new AppException(ErrorCode.FRIEND_RELATIONSHIP_NOT_FOUND, "This user is not your friend.");
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Group> groupPage = groupService.getGroupsByUserIdAndGroupName(user.getId(), groupName, pageable);
+
+        return ResponseEntity.ok(groupPage.map(g -> dtoConvertor.convertGroupToGroupForFriendDTO(g, friendId)));
     }
 
     @GetMapping("/detail")

@@ -5,6 +5,7 @@ import org.lei.bill_buddy.model.Friend;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
@@ -26,5 +27,15 @@ public interface FriendRepository extends JpaRepository<Friend, Long> {
                                                      Pageable pageable);
 
     boolean existsByUserIdAndFriendIdAndDeletedFalse(Long userId, Long friendId);
+
+    @Modifying
+    @Query("""
+    UPDATE Friend f
+    SET f.deleted = true
+    WHERE f.user.id = :userId
+      AND f.friend.id = :friendId
+      AND f.deleted = false
+""")
+    void softDeleteByUserIdAndFriendId(@Param("userId") Long userId, @Param("friendId") Long friendId);
 }
 
