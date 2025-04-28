@@ -10,6 +10,7 @@ import org.lei.bill_buddy.config.exception.AppException;
 import org.lei.bill_buddy.enums.ActionType;
 import org.lei.bill_buddy.enums.ErrorCode;
 import org.lei.bill_buddy.enums.ObjectType;
+import org.lei.bill_buddy.model.Friend;
 import org.lei.bill_buddy.model.Group;
 import org.lei.bill_buddy.model.User;
 import org.lei.bill_buddy.service.*;
@@ -27,6 +28,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Slf4j
 @RateLimit
@@ -173,6 +175,28 @@ public class GroupController {
         }
         List<User> userList = groupMemberService.getMembersOfGroup(groupId);
         return ResponseEntity.ok(userList.stream().map(dtoConvertor::convertUserToUserDTO));
+    }
+
+    @GetMapping("/{groupId}/friends")
+    public ResponseEntity<?> getFriendsOfGroup(
+            @PathVariable Long groupId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false, defaultValue = "") String search
+    ) {
+        User currentUser = userService.getCurrentUser();
+        if (!groupService.isMemberOfGroup(currentUser.getId(), groupId)) {
+            throw new AppException(ErrorCode.NOT_A_MEMBER);
+        }
+        Group group = groupService.getGroupById(groupId);
+        if (group == null) {
+            throw new AppException(ErrorCode.GROUP_NOT_FOUND);
+        }
+        Set<Long> memberIds = groupService.getAllMemberIdsOfGroup(groupId);
+        Pageable pageable = PageRequest.of(page, size);
+        return ResponseEntity.ok(friendService.getFriendsByUserIdAndSearch(
+                        currentUser.getId(), search, pageable).
+                map(f -> dtoConvertor.convertUserToFriendListOfGroupDTO(f.getFriend(), memberIds)));
     }
 
     @GetMapping("/detail")

@@ -13,6 +13,8 @@ public class ExpenseDetailsDTO {
 
     private String title;
 
+    private Long groupId;
+
     private UserDTO payer;
 
     private String description;

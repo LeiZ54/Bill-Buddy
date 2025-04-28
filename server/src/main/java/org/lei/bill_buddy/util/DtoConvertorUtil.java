@@ -16,6 +16,7 @@ import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Slf4j
 @Component
@@ -60,6 +61,7 @@ public class DtoConvertorUtil {
 
         ExpenseDetailsDTO dto = new ExpenseDetailsDTO();
         dto.setId(expense.getId());
+        dto.setGroupId(expense.getGroup().getId());
         dto.setTitle(expense.getTitle());
         dto.setAmount(expense.getAmount());
         dto.setDescription(expense.getDescription());
@@ -163,6 +165,16 @@ public class DtoConvertorUtil {
         dto.setEmail(user.getEmail());
         dto.setNetDebts(netDebts);
 
+        return dto;
+    }
+
+    public FriendListOfGroupDTO convertUserToFriendListOfGroupDTO(User user, Set<Long> memberIds) {
+        FriendListOfGroupDTO dto = new FriendListOfGroupDTO();
+        dto.setId(user.getId());
+        dto.setAvatar(user.getAvatar());
+        dto.setFullName(user.getFullName());
+        dto.setEmail(user.getEmail());
+        dto.setInGroup(memberIds.contains(user.getId()));
         return dto;
     }
 
