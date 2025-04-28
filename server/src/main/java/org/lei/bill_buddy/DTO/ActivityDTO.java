@@ -21,8 +21,6 @@ public class ActivityDTO {
 
     private String descriptionHtml;
 
-    private BigDecimal debtAmount;
-
     private Boolean accessible = true;
 
     private LocalDateTime createdAt;

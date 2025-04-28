@@ -10,7 +10,6 @@ import org.lei.bill_buddy.config.exception.AppException;
 import org.lei.bill_buddy.enums.ActionType;
 import org.lei.bill_buddy.enums.ErrorCode;
 import org.lei.bill_buddy.enums.ObjectType;
-import org.lei.bill_buddy.model.Friend;
 import org.lei.bill_buddy.model.Group;
 import org.lei.bill_buddy.model.User;
 import org.lei.bill_buddy.service.*;
@@ -46,6 +45,7 @@ public class GroupController {
     private final GroupDebtService groupDebtService;
     private final FriendService friendService;
     private final ActivityService activityService;
+    private final GroupDeleteService groupDeleteService;
 
     @Value("${bill-buddy.client.url}")
     private String clientUrl;
@@ -58,6 +58,9 @@ public class GroupController {
 
     @GetMapping("/{groupId}")
     public ResponseEntity<?> getGroup(@PathVariable Long groupId) {
+        User currentUser = userService.getCurrentUser();
+        if (!groupService.isMemberOfGroup(currentUser.getId(), groupId))
+            throw new AppException(ErrorCode.NOT_A_MEMBER);
         Group group = groupService.getGroupById(groupId);
         return ResponseEntity.ok(dtoConvertor.convertGroupToGroupDetailsDTO(group));
     }
@@ -73,10 +76,25 @@ public class GroupController {
 
     @DeleteMapping("/{groupId}")
     public ResponseEntity<?> deleteGroup(@PathVariable Long groupId) {
+        Group group = groupService.getGroupById(groupId);
+        if (group == null) throw new AppException(ErrorCode.GROUP_NOT_FOUND);
         if (!groupService.isMemberOfGroup(userService.getCurrentUser().getId(), groupId)) {
             throw new RuntimeException("You do not have permission to delete this group.");
         }
-        groupService.deleteGroup(groupId);
+        if (!groupDebtService.isGroupSettled(groupId)) {
+            throw new AppException(ErrorCode.GROUP_CAN_NOT_BE_DELETED);
+        }
+        groupDeleteService.deleteGroup(groupId);
+        activityService.log(
+                ActionType.DELETE,
+                ObjectType.GROUP,
+                group.getId(),
+                "user_deleted_group",
+                Map.of(
+                        "userId", userService.getCurrentUser().getId().toString(),
+                        "groupId", group.getId().toString()
+                )
+        );
         return ResponseEntity.ok(Collections.singletonMap("message", "Group deleted"));
     }
 
@@ -164,6 +182,13 @@ public class GroupController {
 
     @DeleteMapping("/{groupId}/members/{userId}")
     public ResponseEntity<?> removeMemberFromGroup(@PathVariable Long groupId, @PathVariable Long userId) {
+        User currentUser = userService.getCurrentUser();
+        Group group = groupService.getGroupById(groupId);
+        if (group == null) throw new AppException(ErrorCode.GROUP_NOT_FOUND);
+        if (!groupService.isMemberOfGroup(currentUser.getId(), groupId) ||
+                (!group.getCreator().getId().equals(currentUser.getId()) && !currentUser.getId().equals(userId)))
+            throw new AppException(ErrorCode.FORBIDDEN, "You do not have permission to remove this member");
+
         groupMemberService.removeMemberFromGroup(groupId, userId);
         return ResponseEntity.ok(Collections.singletonMap("message", "Member removed from group."));
     }

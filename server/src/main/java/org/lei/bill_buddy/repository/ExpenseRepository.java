@@ -24,13 +24,22 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long>, JpaSpec
 
     @Modifying
     @Query("""
-    UPDATE Expense e
-    SET e.settled = true
-    WHERE e.group.id = :groupId
-    AND e.deleted = false
-    AND e.settled = false
-""")
+                UPDATE Expense e
+                SET e.settled = true
+                WHERE e.group.id = :groupId
+                AND e.deleted = false
+                AND e.settled = false
+            """)
     void settleExpensesByGroupId(@Param("groupId") Long groupId);
+
+    @Modifying
+    @Query("""
+                UPDATE Expense e
+                SET e.deleted = true
+                WHERE e.group.id = :groupId
+                AND e.deleted = false
+            """)
+    void softDeleteExpensesByGroupId(@Param("groupId") Long groupId);
 
     Optional<Expense> findExpenseByIdAndDeletedFalse(Long id);
 }

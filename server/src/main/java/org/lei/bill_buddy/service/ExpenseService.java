@@ -124,7 +124,7 @@ public class ExpenseService {
                 params
         );
 
-        groupService.groupUpdated(group);
+        groupService.groupUpdated(groupId);
         settleGroupIfNeeded(savedExpense.getGroup().getId());
 
         log.info("Expense created successfully: id={}", savedExpense.getId());
@@ -168,7 +168,7 @@ public class ExpenseService {
                 params
         );
 
-        groupService.groupUpdated(expense.getGroup());
+        groupService.groupUpdated(expense.getGroup().getId());
         settleGroupIfNeeded(expense.getGroup().getId());
         log.info("Expense deleted successfully: id={}", expenseId);
     }
@@ -319,7 +319,7 @@ public class ExpenseService {
                     fullParams
             );
 
-            groupService.groupUpdated(expense.getGroup());
+            groupService.groupUpdated(expense.getGroup().getId());
             settleGroupIfNeeded(expense.getGroup().getId());
         }
         log.info("Expense updated successfully: id={}", expenseId);

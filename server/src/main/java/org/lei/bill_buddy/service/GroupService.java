@@ -28,7 +28,8 @@ public class GroupService {
     private final ActivityService activityService;
     private final UserService userService;
 
-    public void groupUpdated(Group group) {
+    public void groupUpdated(Long groupId) {
+        Group group = getGroupById(groupId);
         group.setUpdatedAt(LocalDateTime.now());
         groupRepository.save(group);
         log.debug("Group updated: {}", group.getId());
@@ -146,32 +147,6 @@ public class GroupService {
         }
 
         return savedGroup;
-    }
-
-    public void deleteGroup(Long groupId) {
-        log.warn("Deleting group with id: {}", groupId);
-        if (!groupRepository.existsById(groupId)) {
-            log.warn("Cannot delete group {} because it does not exist", groupId);
-            throw new AppException(ErrorCode.GROUP_NOT_FOUND);
-        }
-
-        Group group = getGroupById(groupId);
-        groupMemberRepository.softDeleteAllByGroup(group);
-        group.setDeleted(true);
-        groupRepository.save(group);
-        log.info("Group {} marked as deleted.", groupId);
-
-        Map<String, Object> params = new HashMap<>();
-        params.put("userId", userService.getCurrentUser().getId().toString());
-        params.put("groupId", group.getId().toString());
-
-        activityService.log(
-                ActionType.DELETE,
-                ObjectType.GROUP,
-                group.getId(),
-                "user_deleted_group",
-                params
-        );
     }
 
     @Transactional(readOnly = true)

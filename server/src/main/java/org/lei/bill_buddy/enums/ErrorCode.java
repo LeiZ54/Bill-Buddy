@@ -46,6 +46,8 @@ public enum ErrorCode {
 
     MEMBER_CAN_NOT_BE_REMOVED(HttpStatus.CONFLICT, "Member can not be removed."),
 
+    GROUP_CAN_NOT_BE_DELETED(HttpStatus.CONFLICT, "Group can not be deleted."),
+
     // === Expense Related ===
     EXPENSE_NOT_FOUND(HttpStatus.NOT_FOUND, "Expense not found."),
 

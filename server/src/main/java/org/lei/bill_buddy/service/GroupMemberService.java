@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -26,6 +27,7 @@ public class GroupMemberService {
     private final UserService userService;
     private final GroupService groupService;
     private final GroupDebtService groupDebtService;
+    private final GroupDeleteService groupDeleteService;
     private final ExpenseService expenseService;
     private final FriendService friendService;
     private final ActivityService activityService;
@@ -71,7 +73,7 @@ public class GroupMemberService {
                 .toList();
         friendService.addFriends(user, existingMembers);
         groupDebtService.addGroupDebts(group, user, existingMembers);
-        groupService.groupUpdated(group);
+        groupService.groupUpdated(groupId);
 
         log.info("User {} added to group {}", userId, groupId);
     }
@@ -79,15 +81,14 @@ public class GroupMemberService {
     @Transactional
     public void removeMemberFromGroup(Long groupId, Long userId) {
         log.info("Removing user {} from group {}", userId, groupId);
-        Group group = groupService.getGroupById(groupId);
         User user = userService.getUserById(userId);
         if (user == null) {
             log.warn("User not found with id: {}", userId);
             throw new AppException(ErrorCode.USER_NOT_FOUND);
         }
 
-        GroupMember gm = groupMemberRepository.findByGroupAndUserAndDeletedFalse(group, user)
-                .orElseThrow(() -> new RuntimeException("User is not a member of the group"));
+        GroupMember gm = groupMemberRepository.findByGroupIdAndUserIdAndDeletedFalse(groupId, userId)
+                .orElseThrow(() -> new AppException(ErrorCode.NOT_A_MEMBER, "This user is not a member of this group"));
 
         if (expenseService.hasActiveExpensesInGroup(groupId, userId)) {
             log.warn("User {} has expense in group {}", userId, groupId);
@@ -95,7 +96,21 @@ public class GroupMemberService {
         }
         gm.setDeleted(true);
         groupMemberRepository.save(gm);
-        groupService.groupUpdated(group);
+        Set<Long> memberIds = groupService.getAllMemberIdsOfGroup(groupId);
+
+        if (memberIds == null || memberIds.isEmpty()) groupDeleteService.deleteGroup(groupId);
+        activityService.log(
+                ActionType.UPDATE,
+                ObjectType.GROUP,
+                groupId,
+                "user_leaved_group",
+                Map.of(
+                        "groupId", groupId.toString(),
+                        "userId", userId.toString()
+                )
+        );
+
+        groupService.groupUpdated(groupId);
 
         log.info("User {} removed from group {}", userId, groupId);
     }

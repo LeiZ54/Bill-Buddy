@@ -190,22 +190,13 @@ public class DtoConvertorUtil {
         switch (activity.getObjectType()) {
             case GROUP -> {
                 Group group = groupService.getGroupByIdIncludeDeleted(activity.getObjectId());
-                accessible = !(group == null || Boolean.TRUE.equals(group.getDeleted()));
+                accessible = !(group == null || Boolean.TRUE.equals(group.getDeleted()) || !groupService.isMemberOfGroup(currentUser.getId(), group.getId()));
                 objectPicture = (group != null) ? group.getType().getImageUrl() : GroupType.OTHER.getImageUrl();
             }
             case EXPENSE -> {
                 Expense expense = expenseService.getExpenseByIdIncludeDeleted(activity.getObjectId());
-                accessible = !(expense == null || Boolean.TRUE.equals(expense.getDeleted()));
+                accessible = !(expense == null || Boolean.TRUE.equals(expense.getDeleted()) || !groupService.isMemberOfGroup(currentUser.getId(), expense.getGroup().getId()));
                 objectPicture = (expense != null) ? expense.getType().getImageUrl() : ExpenseType.OTHER.getImageUrl();
-                if (expense != null) {
-                    ExpenseShare share = expenseService.getExpenseShareByUserIdAndExpenseIdIncludeDeleted(currentUser.getId(), expense.getId());
-                    if (share != null) {
-                        dto.setDebtAmount(
-                                expense.getPayer().getId().equals(currentUser.getId()) ?
-                                        expense.getAmount().subtract(share.getShareAmount())
-                                        : share.getShareAmount().negate());
-                    }
-                }
             }
         }
 

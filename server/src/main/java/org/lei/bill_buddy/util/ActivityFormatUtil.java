@@ -41,6 +41,7 @@ public class ActivityFormatUtil {
                 case "user_updated_group" -> formatUserUpdatedGroup(params);
                 case "user_invited_user_to_group" -> formatUserInvitedUserToGroup(params);
                 case "user_joined_group" -> formatUserJoinedGroup(params);
+                case "user_leaved_group" -> formatUserLeavedGroup(params);
                 case "user_added_expense_to_group" -> formatUserAddedExpense(params);
                 case "user_updated_expense" -> formatUserUpdatedExpense(params);
                 case "user_deleted_expense" -> formatUserDeletedExpense(params);
@@ -53,15 +54,15 @@ public class ActivityFormatUtil {
     }
 
     private String formatUserCreatedGroup(Map<String, Object> params) {
-        String creatorName = formatUserName(getLong(params, "userId"));
+        String userName = formatUserName(getLong(params, "userId"));
         String groupName = formatGroupName(getLong(params, "groupId"));
-        return String.format("<b>%s</b> created group <b>%s</b>", creatorName, groupName);
+        return String.format("<b>%s</b> created group <b>%s</b>", userName, groupName);
     }
 
     private String formatUserDeletedGroup(Map<String, Object> params) {
-        String creatorName = formatUserName(getLong(params, "userId"));
+        String userName = formatUserName(getLong(params, "userId"));
         String groupName = formatGroupName(getLong(params, "groupId"));
-        return String.format("<b>%s</b> deleted group <b>%s</b>", creatorName, groupName);
+        return String.format("<b>%s</b> deleted group <b>%s</b>", userName, groupName);
     }
 
     private String formatUserUpdatedGroup(Map<String, Object> params) {
@@ -81,9 +82,15 @@ public class ActivityFormatUtil {
     }
 
     private String formatUserJoinedGroup(Map<String, Object> params) {
-        String creatorName = formatUserName(getLong(params, "userId"));
+        String userName = formatUserName(getLong(params, "userId"));
         String groupName = formatGroupName(getLong(params, "groupId"));
-        return String.format("<b>%s</b> joined group <b>%s</b>", creatorName, groupName);
+        return String.format("<b>%s</b> joined group <b>%s</b>", userName, groupName);
+    }
+
+    private String formatUserLeavedGroup(Map<String, Object> params) {
+        String userName = formatUserName(getLong(params, "userId"));
+        String groupName = formatGroupName(getLong(params, "groupId"));
+        return String.format("<b>%s</b> leaved group <b>%s</b>", userName, groupName);
     }
 
     private String formatUserAddedExpense(Map<String, Object> params) {
