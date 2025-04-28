@@ -165,7 +165,7 @@ export const useGroupDetailStore = create<GroupDetailState>()(
             fetchCycleExpenses: async () => {
                 const { activeGroup } = get();
                 const res = await api.get(`/expenses/${activeGroup}/recurring`);
-                set({ cycleExpenses: res.data.content });
+                set({ cycleExpenses: res.data });
             },
 
             loadMoreExpenses: async () => {

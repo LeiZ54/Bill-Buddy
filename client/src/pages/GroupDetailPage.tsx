@@ -134,7 +134,7 @@ export default function GroupDetailPage() {
 
 
     const handleApplyFilters = () => {
-        const {payer, title, yearMonth} = form.getFieldsValue();
+        const {payer, title, yearMonth,type} = form.getFieldsValue();
         const newFilters: any = {};
 
         if (payer) {
@@ -146,7 +146,9 @@ export default function GroupDetailPage() {
         if (yearMonth) {
             newFilters.month = yearMonth;
         }
-
+        if (type) {
+            newFilters.type = type;
+        }
         setFilters(newFilters);
     };
 
@@ -239,16 +241,30 @@ export default function GroupDetailPage() {
                     <div className="max-w-2xl mx-4 px-0 mt-6">
                         <Form form={form} layout="vertical" className="w-full">
                             <div className="flex flex-col space-y-2">
+                                <Form.Item className="m-0 flex-1" name="title">
+                                    <Input
+                                        placeholder="Search Title"
+                                        allowClear
+                                        className="border p-1 rounded w-full"
+                                        onChange={() =>{ handleApplyFilters();}}
+                                    />
+                                </Form.Item>
                                 <div className="flex items-center space-x-2">
-                                    <Form.Item className="m-0 flex-1" name="title">
-                                        <Input
-                                            placeholder="Search Title"
-                                            allowClear
-                                            className="border p-1 rounded w-full"
-                                            onChange={() =>{ handleApplyFilters();}}
-                                        />
+                                    <Form.Item className="m-0 w-[33%]" name="type" initialValue="">
+                                        <Select
+                                            className="rounded w-full !p-0"
+                                            placeholder="type"
+                                            onSelect={() => { handleApplyFilters(); }}
+                                        >
+                                            <Option value="">All</Option>
+                                            {Object.entries(expenseTypes).map(([key,type],index) => (
+                                                <Option key={index} value={key}>
+                                                    {key}
+                                                </Option>
+                                            ))}
+                                        </Select>
                                     </Form.Item>
-                                    <Form.Item className="m-0 w-[28%]" name="payer" initialValue="">
+                                    <Form.Item className="m-0 w-[33%]" name="payer" initialValue="">
                                         <Select
                                             className=" rounded w-full !p-0"
                                             placeholder="Payer"
@@ -263,7 +279,7 @@ export default function GroupDetailPage() {
                                         </Select>
                                     </Form.Item>
 
-                                    <Form.Item className="w-[34%] m-0" name="yearMonth" initialValue="">
+                                    <Form.Item className="w-[33%] m-0" name="yearMonth" initialValue="">
                                         <Select
                                             className="rounded w-full !p-0"
                                             placeholder="YYYY-MM"
