@@ -3,10 +3,7 @@ package org.lei.bill_buddy.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.lei.bill_buddy.DTO.ExpenseCreateRequest;
-import org.lei.bill_buddy.DTO.ExpenseDTO;
-import org.lei.bill_buddy.DTO.ExpenseUpdateRequest;
-import org.lei.bill_buddy.DTO.RecurringExpenseDTO;
+import org.lei.bill_buddy.DTO.*;
 import org.lei.bill_buddy.annotation.RateLimit;
 import org.lei.bill_buddy.config.exception.AppException;
 import org.lei.bill_buddy.enums.ErrorCode;
@@ -96,6 +93,14 @@ public class ExpenseController {
         );
 
         return ResponseEntity.ok("Expense updated with ID: " + expense.getId());
+    }
+
+    @PutMapping("/{id}/picture")
+    public ResponseEntity<?> updateExpensePicture(@PathVariable Long id, @RequestBody ExpenseUpdatePictureRequest request) {
+        if (!groupService.isMemberOfGroup(userService.getCurrentUser().getId(), id))
+            throw new AppException(ErrorCode.NOT_A_MEMBER);
+        expenseService.updateExpensePicture(id, request.getPicture());
+        return ResponseEntity.ok("Expense picture updated with ID: " + id);
     }
 
     @DeleteMapping("/{id}")

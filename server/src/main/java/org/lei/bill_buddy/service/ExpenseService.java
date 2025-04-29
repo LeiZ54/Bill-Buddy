@@ -326,8 +326,15 @@ public class ExpenseService {
         return savedExpense;
     }
 
+    public void updateExpensePicture(Long expenseId, String picture) {
+        Expense expense = getExpenseById(expenseId);
+        if (expense == null) throw new AppException(ErrorCode.EXPENSE_NOT_FOUND);
+        expense.setPicture(picture);
+        expenseRepository.save(expense);
+    }
+
     public ExpenseShare getExpenseShareByUserIdAndExpenseIdIncludeDeleted(Long userId, Long expenseId) {
-        return expenseShareRepository.findByUserIdAndExpenseId(userId,expenseId).orElse(null);
+        return expenseShareRepository.findByUserIdAndExpenseId(userId, expenseId).orElse(null);
     }
 
     public Expense getExpenseById(Long id) {

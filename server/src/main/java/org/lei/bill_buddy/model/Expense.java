@@ -31,6 +31,9 @@ public class Expense {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal amount;
 
+    @Column
+    private String picture;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ExpenseType type;
