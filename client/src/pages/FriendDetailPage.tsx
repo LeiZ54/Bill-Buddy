@@ -2,16 +2,71 @@ import {motion} from 'framer-motion';
 import Topbar from '../components/TopBar';
 import {useNavigate} from 'react-router-dom';
 import {useFriendStore} from '../stores/friendStore';
-import {Avatar} from "antd";
+import {Avatar, Button, message} from "antd";
 import useAuthStore from "../stores/authStore.ts";
 import { useGroupDetailStore } from '../stores/groupDetailStore.ts';
+import { DeleteOutlined } from '@ant-design/icons';
+import { useEffect, useState } from 'react';
+import Alert from 'antd/es/alert/Alert';
 
 
 export default function FriendDetailPage() {
     const navigate = useNavigate();
-    const {activeFriend} = useFriendStore();
+    const {activeFriend, deleteFriend, getGroupList} = useFriendStore();
     const { currencies, groupType } = useAuthStore();
     const { setActiveGroup } = useGroupDetailStore();
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState("");
+
+    useEffect(() => {
+        if (activeFriend) {
+            const fetchData = async () => {
+                try {
+                    setIsLoading(true);
+                    await getGroupList();
+                } catch (err) {
+                    setError("Failed to get data!");
+                } finally {
+                    setIsLoading(false);
+                }
+            };
+            fetchData();
+        }
+    }, []);
+
+    const handleDelete = async () => {
+        if (isDeleting) return;
+        try {
+            setIsDeleting(true);
+            await deleteFriend();
+            navigate("/friends");
+        } catch (err) {
+            message.error("Fail to delete friend!");
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
+    if (!activeFriend) {
+        return (
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.2 }}
+            >
+                <Topbar
+                    leftType="back"
+                    leftOnClick={() => {
+                        navigate("/friends");
+                    }}
+                    className="text-white"
+                />
+                <Alert message="Something Wrong!" type="error" className="m-4" />
+            </motion.div>
+        )
+    }
+
     return (
         <motion.div
             initial={{opacity: 0}}
@@ -61,7 +116,18 @@ export default function FriendDetailPage() {
                         </div>
 
                     </div>
-
+                    <div className="px-2">
+                        <Button
+                            type="primary"
+                            danger
+                            icon={<DeleteOutlined />}
+                            loading={isDeleting}
+                            onClick={handleDelete}
+                            className="flex items-center justify-center w-full text-lg"
+                        >
+                            Delete friend
+                        </Button>
+                    </div>
 
                     <div className="mt-10  px-2">
                         <div className="text-black font-semibold px-4">Shared groups</div>

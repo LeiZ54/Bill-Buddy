@@ -44,6 +44,7 @@ export default function GroupDetailPage() {
                     await getGroup();
                     await fetchMember();
                 } catch (err) {
+                    setError("Failed to get data!");
                 } finally {
                     setIsLoading(false);
                 }

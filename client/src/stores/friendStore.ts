@@ -2,6 +2,15 @@ import { create } from 'zustand';
 import api from '../util/axiosConfig';
 import { persist } from 'zustand/middleware';
 import { FriendData } from '../util/util';
+
+interface GroupList {
+    groupId: number;
+    groupName: string;
+    type: string;
+    defaultCurrency: string;
+    inGroup: boolean;
+}
+
 interface FriendState {
     activeFriend: FriendData | null;
     friends: FriendData[];
@@ -9,6 +18,7 @@ interface FriendState {
     currentPage: number;
     hasMore: boolean;
     filters: string;
+    groupList: GroupList[];
 
     // public function
     clearData: () => void;
@@ -16,6 +26,8 @@ interface FriendState {
     loadMoreFriends: () => Promise<void>;
     setActiveFriend: (friend: FriendData) => void;
     setFilters: (filters: string) => void;
+    deleteFriend: () => Promise<void>;
+    getGroupList: () => Promise<void>;
 }
 
 export const useFriendStore = create<FriendState>()(
@@ -26,7 +38,8 @@ export const useFriendStore = create<FriendState>()(
             isLoadingMore: false,
             currentPage: 0,
             hasMore: true,
-            filters:"",
+            filters: "",
+            groupList: [],
 
             clearData: () => {
                 set({ friends: [], currentPage: 0, hasMore: true });
@@ -38,6 +51,18 @@ export const useFriendStore = create<FriendState>()(
 
             setActiveFriend: (friend: FriendData) => {
                 set({ activeFriend: friend });
+            },
+
+            deleteFriend: async() => {
+                const { activeFriend } = get();
+                await api.delete(`/friends/${activeFriend!.id}`);
+            },
+
+            getGroupList: async () => {
+                const { activeFriend } = get();
+                const res = await api.get(`/groups/friends/${activeFriend!.id}`);
+                console.log(res);
+                set({ groupList: res.data.content });
             },
 
             fetchFriends: async () => {

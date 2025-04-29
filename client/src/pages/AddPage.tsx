@@ -9,6 +9,7 @@ import { useExpenseStore } from '../stores/expenseStore';
 import ExpenseSplitSection from '../components/ExpenseSplitSection';
 import api from '../util/axiosConfig';
 import { useGroupDetailStore } from '../stores/groupDetailStore';
+import dayjs from 'dayjs';
 
 const AddPage = () => {
     const navigate = useNavigate();
@@ -125,8 +126,12 @@ const AddPage = () => {
     useEffect(() => {
         if (location.state?.ifInGroup) {
             setSelectedGroup(groupData?.id);
-            form.setFieldsValue({ groupId: groupData?.id });
+            form.setFieldsValue({ groupId: groupData?.id, currency: groupData?.currency });
         }
+        form.setFieldsValue({
+            type: 'OTHER',
+            date: dayjs(),
+        });
         const fetchData = async () => {
             try {
                 setLoading(true);
