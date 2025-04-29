@@ -42,7 +42,7 @@ export default function GroupDetailPage() {
                     clearData();
                     setIsLoading(true);
                     await getGroup();
-                    await fetchMember();
+                    await fetchMember(activeGroup);
                 } catch (err) {
                     setError("Failed to get data!");
                 } finally {
@@ -165,9 +165,6 @@ export default function GroupDetailPage() {
                     leftType="back"
                     leftOnClick={() => {
                         navigate("/groups");
-                    }}
-                    rightOnClick={() => {
-                        navigate("/groups/setting");
                     }}
                     className="bg-transparent shadow-none"
                 />

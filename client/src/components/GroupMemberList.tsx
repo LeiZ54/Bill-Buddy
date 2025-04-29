@@ -24,7 +24,7 @@ const GroupMemberList = ({
     useEffect(() => {
         if (selectedGroup) {
             try {
-                fetchMember();
+                fetchMember(selectedGroup);
             } catch (err) {
                 setError("Failed to get data!");
             } finally {

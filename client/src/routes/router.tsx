@@ -16,6 +16,7 @@ import InviteLinkPage from '../pages/InviteLinkPage';
 import AddPage from '../pages/AddPage';
 import ExpenseDetailPage from '../pages/ExpenseDetailPage';
 import FriendDetailPage from '../pages/FriendDetailPage';
+import EditPage from '../pages/EditPage';
 
 export const router = createBrowserRouter([
     {
@@ -40,7 +41,12 @@ export const router = createBrowserRouter([
                                     { index: true, element: <GroupsPage /> },
                                     { path: "detail", element: <GroupDetailPage /> },
                                     { path: "setting", element: <GroupSettingPage /> },
-                                    { path: "expense", element: <ExpenseDetailPage /> }
+                                    {
+                                        path: "expense", children: [
+                                            { index: true, element: <ExpenseDetailPage /> },
+                                            { path: "edit", element: <EditPage /> },
+                                        ]
+                                    }
                                 ]
                             },
                             { path: "activity", element: <ActivityPage /> },

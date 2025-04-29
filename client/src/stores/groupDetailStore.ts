@@ -28,7 +28,7 @@ interface GroupDetailState {
     clearData: () => void;
     setActiveGroup: (id: number) => void;
     setFilters: (filters: ExpenseFilter) => void;
-    fetchMember: () => Promise<void>;
+    fetchMember: (id: number) => Promise<void>;
     loadMoreExpenses: () => Promise<void>;
     getGroup: () => Promise<void>;
     editGroup: (newName: string, newType: string) => Promise<void>;
@@ -84,9 +84,8 @@ export const useGroupDetailStore = create<GroupDetailState>()(
                 message.success('Update group successfully!');
             },
 
-            fetchMember: async () => {
-                const { activeGroup } = get();
-                const response = await api.get(`/groups/${activeGroup}/members`);
+            fetchMember: async (id: number) => {
+                const response = await api.get(`/groups/${id}/members`);
                 set({ members: response.data});
             },
 

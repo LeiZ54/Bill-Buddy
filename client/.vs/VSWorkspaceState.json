@@ -8,6 +8,6 @@
     "\\src\\stores",
     "\\src\\util"
   ],
-  "SelectedNode": "\\src\\components\\AddModal.tsx",
+  "SelectedNode": "\\src\\stores\\authStore.ts",
   "PreviewInSolutionExplorer": false
 }
