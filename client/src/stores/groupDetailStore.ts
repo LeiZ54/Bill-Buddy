@@ -38,7 +38,7 @@ interface GroupDetailState {
     leaveGroup: (id: number) => Promise<void>;
     deleteGroup: () => Promise<void>;
     getFriendList: () => Promise<void>;
-    addFrinedToGroup: (selectedIds: number[]) => Promise<void>;
+    addFriendsToGroup: (selectedIds: number[]) => Promise<void>;
 
 
     // private function
@@ -112,7 +112,7 @@ export const useGroupDetailStore = create<GroupDetailState>()(
                 set({friendList: res.data.content});
             },
 
-            addFrinedToGroup: async (selectedIds:number[]) => {
+            addFriendsToGroup: async (selectedIds:number[]) => {
                 const { activeGroup } = get();
                 await api.post(`/groups/${activeGroup}/invite/friends`, selectedIds);
             },

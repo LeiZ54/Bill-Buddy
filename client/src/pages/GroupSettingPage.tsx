@@ -18,7 +18,6 @@ import LinkInviteModal from '../components/LinkInviteModal';
 import useAuthStore from '../stores/authStore';
 import {useGroupDetailStore} from '../stores/groupDetailStore';
 import {useExpenseStore} from '../stores/expenseStore';
-import Title from "antd/es/skeleton/Title";
 import {recurrenceOptions} from "../util/util.tsx";
 
 
@@ -105,7 +104,6 @@ const GroupSettingPage = () => {
             fetchData();
         }
     }, []);
-
     const handleLeave = async () => {
         if (!ifDelete) return;
         try {
@@ -316,7 +314,7 @@ const GroupSettingPage = () => {
                                                 <Title level={4}
                                                        className="!m-0 text-xl font-bold">
 
-                                                    {groupData?.currency}{currencies[groupData?.currency]}{cycleExpenseData?.amount.toFixed(2)}
+                                                    {groupData?.currency}{currencies[groupData!.currency]}{cycleExpenseData?.amount.toFixed(2)}
                                                 </Title>
                                                 <Text type="secondary" className="text-sm">
                                                     {"Created at "}{cycleExpenseData?.createdAt ? new Date(cycleExpenseData.createdAt).toLocaleDateString() : ''}{" by "}{cycleExpenseData?.payer.fullName}
@@ -329,7 +327,7 @@ const GroupSettingPage = () => {
                                         <div className="flex items-center space-x-2 text-xl">
                                             <Avatar src={cycleExpenseData?.payer.avatar}/>
                                             <Text
-                                                className="text-lg">{cycleExpenseData?.payer.fullName} paid {groupData?.currency + currencies[groupData?.currency] + cycleExpenseData?.amount.toFixed(2)}</Text>
+                                                className="text-lg">{cycleExpenseData?.payer.fullName} paid {groupData?.currency + currencies[groupData!.currency] + cycleExpenseData?.amount.toFixed(2)}</Text>
                                         </div>
 
 
@@ -347,7 +345,7 @@ const GroupSettingPage = () => {
                                                             <Avatar src={member.avatar}
                                                                     className="w-6 h-6 rounded-full"/>
                                                             <Text className="text-gray-700">
-                                                                {`${member.fullName} owes ${groupData?.currency}${currencies[groupData?.currency]}${sharedAmount.toFixed(2)}`}
+                                                                {`${member.fullName} owes ${groupData?.currency}${currencies[groupData!.currency]}${sharedAmount.toFixed(2)}`}
                                                             </Text>
                                                         </div>
                                                     );

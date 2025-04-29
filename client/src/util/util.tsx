@@ -112,7 +112,7 @@ export interface CycleExpenseData {
     expenseDate: string;
     startDate: Date;
     recurrenceUnit: string;
-    recurrenceInterval: string;
+    recurrenceInterval: number;
     createdAt: Date;
 
 }

@@ -116,7 +116,7 @@ public class DtoConvertorUtil {
         dto.setGroupName(group.getName());
         dto.setType(group.getType().name());
         dto.setDefaultCurrency(group.getDefaultCurrency().name());
-        dto.setInGroup(groupService.isMemberOfGroup(group.getId(), userId));
+        dto.setInGroup(groupService.isMemberOfGroup(userId, group.getId()));
         return dto;
     }
 

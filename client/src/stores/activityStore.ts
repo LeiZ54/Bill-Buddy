@@ -33,8 +33,6 @@ export const useActivityStore = create<ActivityState>()(
                     hasMore: !res.data.last,
                     currentPage: 0
                 });
-
-                console.log(res.data.content);
             },
 
             loadMoreActivities: async () => {
@@ -49,7 +47,6 @@ export const useActivityStore = create<ActivityState>()(
                         hasMore: !res.data.last,
                         currentPage: nextPage
                     }));
-                    console.log(res.data.content);
                 } finally {
                     set({ isLoadingMore: false });
                 }
