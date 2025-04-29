@@ -2,6 +2,8 @@ import { create } from 'zustand';
 import { CycleExpenseData, ExpenseData, easyGroup } from '../util/util';
 import api from '../util/axiosConfig';
 import { persist } from 'zustand/middleware';
+import { message } from 'antd';
+import axios from 'axios';
 
 interface ExpenseState {
     activeExpense: number | null;
@@ -12,9 +14,11 @@ interface ExpenseState {
     setActiveExpense: (id: number) => void;
     setActiveCycleExpense: (id: number) => void;
     getExpense: () => Promise<void>;
+    deleteExpense: () => Promise<void>;
     getCycleExpense: () => Promise<void>;
     fetchAllGroups: () => Promise<void>;
     getRecurrenceLabel: (time?: { recurrenceUnit: string; recurrenceInterval: number }) => string;
+    uploadImg: (img: any) => Promise<void>;
 }
 
 export const useExpenseStore = create<ExpenseState>()(
@@ -56,6 +60,11 @@ export const useExpenseStore = create<ExpenseState>()(
                 set({ expenseData: res.data });
             },
 
+            deleteExpense: async () => {
+                const { activeExpense } = get();
+                await api.delete(`/expenses/${activeExpense}`);
+            },
+
             getCycleExpense: async () => {
                 const { activeCycleExpense } = get();
                 const res = await api.get(`/expenses/recurring/${activeCycleExpense}`);
@@ -66,6 +75,28 @@ export const useExpenseStore = create<ExpenseState>()(
                 set({ groupList: [] });
                 const res = await api.get(`/groups?page=0&size=100`);
                 set({ groupList: res.data.content });
+            },
+
+            uploadImg: async (file) => {
+                const { activeExpense } = get();
+                const apiKey = '1523e50e1102802c71f7ac35fe49d0b5';
+                const formData = new FormData();
+                formData.append('image', file);
+                let url;
+                try {
+                    const res = await axios.post(
+                        `https://api.imgbb.com/1/upload?key=${apiKey}`,
+                        formData
+                    );
+                    url = res.data.data.url;
+                } catch (err) {
+                    message.error('Upload failed!');
+                    return;
+                }
+                await api.put(`expenses/${activeExpense}/picture`, {
+                    picture: url
+                });
+                message.success('Upload successfully!');
             },
 
 

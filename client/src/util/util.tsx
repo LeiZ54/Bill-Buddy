@@ -83,10 +83,12 @@ export interface ExpenseData {
     id: number;
     title: string;
     payer: Member;
+    picture: string;
     description: string;
     type: string;
     amount: number;
     currency: string;
+    logs: string;
     expenseDate: string;
     debtsAmount: number;
     shares: Record<string, number>;

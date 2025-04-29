@@ -153,6 +153,7 @@ const useAuthStore = create<AuthState>()(
                     url = res.data.data.url;
                 } catch (err) {
                     message.error('Upload failed!');
+                    return;
                 }
                 await api.put(`users/avatar/${id}`, {
                     avatar: url
