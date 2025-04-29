@@ -98,6 +98,16 @@ public class GroupController {
         return ResponseEntity.ok(Collections.singletonMap("message", "Group deleted"));
     }
 
+    @GetMapping("/{groupId}/settle-info")
+    public SettleInfoDTO getSettleInfo(@PathVariable Long groupId) {
+        Group group = groupService.getGroupById(groupId);
+        if (group == null) throw new AppException(ErrorCode.GROUP_NOT_FOUND);
+        User user = userService.getCurrentUser();
+        if (!groupService.isMemberOfGroup(user.getId(), groupId)) throw new AppException(ErrorCode.NOT_A_MEMBER);
+        return dtoConvertor.formatSettleInfoDTO(user, group);
+    }
+
+
     @GetMapping("/{groupId}/invitation-link")
     public ResponseEntity<?> inviteLink(@PathVariable Long groupId) {
 

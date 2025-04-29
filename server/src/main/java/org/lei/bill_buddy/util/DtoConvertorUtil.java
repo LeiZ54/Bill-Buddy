@@ -3,6 +3,7 @@ package org.lei.bill_buddy.util;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.lei.bill_buddy.DTO.*;
+import org.lei.bill_buddy.enums.Currency;
 import org.lei.bill_buddy.enums.ExpenseType;
 import org.lei.bill_buddy.enums.GroupType;
 import org.lei.bill_buddy.model.*;
@@ -10,10 +11,8 @@ import org.lei.bill_buddy.service.*;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.math.RoundingMode;
+import java.util.*;
 
 @Slf4j
 @Component
@@ -25,6 +24,7 @@ public class DtoConvertorUtil {
     private final ActivityFormatUtil activityFormatUtil;
     private final ActivityService activityService;
     private final GroupService groupService;
+    private final ExchangeRateService exchangeRateService;
 
     public UserDTO convertUserToUserDTO(User user) {
         UserDTO dto = new UserDTO();
@@ -128,10 +128,7 @@ public class DtoConvertorUtil {
 
     public GroupDetailsDTO convertGroupToGroupDetailsDTO(Group group) {
         User currentUser = userService.getCurrentUser();
-        List<GroupDebt> owesUser = groupDebtService.getByGroupAndLender(group, currentUser);
-        List<GroupDebt> userOwes = groupDebtService.getByGroupAndBorrower(group, currentUser);
-
-        Map<Long, BigDecimal> netDebts = formatDebtsMap(userOwes, owesUser);
+        Map<Long, BigDecimal> netDebts = groupDebtService.getUserDebtsOfGroup(currentUser.getId(), group.getId());
 
         Map<String, BigDecimal> currentUserOwes = new HashMap<>();
         Map<String, BigDecimal> owesCurrentUser = new HashMap<>();
@@ -160,6 +157,31 @@ public class DtoConvertorUtil {
         dto.setTotalDebts(totalDebts);
         dto.setOwesCurrentUser(owesCurrentUser);
         dto.setCurrentUserOwes(currentUserOwes);
+        return dto;
+    }
+
+    public SettleInfoDTO formatSettleInfoDTO(User user, Group group) {
+        SettleInfoDTO dto = new SettleInfoDTO();
+        dto.setGroupId(group.getId());
+        Map<Long, BigDecimal> debts = groupDebtService.getUserDebtsOfGroup(user.getId(), group.getId());
+        List<DebtsOfAllCurrenciesDTO> debtsOfAllCurrencies = new ArrayList<>();
+        for (Map.Entry<Long, BigDecimal> entry : debts.entrySet()) {
+            Long otherUserId = entry.getKey();
+            BigDecimal amount = entry.getValue();
+            Map<Currency, BigDecimal> debtsOfCurrencies = new EnumMap<>(Currency.class);
+            if (amount.compareTo(BigDecimal.ZERO) < 0) {
+                for (Currency tgt : Currency.values()) {
+                    BigDecimal converted = exchangeRateService.convert(amount.abs(), group.getDefaultCurrency(), tgt)
+                            .setScale(2, RoundingMode.HALF_UP);
+                    debtsOfCurrencies.put(tgt, converted);
+                }
+                debtsOfAllCurrencies.add(new DebtsOfAllCurrenciesDTO(
+                        convertUserToUserDTO(userService.getUserById(otherUserId)),
+                        debtsOfCurrencies));
+            }
+        }
+        dto.setDebts(debtsOfAllCurrencies);
+        dto.setGroupCurrency(group.getDefaultCurrency());
         return dto;
     }
 
@@ -222,21 +244,6 @@ public class DtoConvertorUtil {
         dto.setCreatedAt(activity.getCreatedAt());
         dto.setDescriptionHtml(activityFormatUtil.formatActivityDescriptionAsHtml(activity.getTemplate(), activity.getParams()));
         return dto;
-    }
-
-    private static Map<Long, BigDecimal> formatDebtsMap(List<GroupDebt> userOwes, List<GroupDebt> owesUser) {
-        Map<Long, BigDecimal> netDebts = new HashMap<>();
-
-        for (GroupDebt debt : userOwes) {
-            Long otherUserId = debt.getLender().getId();
-            netDebts.put(otherUserId, netDebts.getOrDefault(otherUserId, BigDecimal.ZERO).subtract(debt.getAmount()));
-        }
-
-        for (GroupDebt debt : owesUser) {
-            Long otherUserId = debt.getBorrower().getId();
-            netDebts.put(otherUserId, netDebts.getOrDefault(otherUserId, BigDecimal.ZERO).add(debt.getAmount()));
-        }
-        return netDebts;
     }
 
     private BigDecimal calculateExpenseDebtsAmount(Long userId, Expense expense) {

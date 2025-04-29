@@ -22,7 +22,6 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class GroupDebtService {
     private final GroupDebtRepository groupDebtRepository;
-    private final UserService userService;
 
     public void addGroupDebt(User lender, User borrower, Group group) {
         GroupDebt groupDebt = new GroupDebt();
@@ -54,6 +53,12 @@ public class GroupDebtService {
         gb.setAmount(gb.getAmount().add(amount));
         log.info("Lender {} borrowed borrower{} {} {}", lender.getId(), borrower.getId(), group.getDefaultCurrency(), amount);
         groupDebtRepository.save(gb);
+    }
+
+    public Map<Long, BigDecimal> getUserDebtsOfGroup(Long userId, Long groupId) {
+        List<GroupDebt> userBorrowed = groupDebtRepository.findByGroupIdAndBorrowerIdAndDeletedFalse(groupId, userId);
+        List<GroupDebt> userLent = groupDebtRepository.findByGroupIdAndLenderIdAndDeletedFalse(groupId, userId);
+        return formatDebtsMap(userBorrowed, userLent);
     }
 
     public Map<Group, BigDecimal> getNetDebtsBetweenUsers(Long userAId, Long userBId) {
@@ -110,6 +115,20 @@ public class GroupDebtService {
         return netDebts.values().stream().allMatch(val -> val.compareTo(BigDecimal.ZERO) == 0);
     }
 
+    private Map<Long, BigDecimal> formatDebtsMap(List<GroupDebt> userOwes, List<GroupDebt> owesUser) {
+        Map<Long, BigDecimal> netDebts = new HashMap<>();
+
+        for (GroupDebt debt : userOwes) {
+            Long otherUserId = debt.getLender().getId();
+            netDebts.put(otherUserId, netDebts.getOrDefault(otherUserId, BigDecimal.ZERO).subtract(debt.getAmount()));
+        }
+
+        for (GroupDebt debt : owesUser) {
+            Long otherUserId = debt.getBorrower().getId();
+            netDebts.put(otherUserId, netDebts.getOrDefault(otherUserId, BigDecimal.ZERO).add(debt.getAmount()));
+        }
+        return netDebts;
+    }
 
     public List<GroupDebt> getByGroupAndLender(Group group, User lender) {
         return groupDebtRepository.findByGroupIdAndLenderIdAndDeletedFalse(group.getId(), lender.getId());

@@ -176,9 +176,9 @@ public class ActivityFormatUtil {
             String after = change.getOrDefault("after", "");
 
             if ("participant_added".equals(field)) {
-                changeDetails.append(String.format("<li>Added participants: <i>%s</i></li>", parseParticipantNames(before)));
+                changeDetails.append(String.format("<li>Added participants: <i>%s</i></li>", parseParticipantNames(change.getOrDefault("value", ""))));
             } else if ("participant_removed".equals(field)) {
-                changeDetails.append(String.format("<li>Removed participants: <i>%s</i></li>", parseParticipantNames(before)));
+                changeDetails.append(String.format("<li>Removed participants: <i>%s</i></li>", parseParticipantNames(change.getOrDefault("value", ""))));
             } else {
                 changeDetails.append(String.format(
                         "<li>Changed <b>%s</b> from <i>%s</i> to <i>%s</i></li>",
