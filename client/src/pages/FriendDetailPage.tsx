@@ -75,7 +75,7 @@ export default function FriendDetailPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.2, delay: 0.2 }}
-            className="mb-40"
+            className="mb-16"
         >
             <AddFriendsToGroupModal
                 open={addFriendsToGroupModal}
@@ -167,30 +167,35 @@ export default function FriendDetailPage() {
                             {/* Shared Groups */}
                             <div className="mt-4 px-2">
                                 <div className="text-black font-semibold px-4">Shared groups</div>
-                                {friendData?.netDebts.map((debt, index) => (
-                                    <div
-                                        className="flex items-center justify-between px-4 pt-3 transition active:scale-95"
-                                        key={index}
-                                        onClick={() => {
-                                            setActiveGroup(debt.group.groupId);
-                                            navigate('/groups/detail');
-                                        }}
-                                    >
-                                        <div>
-                                            <Avatar
-                                                shape="square"
-                                                src={groupType[debt.group.type]}
-                                                className="w-12 h-12"
-                                            />
-                                        </div>
+                                {friendData?.netDebts.length === 0 ? (
+                                            <div className="text-center text-gray-500 py-6">You don't have the same group!</div>
+                                ) : (
+                                    friendData?.netDebts.map((debt, index) => (
+                                        <div
+                                            className="flex items-center justify-between px-4 pt-3 transition active:scale-95"
+                                            key={index}
+                                            onClick={() => {
+                                                setActiveGroup(debt.group.groupId);
+                                                navigate('/groups/detail');
+                                            }}
+                                        >
+                                            <div>
+                                                <Avatar
+                                                    shape="square"
+                                                    src={groupType[debt.group.type]}
+                                                    className="w-12 h-12"
+                                                />
+                                            </div>
 
-                                        <div className="flex-1 mx-4">
-                                            <div className="text-lg leading-none">
-                                                {debt.group.groupName}
+                                            <div className="flex-1 mx-4">
+                                                <div className="text-lg leading-none">
+                                                    {debt.group.groupName}
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    ))
+                                )}
+
                             </div>
                         </>
                     )}

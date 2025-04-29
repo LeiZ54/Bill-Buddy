@@ -16,7 +16,6 @@ const GroupSection = ({ id, name, type, items, netBalance, currency }: GroupData
         <motion.section
             initial={{opacity: 0}}
             animate={{opacity: 1}}
-            whileHover={{scale: 1.02}}
             whileTap={{scale: 0.98}}
             onClick={() => {
                 setActiveGroup(id);

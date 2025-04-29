@@ -1,3 +1,6 @@
 .idea
 documents
 .DS_Store
+mykey
+mykey.ppk
+mykey.pub

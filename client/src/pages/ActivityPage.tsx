@@ -71,66 +71,68 @@ const ActivityPage = () => {
             </div>
             <>
                 {isLoading ? (
-                    <div className="flex justify-center">
+                    <div className="flex justify-center p-4 py-10">
                         <Spin size="large" />
                     </div>
                 ) : (
                     <>
-                        {error && <Alert message={"Failed to get data!"} type="error" className="mb-4"/>}
+                        {error ? (
+                            <Alert message="Failed to get data!" type="error" className="mb-4" />
+                        ) : activities.length === 0 ? (
+                            <div className="text-center text-gray-500 py-10 text-lg">
+                                There is no activities.
+                            </div>
+                        ) : (
+                            <div className="flex flex-col bg-white mb-16">
+                                {activities.map((activity) => (
+                                    <div
+                                        key={activity.id}
+                                        className="flex flex-col p-4 bg-white rounded transition active:scale-95"
+                                        onClick={() => {
+                                            if (activity.accessible) {
+                                                if (activity.objectType === "GROUP") {
+                                                    setActiveGroup(activity.objectId);
+                                                    navigate("/groups/detail");
+                                                } else {
+                                                    setActiveExpense(activity.objectId);
+                                                    navigate("/groups/expense");
+                                                }
+                                            } else {
+                                                message.error("This item has been deleted!");
+                                            }
+                                        }}
+                                    >
+                                        <div className="flex space-x-4 items-start">
+                                            <div className="relative flex-shrink-0">
+                                                <img
+                                                    src={activity.objectPicture}
+                                                    alt="background"
+                                                    className="w-14 h-14 rounded-2xl"
+                                                />
+                                                <Avatar
+                                                    src={activity.userAvatar}
+                                                    alt="avatar"
+                                                    className="w-8 h-8 rounded-full absolute bottom-0 right-0 translate-x-1/4 translate-y-1/4 border-2 border-white"
+                                                />
+                                            </div>
+                                            <div className="flex-1">
+                                                <div
+                                                    className="text-gray-800 text-sm"
+                                                    dangerouslySetInnerHTML={{
+                                                        __html: activity.descriptionHtml,
+                                                    }}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </>
                 )}
             </>
-            <div className="flex flex-col bg-white mb-16">
-
-                {activities.map((activity) => (
-                    <div key={activity.id} className="flex flex-col p-4 bg-white rounded transition active:scale-95"
-                        onClick={() => {
-                            if (activity.accessible) {
-                                if (activity.objectType == "GROUP") {
-                                    setActiveGroup(activity.objectId);
-                                    navigate("/groups/detail");
-                                } else {
-                                    setActiveExpense(activity.objectId);
-                                    navigate("/groups/expense");
-                                }
-
-                            } else {
-                                message.error("This item has been deleted!");
-                            }
-
-                        }}
-                    >
-                        <div className="flex space-x-4 items-start">
-                            <div className="relative flex-shrink-0">
-                                <img
-                                    src={activity.objectPicture}
-                                    alt="background"
-                                    className="w-14 h-14 rounded-2xl"
-                                />
-                                <Avatar
-                                    src={activity.userAvatar}
-                                    alt="avatar"
-                                    className="w-8 h-8 rounded-full absolute bottom-0 right-0 translate-x-1/4 translate-y-1/4 border-2 border-white"
-                                />
-                            </div>
-                            <div className="flex-1">
-                                <div
-                                    className="text-gray-800 text-sm"
-                                    dangerouslySetInnerHTML={{
-                                        __html: activity.descriptionHtml,
-                                    }}
-                                />
-                                <div className="text-xs text-gray-400 mt-1">
-                                    {new Date(activity.createdAt).toLocaleString()}
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
-                ))}
 
 
-            </div>
 
 
         </motion.div>

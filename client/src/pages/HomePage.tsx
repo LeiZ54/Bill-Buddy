@@ -99,9 +99,9 @@ export default function HomePage() {
             initial="hidden"
             animate="visible"
             variants={pageVariants}
-            className="h-screen flex flex-col"
+            className="flex flex-col"
         >
-            <Layout className="flex-1 flex flex-col">
+            <Layout className="flex-1 flex flex-col min-h-screen">
                 <Content className="bg-white flex-1 overflow-y-auto">
                     <motion.div
                         variants={contentVariants}

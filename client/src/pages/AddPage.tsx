@@ -2,9 +2,8 @@ import { motion } from 'framer-motion';
 import Topbar from '../components/TopBar';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { Form, Input, Tag, Avatar, Checkbox, Button, DatePicker, message, Select, Spin } from 'antd';
+import { Form, Input, Avatar, Checkbox, Button, DatePicker, message, Select, Spin, InputNumber, Space } from 'antd';
 import useAuthStore from '../stores/authStore';
-import { RecurrenceTimeSelectorModal } from '../components/AddModal';
 import { useExpenseStore } from '../stores/expenseStore';
 import ExpenseSplitSection from '../components/ExpenseSplitSection';
 import api from '../util/axiosConfig';
@@ -16,7 +15,7 @@ const AddPage = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { groupType, expenseTypes } = useAuthStore();
-    const { getRecurrenceLabel, groupList, fetchAllGroups } = useExpenseStore();
+    const { groupList, fetchAllGroups } = useExpenseStore();
     const { groupData } = useGroupDetailStore();
     const [hideMask, setHideMask] = useState(false);
     const [form] = Form.useForm();
@@ -31,16 +30,45 @@ const AddPage = () => {
     const [isStep2Valid, setIsStep2Valid] = useState(false);
 
     const [selectedGroup, setSelectedGroup] = useState<number>();
-    const [recurrenceTime, setRecurrenceTime] = useState<{
-        recurrenceUnit: string;
-        recurrenceInterval: number;
-    } | null>(null);
-    const [isTimeModalOpen, setIsTimeModalOpen] = useState(false);
 
     const [splitMethod, setSplitMethod] = useState<'equally' | 'unequally'>('equally');
     const [amount, setAmount] = useState("");
     const [selectedMembers, setSelectedMembers] = useState<number[]>([]);
     const [amountsByMember, setAmountsByMember] = useState<Record<number, string>>({});
+
+    const recurrenceOptions = [
+        { label: 'Every Day', value: 'DAY-1' },
+        { label: 'Every Week', value: 'WEEK-1' },
+        { label: 'Every Month', value: 'MONTH-1' },
+        { label: 'Every Season', value: 'MONTH-3' },
+        { label: 'Half Year', value: 'MONTH-6' },
+        { label: 'Every Year', value: 'YEAR-1' },
+        { label: 'Custom', value: 'CUSTOM' }
+    ];
+
+    const unitOptions = [
+        { label: 'Day', value: 'DAY' },
+        { label: 'Week', value: 'WEEK' },
+        { label: 'Month', value: 'MONTH' },
+        { label: 'Year', value: 'YEAR' },
+    ];
+
+    const [selectedRecurrence, setSelectedRecurrence] = useState<string>('DAY-1');
+    const [customInterval, setCustomInterval] = useState<number>(1);
+    const [customUnit, setCustomUnit] = useState<string>('DAY');
+    const isRecurring = Form.useWatch('isRecurring', form);
+
+
+    useEffect(() => {
+        if (isRecurring && selectedRecurrence !== 'CUSTOM') {
+            const [unit, interval] = selectedRecurrence.split('-');
+            form.setFieldsValue({
+                recurrenceUnit: unit,
+                recurrenceInterval: parseInt(interval),
+            });
+        }
+    }, [isRecurring, selectedRecurrence]);
+
 
     const handleSubmit = async () => {
         try {
@@ -71,9 +99,9 @@ const AddPage = () => {
                 type: allValues.type,
                 isRecurring: allValues.isRecurring,
                 recurrenceUnit: allValues.isRecurring
-                    ? allValues.recurrenceTime.recurrenceUnit : null,
+                    ? allValues.recurrenceUnit : null,
                 recurrenceInterval: allValues.isRecurring
-                    ? allValues.recurrenceTime.recurrenceInterval : null,
+                    ? allValues.recurrenceInterval : null,
             };
             setSubmitting(true);
             await api.post('/expenses', payload);
@@ -97,7 +125,6 @@ const AddPage = () => {
                 'description',
                 'isRecurring',
                 'currency',
-                ...(form.getFieldValue('isRecurring') ? ['recurrenceTime'] : []),
             ]);
             setStep(2);
         } catch (err) {
@@ -114,7 +141,6 @@ const AddPage = () => {
             'description',
             'isRecurring',
             'currency',
-            ...(form.getFieldValue('isRecurring') ? ['recurrenceTime'] : []),
         ], { validateOnly: true }).then(
             () => {
                 setIsStep1Valid(true)
@@ -287,41 +313,56 @@ const AddPage = () => {
                                     <Checkbox>This is a recurring expense</Checkbox>
                                 </Form.Item>
 
-                                <Form.Item shouldUpdate={(prev, curr) => prev.isRecurring !== curr.isRecurring}>
-                                    {({ getFieldValue }) => {
-                                        return getFieldValue('isRecurring') ? (
-                                            <Form.Item
-                                                name="recurrenceTime"
-                                                rules={[{ required: true, message: 'Please input recurrence time!' }]}
+                                {form.getFieldValue('isRecurring') && (
+                                    <>
+                                        <Form.Item label="Recurrence Time" required>
+                                            <Select
+                                                value={selectedRecurrence}
+                                                onChange={(val) => setSelectedRecurrence(val)}
+                                                placeholder="Select recurrence"
                                             >
-                                                <Tag
-                                                    color="blue"
-                                                    className="cursor-pointer rounded-full px-4 py-1 text-base h-auto"
-                                                    onClick={() => setIsTimeModalOpen(true)}
-                                                >
-                                                    {recurrenceTime ? (
-                                                        <span>{getRecurrenceLabel(recurrenceTime)}</span>
-                                                    ) : (
-                                                        <span>Please select recurrence time</span>
-                                                    )}
-                                                </Tag>
-                                            </Form.Item>
-                                        ) : null;
-                                    }}
-                                </Form.Item>
+                                                {recurrenceOptions.map((opt) => (
+                                                    <Select.Option key={opt.value} value={opt.value}>
+                                                        {opt.label}
+                                                    </Select.Option>
+                                                ))}
+                                            </Select>
+                                        </Form.Item>
 
-                                <RecurrenceTimeSelectorModal
-                                    open={isTimeModalOpen}
-                                    onCancel={() => setIsTimeModalOpen(false)}
-                                    onSelect={(val) => {
-                                        setRecurrenceTime(val);
-                                        setIsTimeModalOpen(false);
-                                        form.setFieldsValue({ recurrenceTime: val });
-                                    }}
-                                />
+                                        {selectedRecurrence === 'CUSTOM' && (
+                                            <Space direction="vertical" className="w-full">
+                                                <Form.Item
+                                                    name="recurrenceInterval"
+                                                    label="Custom Interval"
+                                                    rules={[{ required: true, message: 'Please input interval!' }]}
+                                                >
+                                                    <InputNumber
+                                                        min={1}
+                                                        value={customInterval}
+                                                        onChange={(val) => setCustomInterval(val ?? 1)}
+                                                        className="w-full"
+                                                    />
+                                                </Form.Item>
+                                                <Form.Item
+                                                    name="recurrenceUnit"
+                                                    label="Custom Unit"
+                                                    rules={[{ required: true, message: 'Please select unit!' }]}
+                                                >
+                                                    <Select
+                                                        value={customUnit}
+                                                        onChange={setCustomUnit}
+                                                        options={unitOptions}
+                                                        className="w-full"
+                                                    />
+                                                </Form.Item>
+                                            </Space>
+                                        )}
+                                    </>
+                                )}
+
 
                                 {/* Next */}
-                                <Form.Item className="mt-6">
+                                <Form.Item>
                                     <Button type="primary" block onClick={onNext} disabled={!isStep1Valid}>
                                         Next
                                     </Button>

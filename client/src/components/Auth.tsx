@@ -23,7 +23,7 @@ const RequireAuth = () => {
     }, [token, exp, logout]);
 
     if (isLoading || isAuthenticated === null) {
-        return <div className="flex justify-center items-center h-screen"><Spin size="large" /></div>;
+        return <div className="flex justify-center items-center"><Spin size="large" /></div>;
     }
 
     return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />;

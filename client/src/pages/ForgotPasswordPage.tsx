@@ -85,7 +85,6 @@ export default function ForgotPasswordPage() {
             initial="hidden"
             animate="visible"
             variants={containerVariants}
-            className="h-screen w-screen"
         >
             <AuthHeader />
 

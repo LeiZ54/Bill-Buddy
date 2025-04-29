@@ -270,19 +270,28 @@ const GroupSettingPage = () => {
                         {/* Cycle Expenses */}
                         <div className="space-y-4 py-2">
                             <h3 className="text-lg font-medium">Cycle expenses</h3>
-                            {cycleExpenses.map((expense) => (
-                                <div key={expense.id} className="flex items-center space-x-4 px-4"
-                                    onClick={() => {
-                                        handleOpenModal(expense.id);
-                                    }}
-                                >
-                                    <Avatar
-                                        src={expenseTypes[expense.type]}
-                                        className="w-12 h-12 rounded-full object-cover"
-                                    />
-                                    <Text className="text-lg font-medium">{expense.title}</Text>
+                            {cycleExpenses.length === 0 ? (
+                                <div className="text-center text-gray-500 py-6 text-lg">
+                                    There is no cycle expense.
                                 </div>
-                            ))}
+                            ) : (
+                                cycleExpenses.map((expense) => (
+                                    <div
+                                        key={expense.id}
+                                        className="flex items-center space-x-4 px-4"
+                                        onClick={() => {
+                                            handleOpenModal(expense.id);
+                                        }}
+                                    >
+                                        <Avatar
+                                            src={expenseTypes[expense.type]}
+                                            className="w-12 h-12 rounded-full object-cover"
+                                        />
+                                        <Text className="text-lg font-medium">{expense.title}</Text>
+                                    </div>
+                                ))
+                            )}
+
                         </div>
 
                         <Modal

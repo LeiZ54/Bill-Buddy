@@ -54,7 +54,6 @@ export default function LoginPage() {
             animate="visible"
             variants={formVariants}
             transition={{ duration: 0.5 }}
-            className="h-screen w-scree"
         >
             <AuthHeader />
             <motion.div
@@ -63,7 +62,7 @@ export default function LoginPage() {
                 transition={{ delay: 0.2, duration: 0.4 }}
                 className="flex justify-center p-8"
             >
-                <div className="mt-12 w-full max-w-md rounded-xl p-8 border-2 border-black">
+                <div className="mt-4 w-full max-w-md rounded-xl p-8 border-2 border-black">
 
                     <h1 className="text-2xl font-bold text-center mb-6">Login</h1>
                     <Form

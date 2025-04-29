@@ -99,7 +99,7 @@ const FriendsPage = () => {
                             <Alert message="Failed to get data!" type="error" className="mb-4" />
                         )}
 
-                        <div className="mb-40 bg-white mt-2">
+                        <div className="mb-16 bg-white mt-4">
                             {friends.length === 0 ? (
                                 <div className="text-center text-gray-500 py-10 text-lg">
                                     There is no friends.

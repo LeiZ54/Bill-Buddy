@@ -41,7 +41,6 @@ export default function RegisterPage() {
             animate="visible"
             variants={formVariants}
             transition={{ duration: 0.5 }}
-            className="h-screen w-screen"
         >
             <AuthHeader />
             <motion.div
@@ -50,7 +49,7 @@ export default function RegisterPage() {
                 transition={{ delay: 0.3, duration: 0.4 }}
                 className="flex justify-center p-8"
             >
-                <div className="mt-12 w-full max-w-md rounded-xl p-8 border-2 border-black">
+                <div className="mt-4 w-full max-w-md rounded-xl p-8 border-2 border-black">
 
                     <h1 className="text-2xl font-bold text-center mb-6">Register</h1>
                     <Form

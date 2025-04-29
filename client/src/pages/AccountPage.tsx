@@ -145,7 +145,7 @@ export default function AccountPage() {
             animate={{opacity: 1}}
             transition={{duration: 0.3, delay: 0.5}}
         >
-            <div className="relative pb-72">
+            <div className="relative pb-40">
                 <img
                     src="/Account/images.jpg"
                     className="w-full h-64 object-cover"
@@ -186,13 +186,13 @@ export default function AccountPage() {
                 </div>
 
                 <Button
-                    type="default"
+                    
                     icon={<LogoutOutlined/>}
                     onClick={()=>{
                         logout();
                         navigate('/login');
                     }}
-                    className="w-[80%] py-1  font-semibold absolute left-1/2 -translate-x-1/2 mt-40 bg-transparent  rounded-md border-2 border-green-500 text-green-500 text-xl h-auto"
+                    className="w-[80%] font-semibold left-1/2 mt-16 -translate-x-1/2 border-2 border-blue-500 text-blue-500 text-xl h-auto"
                 >
                     Log Out
                 </Button>

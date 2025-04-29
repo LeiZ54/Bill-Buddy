@@ -9,7 +9,7 @@ import useAuthStore from "../stores/authStore.ts";
 
 import { Typography } from 'antd';
 import { useGroupDetailStore } from '../stores/groupDetailStore.ts';
-import { DeleteOutlined, UploadOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined, UploadOutlined } from '@ant-design/icons';
 
 export default function ExpenseDetailPage() {
     const { currencies, expenseTypes } = useAuthStore();
@@ -31,6 +31,10 @@ export default function ExpenseDetailPage() {
             setPreviewOpen(true);
         }
     };
+
+    const [editOpen, setEditOpen] = useState(false);
+    
+
     const fetchData = async () => {
         try {
             setIsLoading(true);
@@ -135,6 +139,17 @@ export default function ExpenseDetailPage() {
                 </div>
             </Modal>
 
+            <Modal
+                open={editOpen}
+                footer={null}
+                onCancel={() => setEditOpen(false)}
+                centered
+            >
+                <div className="flex flex-col items-center space-y-4">
+                    dwa
+                </div>
+            </Modal>
+
             {isLoading ? (
                 <div className="flex justify-center py-10">
                     <Spin size="large" />
@@ -196,9 +211,20 @@ export default function ExpenseDetailPage() {
                         >
                             Delete
                         </Button>
-                    </div>
+                            </div>
 
-                    <div className="pt-4 pl-6 max-w-md mx-auto space-y-2">
+                            <div className="my-4 px-6 flex gap-4">
+                                <Button
+                                    type="primary"
+                                    icon={<EditOutlined />}
+                                    onClick={() => { setEditOpen(true) }}
+                                    className="flex-1 flex items-center justify-center text-lg"
+                                >
+                                    Edit
+                                </Button>
+                            </div>
+
+                    <div className="pt-4 pl-6 space-y-2">
                         <div className="flex items-center text-xl">
                             <Avatar src={expenseData.payer.avatar} />
                             <Text className="text-lg">{expenseData.payer.fullName} paid {expenseData.currency + currencies[expenseData.currency] + expenseData.amount}</Text>

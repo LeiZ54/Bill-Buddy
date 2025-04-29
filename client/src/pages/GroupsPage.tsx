@@ -114,14 +114,21 @@ export default function GroupsPage() {
                             <Alert message={error} type="error" className="mb-4" />
                         ) : (
                             <div className="pt-4 mb-16">
-                                {groups.map(group => (
-                                    <GroupSection key={group.id} {...group} />
-                                ))}
+                                {groups.length === 0 ? (
+                                    <div className="text-center text-gray-500 py-10 text-lg">
+                                        There is no groups.
+                                    </div>
+                                ) : (
+                                    groups.map(group => (
+                                        <GroupSection key={group.id} {...group} />
+                                    ))
+                                )}
                             </div>
                         )}
                     </>
                 )}
             </>
+
 
             <CreateGroupModal
                 open={showCreateModal}
