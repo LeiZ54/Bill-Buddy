@@ -9,6 +9,7 @@ import org.lei.bill_buddy.enums.ObjectType;
 import org.lei.bill_buddy.model.Group;
 import org.lei.bill_buddy.model.GroupMember;
 import org.lei.bill_buddy.model.User;
+import org.lei.bill_buddy.repository.GroupDebtRepository;
 import org.lei.bill_buddy.repository.GroupMemberRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +25,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class GroupMemberService {
     private final GroupMemberRepository groupMemberRepository;
+    private final GroupDebtRepository groupDebtRepository;
     private final UserService userService;
     private final GroupService groupService;
     private final GroupDebtService groupDebtService;
@@ -57,20 +59,9 @@ public class GroupMemberService {
         gm.setJoinedAt(LocalDateTime.now());
         groupMemberRepository.save(gm);
 
-        activityService.log(
-                ActionType.UPDATE,
-                ObjectType.GROUP,
-                groupId,
-                "user_joined_group",
-                Map.of(
-                        "groupId", groupId.toString(),
-                        "userId", userId.toString()
-                )
-        );
+        activityService.log(ActionType.UPDATE, ObjectType.GROUP, groupId, "user_joined_group", Map.of("groupId", groupId.toString(), "userId", userId.toString()));
 
-        List<User> existingMembers = getMembersOfGroup(groupId).stream()
-                .filter(member -> !member.getId().equals(userId))
-                .toList();
+        List<User> existingMembers = getMembersOfGroup(groupId).stream().filter(member -> !member.getId().equals(userId)).toList();
         friendService.addFriends(user, existingMembers);
         groupDebtService.addGroupDebts(group, user, existingMembers);
         groupService.groupUpdated(groupId);
@@ -87,8 +78,7 @@ public class GroupMemberService {
             throw new AppException(ErrorCode.USER_NOT_FOUND);
         }
 
-        GroupMember gm = groupMemberRepository.findByGroupIdAndUserIdAndDeletedFalse(groupId, userId)
-                .orElseThrow(() -> new AppException(ErrorCode.NOT_A_MEMBER, "This user is not a member of this group"));
+        GroupMember gm = groupMemberRepository.findByGroupIdAndUserIdAndDeletedFalse(groupId, userId).orElseThrow(() -> new AppException(ErrorCode.NOT_A_MEMBER, "This user is not a member of this group"));
 
         if (expenseService.hasActiveExpensesInGroup(groupId, userId)) {
             log.warn("User {} has expense in group {}", userId, groupId);
@@ -96,19 +86,12 @@ public class GroupMemberService {
         }
         gm.setDeleted(true);
         groupMemberRepository.save(gm);
+        groupDebtRepository.softDeleteByGroupIdAndBorrowerIdAndDeletedFalse(groupId, userId);
+        groupDebtRepository.softDeleteByGroupIdAndLenderIdAndDeletedFalse(groupId, userId);
         Set<Long> memberIds = groupService.getAllMemberIdsOfGroup(groupId);
 
         if (memberIds == null || memberIds.isEmpty()) groupDeleteService.deleteGroup(groupId);
-        activityService.log(
-                ActionType.UPDATE,
-                ObjectType.GROUP,
-                groupId,
-                "user_leaved_group",
-                Map.of(
-                        "groupId", groupId.toString(),
-                        "userId", userId.toString()
-                )
-        );
+        activityService.log(ActionType.UPDATE, ObjectType.GROUP, groupId, "user_leaved_group", Map.of("groupId", groupId.toString(), "userId", userId.toString()));
 
         groupService.groupUpdated(groupId);
 
@@ -124,8 +107,6 @@ public class GroupMemberService {
             throw new AppException(ErrorCode.GROUP_NOT_FOUND);
         }
         List<GroupMember> memberList = groupMemberRepository.findAllByGroupIdAndDeletedFalse(groupId);
-        return memberList.stream()
-                .map(GroupMember::getUser)
-                .collect(Collectors.toList());
+        return memberList.stream().map(GroupMember::getUser).collect(Collectors.toList());
     }
 }

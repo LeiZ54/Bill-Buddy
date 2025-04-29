@@ -1,0 +1,2 @@
+ALTER TABLE expenses
+    ADD COLUMN picture VARCHAR(255);

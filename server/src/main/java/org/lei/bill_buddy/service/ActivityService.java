@@ -7,12 +7,15 @@ import org.lei.bill_buddy.enums.ActionType;
 import org.lei.bill_buddy.enums.ObjectType;
 import org.lei.bill_buddy.model.Activity;
 import org.lei.bill_buddy.repository.ActivityRepository;
+import org.lei.bill_buddy.repository.ExpenseRepository;
+import org.lei.bill_buddy.repository.GroupMemberRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -21,15 +24,21 @@ import java.util.Map;
 public class ActivityService {
 
     private final ActivityRepository activityRepository;
+    private final GroupMemberRepository groupMemberRepository;
+    private final ExpenseRepository expenseRepository;
     private final UserService userService;
     private final Gson gson = new Gson();
 
     @Transactional(readOnly = true)
     public Page<Activity> getActivitiesByUserId(Long userId, Pageable pageable) {
         log.info("Fetching activities for userId={} with paging", userId);
-        return activityRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable);
+        List<Long> groupIds = groupMemberRepository.findGroupIdByUserIdAndDeletedFalse(userId);
+        List<Long> expenseIds = expenseRepository.findIdsByGroupIdInAndDeletedFalse(groupIds);
+        return activityRepository.findByExpenseIdsAndGroupIdsOrderByCreatedAtDesc(
+                expenseIds,
+                groupIds,
+                pageable);
     }
-
 
     @Transactional
     public void log(ActionType action, ObjectType objectType, Long objectId, String template, Map<String, Object> params) {
@@ -44,6 +53,5 @@ public class ActivityService {
 
         activityRepository.save(activity);
     }
-
 }
 

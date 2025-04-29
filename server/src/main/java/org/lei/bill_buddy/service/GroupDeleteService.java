@@ -3,6 +3,7 @@ package org.lei.bill_buddy.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.lei.bill_buddy.repository.ExpenseRepository;
+import org.lei.bill_buddy.repository.GroupDebtRepository;
 import org.lei.bill_buddy.repository.GroupMemberRepository;
 import org.lei.bill_buddy.repository.GroupRepository;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ public class GroupDeleteService {
     private final GroupRepository groupRepository;
     private final GroupMemberRepository groupMemberRepository;
     private final ExpenseRepository expenseRepository;
+    private final GroupDebtRepository groupDebtRepository;
 
     @Transactional
     public void deleteGroup(Long groupId) {
@@ -23,6 +25,7 @@ public class GroupDeleteService {
         groupMemberRepository.softDeleteAllByGroupId(groupId);
         groupRepository.softDeleteByGroupId(groupId);
         expenseRepository.softDeleteExpensesByGroupId(groupId);
+        groupDebtRepository.softDeleteByGroupIdAndDeletedFalse(groupId);
         log.info("Group {} marked as deleted.", groupId);
     }
 }
