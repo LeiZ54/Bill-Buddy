@@ -59,41 +59,38 @@ const ExpenseSplitSection: React.FC<ExpenseSplitSectionProps> = ({
 
         setSelectedMembers(newSelected);
 
-        setAmountsByMember(prev => {
-            const updated = { ...prev };
-            if (newSelected.includes(memberId)) {
-                updated[memberId] = prev[memberId] || '0.00';
-            } else {
-                delete updated[memberId];
-            }
-            return updated;
-        });
+        const updated = { ...amountsByMember };
+        if (newSelected.includes(memberId)) {
+            updated[memberId] = amountsByMember[memberId] || '0.00';
+        } else {
+            delete updated[memberId];
+        }
+        setAmountsByMember(updated);
     };
 
     const handleAmountChangeForMember = (memberId: number, value: string) => {
         if (/^\d*\.?\d*$/.test(value)) {
-            setAmountsByMember(prev => {
-                const newAmounts = { ...prev };
-                const hasValue = value !== '' && value !== '0' && value !== '0.00';
-                const isSelected = selectedMembers.includes(memberId);
+            const newAmounts = { ...amountsByMember };
+            const hasValue = value !== '' && value !== '0' && value !== '0.00';
+            const isSelected = selectedMembers.includes(memberId);
 
-                if (hasValue && !isSelected) {
-                    setSelectedMembers([...selectedMembers, memberId]);
-                }
-                if (!hasValue && isSelected) {
-                    setSelectedMembers(selectedMembers.filter(id => id !== memberId));
-                }
+            if (hasValue && !isSelected) {
+                setSelectedMembers([...selectedMembers, memberId]);
+            }
+            if (!hasValue && isSelected) {
+                setSelectedMembers(selectedMembers.filter(id => id !== memberId));
+            }
 
-                if (value === '') {
-                    delete newAmounts[memberId];
-                } else {
-                    newAmounts[memberId] = value;
-                }
+            if (value === '') {
+                delete newAmounts[memberId];
+            } else {
+                newAmounts[memberId] = value;
+            }
 
-                return newAmounts;
-            });
+            setAmountsByMember(newAmounts);
         }
     };
+
 
     const calculateTotal = () => {
         return Object.values(amountsByMember).reduce(
