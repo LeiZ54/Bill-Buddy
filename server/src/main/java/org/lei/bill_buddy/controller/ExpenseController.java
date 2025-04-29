@@ -97,7 +97,9 @@ public class ExpenseController {
 
     @PutMapping("/{id}/picture")
     public ResponseEntity<?> updateExpensePicture(@PathVariable Long id, @RequestBody ExpenseUpdatePictureRequest request) {
-        if (!groupService.isMemberOfGroup(userService.getCurrentUser().getId(), id))
+        Expense expense = expenseService.getExpenseById(id);
+        if (expense == null) throw new AppException(ErrorCode.EXPENSE_NOT_FOUND);
+        if (!groupService.isMemberOfGroup(userService.getCurrentUser().getId(), expense.getGroup().getId()))
             throw new AppException(ErrorCode.NOT_A_MEMBER);
         expenseService.updateExpensePicture(id, request.getPicture());
         return ResponseEntity.ok("Expense picture updated with ID: " + id);

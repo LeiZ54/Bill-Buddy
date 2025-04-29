@@ -32,7 +32,7 @@ public class ActivityService {
     @Transactional(readOnly = true)
     public Page<Activity> getActivitiesByUserId(Long userId, Pageable pageable) {
         log.info("Fetching activities for userId={} with paging", userId);
-        List<Long> groupIds = groupMemberRepository.findGroupIdByUserIdAndDeletedFalse(userId);
+        List<Long> groupIds = groupMemberRepository.findGroupIdsByUserIdAndDeletedFalse(userId);
         List<Long> expenseIds = expenseRepository.findIdsByGroupIdInAndDeletedFalse(groupIds);
         System.out.println(expenseIds);
         return activityRepository.findByExpenseIdsAndGroupIdsOrderByCreatedAtDesc(
