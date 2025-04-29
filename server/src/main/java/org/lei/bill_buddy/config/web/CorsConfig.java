@@ -13,12 +13,12 @@ import java.util.List;
 @Configuration
 public class CorsConfig {
     @Value("${bill-buddy.client.url}")
-    private String clientUrl;
+    private List<String> clientUrls;
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of(clientUrl));
+        config.setAllowedOrigins(clientUrls);
         config.setAllowedMethods(List.of("*"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
