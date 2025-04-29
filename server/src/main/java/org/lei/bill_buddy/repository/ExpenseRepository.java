@@ -45,10 +45,10 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long>, JpaSpec
     Optional<Expense> findExpenseByIdAndDeletedFalse(Long id);
 
     @Query("""
-    SELECT g.id
-    FROM Group g
-    WHERE g.id IN :groupIds
-      AND g.deleted = false
-""")
+                SELECT e.id
+                FROM Expense e, Group g
+                WHERE g.id IN :groupIds
+                  AND e.deleted = false
+            """)
     List<Long> findIdsByGroupIdInAndDeletedFalse(List<Long> groupIds);
 }

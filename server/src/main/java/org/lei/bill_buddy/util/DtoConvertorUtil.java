@@ -6,10 +6,7 @@ import org.lei.bill_buddy.DTO.*;
 import org.lei.bill_buddy.enums.ExpenseType;
 import org.lei.bill_buddy.enums.GroupType;
 import org.lei.bill_buddy.model.*;
-import org.lei.bill_buddy.service.ExpenseService;
-import org.lei.bill_buddy.service.GroupDebtService;
-import org.lei.bill_buddy.service.GroupService;
-import org.lei.bill_buddy.service.UserService;
+import org.lei.bill_buddy.service.*;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -26,6 +23,7 @@ public class DtoConvertorUtil {
     private final ExpenseService expenseService;
     private final GroupDebtService groupDebtService;
     private final ActivityFormatUtil activityFormatUtil;
+    private final ActivityService activityService;
     private final GroupService groupService;
 
     public UserDTO convertUserToUserDTO(User user) {
@@ -58,10 +56,17 @@ public class DtoConvertorUtil {
         User currentUser = userService.getCurrentUser();
         expenseService.getExpenseSharesByExpenseId(expense.getId())
                 .forEach(s -> shares.put(s.getUser().getFullName(), s.getShareAmount()));
-
+        StringBuilder logs = new StringBuilder();
+        List<Activity> activities = activityService.getActivitiesByExpenseId(expense.getId());
+        for (Activity activity : activities) {
+            logs.append("<p>");
+            logs.append(activityFormatUtil.formatActivityDescriptionAsHtml(activity.getTemplate(), activity.getParams()));
+            logs.append("</p>");
+        }
         ExpenseDetailsDTO dto = new ExpenseDetailsDTO();
         dto.setId(expense.getId());
         dto.setGroupId(expense.getGroup().getId());
+        dto.setPicture(expense.getPicture());
         dto.setTitle(expense.getTitle());
         dto.setAmount(expense.getAmount());
         dto.setDescription(expense.getDescription());
@@ -71,6 +76,7 @@ public class DtoConvertorUtil {
         dto.setShares(shares);
         dto.setExpenseDate(expense.getExpenseDate());
         dto.setType(expense.getType());
+        dto.setLogs(logs.toString());
         return dto;
     }
 

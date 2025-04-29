@@ -17,6 +17,8 @@ public class ExpenseDetailsDTO {
 
     private UserDTO payer;
 
+    private String picture;
+
     private String description;
 
     private ExpenseType type;
@@ -24,6 +26,8 @@ public class ExpenseDetailsDTO {
     private BigDecimal amount;
 
     private String currency;
+
+    private String logs;
 
     private LocalDateTime expenseDate;
 

@@ -34,10 +34,17 @@ public class ActivityService {
         log.info("Fetching activities for userId={} with paging", userId);
         List<Long> groupIds = groupMemberRepository.findGroupIdByUserIdAndDeletedFalse(userId);
         List<Long> expenseIds = expenseRepository.findIdsByGroupIdInAndDeletedFalse(groupIds);
+        System.out.println(expenseIds);
         return activityRepository.findByExpenseIdsAndGroupIdsOrderByCreatedAtDesc(
                 expenseIds,
                 groupIds,
                 pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Activity> getActivitiesByExpenseId(Long expenseId) {
+        log.info("Fetching activities for expenseId={}", expenseId);
+        return activityRepository.findByObjectTypeAndObjectIdOrderByCreatedAtDesc(ObjectType.EXPENSE, expenseId);
     }
 
     @Transactional
