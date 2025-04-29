@@ -224,7 +224,6 @@ public class ExpenseService {
         return expense;
     }
 
-
     public void updateExpensePicture(Long expenseId, String picture) {
         Expense expense = getExpenseById(expenseId);
         if (expense == null) throw new AppException(ErrorCode.EXPENSE_NOT_FOUND);
@@ -471,11 +470,15 @@ public class ExpenseService {
 
     private Expense validateAndGetExpense(Long expenseId) {
         Expense expense = getExpenseById(expenseId);
+        User currentUser = userService.getCurrentUser();
         if (expense == null) throw new AppException(ErrorCode.EXPENSE_NOT_FOUND);
 
-        if (!groupService.isMemberOfGroup(userService.getCurrentUser().getId(),
+        if (!groupService.isMemberOfGroup(currentUser.getId(),
                 expense.getGroup().getId())) {
             throw new AppException(ErrorCode.NOT_A_MEMBER);
+        }
+        if (!expense.getPayer().getId().equals(currentUser.getId())) {
+            throw new AppException(ErrorCode.FORBIDDEN, "Only the payer can update this expense.");
         }
         return expense;
     }
@@ -535,7 +538,6 @@ public class ExpenseService {
                 oldTitle, newTitle
         );
     }
-
 
     private record ParsedRequest(
             User newPayer, boolean payerChanged,

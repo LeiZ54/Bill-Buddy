@@ -52,10 +52,15 @@ public class DtoConvertorUtil {
     }
 
     public ExpenseDetailsDTO convertExpenseToExpenseDetailsDTO(Expense expense) {
-        Map<String, BigDecimal> shares = new HashMap<>();
+        List<ShareOfUserDTO> shares = new ArrayList<>();
         User currentUser = userService.getCurrentUser();
         expenseService.getExpenseSharesByExpenseId(expense.getId())
-                .forEach(s -> shares.put(s.getUser().getFullName(), s.getShareAmount()));
+                .forEach(s -> {
+                    shares.add(new ShareOfUserDTO(
+                            convertUserToUserDTO(userService.getUserById(s.getUser().getId())),
+                            s.getShareAmount())
+                    );
+                });
         StringBuilder logs = new StringBuilder();
         List<Activity> activities = activityService.getActivitiesByExpenseId(expense.getId());
         for (Activity activity : activities) {

@@ -5,7 +5,7 @@ import org.lei.bill_buddy.enums.ExpenseType;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.Map;
+import java.util.List;
 
 @Data
 public class ExpenseDetailsDTO {
@@ -33,5 +33,5 @@ public class ExpenseDetailsDTO {
 
     private BigDecimal debtsAmount;
 
-    private Map<String, BigDecimal> shares;
+    private List<ShareOfUserDTO> shares;
 }
