@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -42,4 +43,12 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long>, JpaSpec
     void softDeleteExpensesByGroupId(@Param("groupId") Long groupId);
 
     Optional<Expense> findExpenseByIdAndDeletedFalse(Long id);
+
+    @Query("""
+    SELECT g.id
+    FROM Group g
+    WHERE g.id IN :groupIds
+      AND g.deleted = false
+""")
+    List<Long> findIdsByGroupIdInAndDeletedFalse(List<Long> groupIds);
 }

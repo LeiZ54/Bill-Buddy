@@ -26,4 +26,11 @@ public interface GroupMemberRepository extends JpaRepository<GroupMember, Long> 
     @Query("UPDATE GroupMember gm SET gm.deleted = true WHERE gm.group.id = :groupId")
     void softDeleteAllByGroupId(@Param("groupId") Long groupId);
 
+    @Query("""
+                SELECT gm.group.id
+                FROM GroupMember gm
+                WHERE gm.user.id = :userId
+                  AND gm.deleted = false
+            """)
+    List<Long> findGroupIdByUserIdAndDeletedFalse(Long userId);
 }
