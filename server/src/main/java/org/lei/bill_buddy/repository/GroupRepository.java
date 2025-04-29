@@ -16,7 +16,7 @@ import java.util.Optional;
 public interface GroupRepository extends JpaRepository<Group, Long> {
     Optional<Group> findByIdAndDeletedFalse(Long id);
 
-    Page<Group> findAllByIdInAndNameContaining(List<Long> ids, @Param("groupName") String groupName, Pageable pageable);
+    Page<Group> findAllByIdInAndNameContainingOrderByUpdatedAtDesc(List<Long> ids, @Param("groupName") String groupName, Pageable pageable);
 
     @Modifying
     @Query("UPDATE Group g SET g.deleted = true WHERE g.id = :groupId")
