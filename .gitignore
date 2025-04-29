@@ -4,4 +4,6 @@ documents
 mykey
 mykey.ppk
 mykey.pub
-.vs
+**/.vs/**
+client/node_modules/
+client/dist/

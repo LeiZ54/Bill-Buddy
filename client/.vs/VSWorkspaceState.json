@@ -2,12 +2,9 @@
   "ExpandedNodes": [
     "",
     "\\src",
-    "\\src\\components",
-    "\\src\\pages",
-    "\\src\\routes",
-    "\\src\\stores",
+    "\\src\\Test",
     "\\src\\util"
   ],
-  "SelectedNode": "\\src\\stores\\authStore.ts",
+  "SelectedNode": "\\src\\vite-env.d.ts",
   "PreviewInSolutionExplorer": false
 }

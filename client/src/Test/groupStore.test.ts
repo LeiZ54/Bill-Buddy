@@ -1,19 +1,22 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { useGroupStore } from '../stores/groupStore';
-import { act } from 'react-dom/test-utils';
 
-// ✅ mock localStorage（用于 Zustand persist）
 if (typeof localStorage === 'undefined') {
     let store: Record<string, string> = {};
-    global.localStorage = {
+
+    globalThis.localStorage = {
         getItem: vi.fn((key) => store[key] ?? null),
         setItem: vi.fn((key, val) => { store[key] = String(val); }),
         removeItem: vi.fn((key) => { delete store[key]; }),
         clear: vi.fn(() => { store = {}; }),
+
+        get length() {
+            return Object.keys(store).length;
+        },
+        key: vi.fn((index: number) => Object.keys(store)[index] ?? null),
     };
 }
 
-// ✅ mock message + axios
 vi.mock('antd', () => ({
     message: {
         success: vi.fn(),

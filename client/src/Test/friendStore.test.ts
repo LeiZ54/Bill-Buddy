@@ -1,15 +1,18 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { useFriendStore } from '../stores/friendStore';
-import { act } from 'react-dom/test-utils';
 
 
 if (typeof localStorage === 'undefined') {
     let store: Record<string, string> = {};
-    global.localStorage = {
+    globalThis.localStorage = {
         getItem: vi.fn((key) => store[key] ?? null),
         setItem: vi.fn((key, val) => { store[key] = String(val); }),
         removeItem: vi.fn((key) => { delete store[key]; }),
         clear: vi.fn(() => { store = {}; }),
+        get length() {
+            return Object.keys(store).length;
+        },
+        key: vi.fn((index: number) => Object.keys(store)[index] ?? null),
     };
 }
 
@@ -91,13 +94,13 @@ describe('friendStore', () => {
     test('getFriendData 应更新 friendData', async () => {
         useFriendStore.setState({ activeFriend: 66 });
         (api.get as any).mockResolvedValueOnce({
-            data: { id: 66, name: 'Jane' },
+            data: { id: 66, fullName: 'Jane' },
         });
 
         await useFriendStore.getState().getFriendData();
-        expect(useFriendStore.getState().friendData?.name).toBe('Jane');
+        expect(useFriendStore.getState().friendData?.fullName).toBe('Jane');
     });
-
+    
     test('deleteFriend 应调用 DELETE', async () => {
         useFriendStore.setState({ activeFriend: 42 });
         (api.delete as any).mockResolvedValueOnce({});

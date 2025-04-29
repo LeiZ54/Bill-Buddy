@@ -1,17 +1,21 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { useExpenseStore } from '../stores/expenseStore';
-import { act } from 'react-dom/test-utils';
 import axios from 'axios';
 
 if (typeof localStorage === 'undefined') {
     let store: Record<string, string> = {};
-    global.localStorage = {
+    globalThis.localStorage = {
         getItem: vi.fn((key) => store[key] ?? null),
         setItem: vi.fn((key, val) => { store[key] = String(val); }),
         removeItem: vi.fn((key) => { delete store[key]; }),
         clear: vi.fn(() => { store = {}; }),
+        get length() {
+            return Object.keys(store).length;
+        },
+        key: vi.fn((index: number) => Object.keys(store)[index] ?? null),
     };
 }
+
 
 
 vi.mock('axios');

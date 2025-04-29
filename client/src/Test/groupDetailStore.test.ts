@@ -1,27 +1,27 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { useGroupDetailStore } from '../stores/groupDetailStore';
-import axios from 'axios';
-import { act } from 'react-dom/test-utils';
 
-// ✅ mock localStorage
 if (typeof localStorage === 'undefined') {
     let store: Record<string, string> = {};
-    global.localStorage = {
+    globalThis.localStorage = {
         getItem: vi.fn((key) => store[key] ?? null),
         setItem: vi.fn((key, val) => { store[key] = String(val); }),
         removeItem: vi.fn((key) => { delete store[key]; }),
         clear: vi.fn(() => { store = {}; }),
+        get length() {
+            return Object.keys(store).length;
+        },
+        key: vi.fn((index: number) => Object.keys(store)[index] ?? null),
     };
 }
 
-// ✅ mock antd
+
 vi.mock('antd', () => ({
     message: {
         success: vi.fn(),
     },
 }));
 
-// ✅ mock axiosConfig
 vi.mock('../util/axiosConfig', () => ({
     default: {
         get: vi.fn(),
@@ -105,7 +105,7 @@ describe('groupDetailStore', () => {
             data: [{ id: 1, name: 'Tom' }],
         });
 
-        await useGroupDetailStore.getState().fetchMember();
+        await useGroupDetailStore.getState().fetchMember(useGroupDetailStore.getState().activeGroup!);
         expect(useGroupDetailStore.getState().members.length).toBe(1);
     });
 
