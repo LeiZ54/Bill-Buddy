@@ -14,7 +14,7 @@ import { DeleteOutlined, EditOutlined, UploadOutlined } from '@ant-design/icons'
 export default function ExpenseDetailPage() {
     const { currencies, expenseTypes } = useAuthStore();
     const { activeExpense, expenseData, getExpense, deleteExpense, uploadImg } = useExpenseStore();
-    const { setActiveGroup } = useGroupDetailStore();
+    const { setActiveGroup} = useGroupDetailStore();
     const { Title, Text } = Typography;
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
@@ -32,14 +32,11 @@ export default function ExpenseDetailPage() {
         }
     };
 
-    const [editOpen, setEditOpen] = useState(false);
-    
-
     const fetchData = async () => {
         try {
             setIsLoading(true);
             await getExpense();
-
+            setActiveGroup(expenseData?.groupId!);
         } catch (err) {
             setError("Failed to get Data!");
         } finally {
@@ -54,7 +51,6 @@ export default function ExpenseDetailPage() {
                 await uploadImg(file);
                 await fetchData();
             } catch (err) {
-                console.log(err);
                 message.error("Upload failed");
             }
         }
@@ -91,9 +87,7 @@ export default function ExpenseDetailPage() {
             setIsDeleting(true);
             await deleteExpense();
             navigate("/groups/detail");
-            setActiveGroup(expenseData!.groupId);
         } catch (err) {
-            console.log(err);
             message.error("Fail to delete expense!");
         } finally {
             setIsDeleting(false);
@@ -136,17 +130,6 @@ export default function ExpenseDetailPage() {
                     >
                         Reupload
                     </button>
-                </div>
-            </Modal>
-
-            <Modal
-                open={editOpen}
-                footer={null}
-                onCancel={() => setEditOpen(false)}
-                centered
-            >
-                <div className="flex flex-col items-center space-y-4">
-                    dwa
                 </div>
             </Modal>
 
@@ -217,7 +200,7 @@ export default function ExpenseDetailPage() {
                                 <Button
                                     type="primary"
                                     icon={<EditOutlined />}
-                                    onClick={() => { setEditOpen(true) }}
+                                    onClick={() => { navigate("edit") }}
                                     className="flex-1 flex items-center justify-center text-lg"
                                 >
                                     Edit

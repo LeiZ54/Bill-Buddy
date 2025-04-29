@@ -138,7 +138,7 @@ export default function LoginPage() {
                         </Form.Item>
 
                         <Form.Item>
-                            <div>
+                            <div className='flex justify-center items-center'>
                                 <GoogleLogin
                                     onSuccess={handleGoogleLogin}
                                     onError={() => console.error('Google Login Error!')}

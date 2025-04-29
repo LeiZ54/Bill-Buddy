@@ -91,7 +91,7 @@ const GroupSettingPage = () => {
             const fetchData = async () => {
                 try {
                     setIsLoading(true);
-                    await fetchMember();
+                    await fetchMember(activeGroup);
                     await getIfDelete();
                     await getFriendList();
                     await fetchCycleExpenses();

@@ -12,7 +12,7 @@ type AddFriendsToGroupModalProps = {
 };
 
 export const AddFriendsToGroupModal = ({ open, onCancel, isGroup }: AddFriendsToGroupModalProps) => {
-    const { friendList, addFriendsToGroup, fetchMember } = useGroupDetailStore();
+    const { friendList, addFriendsToGroup, fetchMember, activeGroup } = useGroupDetailStore();
     const { groupType } = useAuthStore();
     const { groupList, addFriendToGroup, getFriendData} = useFriendStore();
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
@@ -36,11 +36,10 @@ export const AddFriendsToGroupModal = ({ open, onCancel, isGroup }: AddFriendsTo
                 await getFriendData();
             } else {
                 await addFriendsToGroup(selectedIds);
-                await fetchMember();
+                await fetchMember(activeGroup!);
             }
             onCancel();
         } catch (err: any) {
-            console.log(err);
             message.error(err.response?.data?.message || "Network Error!");
         } finally {
             setIsLoading(false);
