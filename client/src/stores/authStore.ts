@@ -62,13 +62,11 @@ const useAuthStore = create<AuthState>()(
                     set({expenseTypes: res.data});
                     return true;
                 } catch (err: any) {
-                    if (err.response.data.error) {
-                        set({error: err.response.data.error});
-                    } else {
-                        set({error: "Network Error!"});
-                    }
+                    const errorMessage = err?.response?.data?.error ?? 'Network Error!';
+                    set({ error: errorMessage });
                     return false;
-                } finally {
+                }
+                finally {
                     set({isLoading: false});
                 }
             },
@@ -87,8 +85,9 @@ const useAuthStore = create<AuthState>()(
                     res = await api.get('/common/expense-types');
                     set({expenseTypes: res.data});
                     return true;
-                } catch (err) {
-                    set({error: 'Google login failed!'});
+                } catch (err: any) {
+                    const errorMessage = err?.response?.data?.error ?? 'Google login failed!';
+                    set({ error: errorMessage });
                     return false;
                 } finally {
                     set({isLoading: false});
@@ -114,12 +113,9 @@ const useAuthStore = create<AuthState>()(
                     res = await api.get('/common/expense-types');
                     set({expenseTypes: res.data});
                     return true;
-                } catch (err: any) {
-                    if (err.response.data.error) {
-                        set({error: err.response.data.error});
-                    } else {
-                        set({error: 'Network Error!'});
-                    }
+                }catch (err: any) {
+                    const errorMessage = err?.response?.data?.error ?? 'Network Error!';
+                    set({ error: errorMessage });
                     return false;
                 } finally {
                     set({isLoading: false});
