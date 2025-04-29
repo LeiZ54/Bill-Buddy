@@ -153,7 +153,7 @@ public class GroupService {
     public Page<Group> getGroupsByUserIdAndGroupName(Long userId, String groupName, Pageable pageable) {
         log.debug("Getting groups for user: {}, and group name contains: {}", userId, groupName);
         List<Long> groupIds = groupMemberRepository.findGroupIdsByUserIdAndDeletedFalse(userId);
-        return groupRepository.findAllByIdInAndNameContaining(groupIds, groupName.trim(), pageable);
+        return groupRepository.findAllByIdInAndNameContainingOrderByUpdatedAtDesc(groupIds, groupName.trim(), pageable);
     }
 
     private GroupType parseGroupType(String type) {

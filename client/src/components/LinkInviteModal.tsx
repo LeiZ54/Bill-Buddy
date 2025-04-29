@@ -33,6 +33,7 @@ const LinkInviteModal = ({ open, onCancel, groupId }: LinkInviteModalProps) => {
             await navigator.clipboard.writeText(inviteLink);
             message.success('Link copied to clipboard!');
         } catch (err) {
+            console.log(err)
             message.error('Failed to copy link');
         }
     };
