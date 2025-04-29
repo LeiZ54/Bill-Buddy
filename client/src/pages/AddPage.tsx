@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import Topbar from '../components/TopBar';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { Form, Input, Tag, Avatar, Checkbox, Button, DatePicker, message, Select } from 'antd';
+import { Form, Input, Tag, Avatar, Checkbox, Button, DatePicker, message, Select, Spin } from 'antd';
 import useAuthStore from '../stores/authStore';
 import { RecurrenceTimeSelectorModal } from '../components/AddModal';
 import { useExpenseStore } from '../stores/expenseStore';
@@ -10,6 +10,7 @@ import ExpenseSplitSection from '../components/ExpenseSplitSection';
 import api from '../util/axiosConfig';
 import { useGroupDetailStore } from '../stores/groupDetailStore';
 import dayjs from 'dayjs';
+import Alert from 'antd/es/alert/Alert';
 
 const AddPage = () => {
     const navigate = useNavigate();
@@ -98,29 +99,29 @@ const AddPage = () => {
                 'currency',
                 ...(form.getFieldValue('isRecurring') ? ['recurrenceTime'] : []),
             ]);
-            setStep(2); 
+            setStep(2);
         } catch (err) {
 
         }
     };
     const values = Form.useWatch([], form);
     useEffect(() => {
-            form.validateFields([
-                'groupId',
-                'type',
-                'date',
-                'title',
-                'description',
-                'isRecurring',
-                'currency',
-                ...(form.getFieldValue('isRecurring') ? ['recurrenceTime'] : []),
-            ], { validateOnly: true }).then(
-                () => {
-                    setIsStep1Valid(true)
-                },
-                () => setIsStep1Valid(false)
-            );
-      
+        form.validateFields([
+            'groupId',
+            'type',
+            'date',
+            'title',
+            'description',
+            'isRecurring',
+            'currency',
+            ...(form.getFieldValue('isRecurring') ? ['recurrenceTime'] : []),
+        ], { validateOnly: true }).then(
+            () => {
+                setIsStep1Valid(true)
+            },
+            () => setIsStep1Valid(false)
+        );
+
     }, [form, values]);
 
     useEffect(() => {
@@ -174,175 +175,190 @@ const AddPage = () => {
                     leftOnClick={() => (step === 2 ? setStep(1) : navigate(-1))}
                     title="Add an expense"
                 />
-                <Form form={form} className="p-4 max-w-2xl mx-auto" layout="vertical">
-                    {step === 1 && (
-                        <>
-                            {/* Group */}
-                            <Form.Item
-                                label="Group"
-                                name="groupId"
-                                rules={[{ required: true, message: 'Please select a group!' }]}
-                            >
-                                <Select
-                                    placeholder="Select a group"
-                                    optionLabelProp="label"
-                                    onChange={(value) => setSelectedGroup(value)}
+
+                {loading ? (
+                    <div className="flex justify-center items-center h-64">
+                        <Spin size="large" />
+                    </div>
+                ) : error ? (
+                    <Alert
+                        message="Error"
+                        description={error}
+                        type="error"
+                        showIcon
+                        className="max-w-2xl mx-auto my-4"
+                    />
+                ) : (
+                    <Form form={form} className="p-4 max-w-2xl mx-auto" layout="vertical">
+                        {step === 1 && (
+                            <>
+                                {/* Group */}
+                                <Form.Item
+                                    label="Group"
+                                    name="groupId"
+                                    rules={[{ required: true, message: 'Please select a group!' }]}
                                 >
-                                    {groupList.map((group) => (
-                                        <Select.Option
-                                            key={group.groupId}
-                                            value={group.groupId}
-                                            label={group.groupName}
-                                        >
-                                            <div className="flex items-center gap-2">
-                                                <Avatar
-                                                    src={groupType[group.type]}
-                                                    size={20}
-                                                    className="flex-shrink-0"
-                                                />
-                                                <span>{group.groupName}</span>
-                                            </div>
-                                        </Select.Option>
-                                    ))}
-                                </Select>
-                            </Form.Item>
-
-
-                            {/* Expense Type */}
-                            <Form.Item
-                                label="Expense Type"
-                                name="type"
-                                rules={[{ required: true, message: 'Please select a type!' }]}
-                            >
-                                <Select
-                                    placeholder="Select a type"
-                                    optionLabelProp="label"
-                                >
-                                    {Object.entries(expenseTypes).map(([type, url]) => (
-                                        <Select.Option key={type} value={type} label={type}>
-                                            <div className="flex items-center gap-2">
-                                                <Avatar src={url as string} size={20} />
-                                                <span>{type}</span>
-                                            </div>
-                                        </Select.Option>
-                                    ))}
-                                </Select>
-                            </Form.Item>
-
-                            {/* Date */}
-                            <Form.Item
-                                label="Date"
-                                name="date"
-                                rules={[{ required: true, message: 'Please select a date!' }]}
-                            >
-                                <DatePicker className="w-full" />
-                            </Form.Item>
-
-                            {/* Currency */}
-                            <Form.Item
-                                label="Currency"
-                                name="currency"
-                                rules={[{ required: true, message: 'Please select a currency!' }]}
-                            >
-                                <Select placeholder="Select a currency">
-                                    {Object.entries(currencies).map(([code, symbol]) => (
-                                        <Select.Option key={code} value={code}>
-                                            {code} ({symbol})
-                                        </Select.Option>
-                                    ))}
-                                </Select>
-                            </Form.Item>
-
-                            {/* Title */}
-                            <Form.Item
-                                label="Title"
-                                name="title"
-                                rules={[{ required: true, message: 'Please input title!' }]}
-                            >
-                                <Input />
-                            </Form.Item>
-
-                            {/* Description */}
-                            <Form.Item label="Description" name="description">
-                                <Input.TextArea rows={3} placeholder="Add description (optional)" />
-                            </Form.Item>
-
-                            {/* Recurring */}
-                            <Form.Item name="isRecurring" valuePropName="checked">
-                                <Checkbox>This is a recurring expense</Checkbox>
-                            </Form.Item>
-
-                            <Form.Item shouldUpdate={(prev, curr) => prev.isRecurring !== curr.isRecurring}>
-                                {({ getFieldValue }) => {
-                                    return getFieldValue('isRecurring') ? (
-                                        <Form.Item
-                                            name="recurrenceTime"
-                                            rules={[{ required: true, message: 'Please input recurrence time!' }]}
-                                        >
-                                            <Tag
-                                                color="blue"
-                                                className="cursor-pointer rounded-full px-4 py-1 text-base h-auto"
-                                                onClick={() => setIsTimeModalOpen(true)}
+                                    <Select
+                                        placeholder="Select a group"
+                                        optionLabelProp="label"
+                                        onChange={(value) => setSelectedGroup(value)}
+                                    >
+                                        {groupList.map((group) => (
+                                            <Select.Option
+                                                key={group.groupId}
+                                                value={group.groupId}
+                                                label={group.groupName}
                                             >
-                                                {recurrenceTime ? (
-                                                    <span>{getRecurrenceLabel(recurrenceTime)}</span>
-                                                ) : (
-                                                    <span>Please select recurrence time</span>
-                                                )}
-                                            </Tag>
-                                        </Form.Item>
-                                    ) : null;
-                                }}
-                            </Form.Item>
+                                                <div className="flex items-center gap-2">
+                                                    <Avatar
+                                                        src={groupType[group.type]}
+                                                        size={20}
+                                                        className="flex-shrink-0"
+                                                    />
+                                                    <span>{group.groupName}</span>
+                                                </div>
+                                            </Select.Option>
+                                        ))}
+                                    </Select>
+                                </Form.Item>
 
-                            <RecurrenceTimeSelectorModal
-                                open={isTimeModalOpen}
-                                onCancel={() => setIsTimeModalOpen(false)}
-                                onSelect={(val) => {
-                                    setRecurrenceTime(val);
-                                    setIsTimeModalOpen(false);
-                                    form.setFieldsValue({ recurrenceTime: val });
-                                }}
-                            />
 
-                            {/* Next */}
-                            <Form.Item className="mt-6">
-                                <Button type="primary" block onClick={onNext} disabled={!isStep1Valid}>
-                                    Next
-                                </Button>
-                            </Form.Item>
-                        </>
-                    )}
-
-                    {step === 2 && (
-                        <>
-                            <ExpenseSplitSection
-                                setIsStep2Valid={setIsStep2Valid}
-                                selectedGroup={selectedGroup!}
-                                splitMethod={splitMethod}
-                                setSplitMethod={setSplitMethod}
-                                amount={amount}
-                                setAmount={setAmount}
-                                selectedMembers={selectedMembers}
-                                setSelectedMembers={setSelectedMembers}
-                                amountsByMember={amountsByMember}
-                                setAmountsByMember={setAmountsByMember}
-                            />
-                            {/* Submit */}
-                            <Form.Item className="mt-6">
-                                <Button
-                                    type="primary"
-                                    block
-                                    loading={submitting}
-                                    disabled={!isStep2Valid}
-                                    onClick={handleSubmit}
+                                {/* Expense Type */}
+                                <Form.Item
+                                    label="Expense Type"
+                                    name="type"
+                                    rules={[{ required: true, message: 'Please select a type!' }]}
                                 >
-                                    Submit
-                                </Button>
-                            </Form.Item>
-                        </>
-                    )}
-                </Form>
+                                    <Select
+                                        placeholder="Select a type"
+                                        optionLabelProp="label"
+                                    >
+                                        {Object.entries(expenseTypes).map(([type, url]) => (
+                                            <Select.Option key={type} value={type} label={type}>
+                                                <div className="flex items-center gap-2">
+                                                    <Avatar src={url as string} size={20} />
+                                                    <span>{type}</span>
+                                                </div>
+                                            </Select.Option>
+                                        ))}
+                                    </Select>
+                                </Form.Item>
+
+                                {/* Date */}
+                                <Form.Item
+                                    label="Date"
+                                    name="date"
+                                    rules={[{ required: true, message: 'Please select a date!' }]}
+                                >
+                                    <DatePicker className="w-full" />
+                                </Form.Item>
+
+                                {/* Currency */}
+                                <Form.Item
+                                    label="Currency"
+                                    name="currency"
+                                    rules={[{ required: true, message: 'Please select a currency!' }]}
+                                >
+                                    <Select placeholder="Select a currency">
+                                        {Object.entries(currencies).map(([code, symbol]) => (
+                                            <Select.Option key={code} value={code}>
+                                                {code} ({symbol})
+                                            </Select.Option>
+                                        ))}
+                                    </Select>
+                                </Form.Item>
+
+                                {/* Title */}
+                                <Form.Item
+                                    label="Title"
+                                    name="title"
+                                    rules={[{ required: true, message: 'Please input title!' }]}
+                                >
+                                    <Input />
+                                </Form.Item>
+
+                                {/* Description */}
+                                <Form.Item label="Description" name="description">
+                                    <Input.TextArea rows={3} placeholder="Add description (optional)" />
+                                </Form.Item>
+
+                                {/* Recurring */}
+                                <Form.Item name="isRecurring" valuePropName="checked">
+                                    <Checkbox>This is a recurring expense</Checkbox>
+                                </Form.Item>
+
+                                <Form.Item shouldUpdate={(prev, curr) => prev.isRecurring !== curr.isRecurring}>
+                                    {({ getFieldValue }) => {
+                                        return getFieldValue('isRecurring') ? (
+                                            <Form.Item
+                                                name="recurrenceTime"
+                                                rules={[{ required: true, message: 'Please input recurrence time!' }]}
+                                            >
+                                                <Tag
+                                                    color="blue"
+                                                    className="cursor-pointer rounded-full px-4 py-1 text-base h-auto"
+                                                    onClick={() => setIsTimeModalOpen(true)}
+                                                >
+                                                    {recurrenceTime ? (
+                                                        <span>{getRecurrenceLabel(recurrenceTime)}</span>
+                                                    ) : (
+                                                        <span>Please select recurrence time</span>
+                                                    )}
+                                                </Tag>
+                                            </Form.Item>
+                                        ) : null;
+                                    }}
+                                </Form.Item>
+
+                                <RecurrenceTimeSelectorModal
+                                    open={isTimeModalOpen}
+                                    onCancel={() => setIsTimeModalOpen(false)}
+                                    onSelect={(val) => {
+                                        setRecurrenceTime(val);
+                                        setIsTimeModalOpen(false);
+                                        form.setFieldsValue({ recurrenceTime: val });
+                                    }}
+                                />
+
+                                {/* Next */}
+                                <Form.Item className="mt-6">
+                                    <Button type="primary" block onClick={onNext} disabled={!isStep1Valid}>
+                                        Next
+                                    </Button>
+                                </Form.Item>
+                            </>
+                        )}
+
+                        {step === 2 && (
+                            <>
+                                <ExpenseSplitSection
+                                    setIsStep2Valid={setIsStep2Valid}
+                                    selectedGroup={selectedGroup!}
+                                    splitMethod={splitMethod}
+                                    setSplitMethod={setSplitMethod}
+                                    amount={amount}
+                                    setAmount={setAmount}
+                                    selectedMembers={selectedMembers}
+                                    setSelectedMembers={setSelectedMembers}
+                                    amountsByMember={amountsByMember}
+                                    setAmountsByMember={setAmountsByMember}
+                                />
+                                {/* Submit */}
+                                <Form.Item className="mt-6">
+                                    <Button
+                                        type="primary"
+                                        block
+                                        loading={submitting}
+                                        disabled={!isStep2Valid}
+                                        onClick={handleSubmit}
+                                    >
+                                        Submit
+                                    </Button>
+                                </Form.Item>
+                            </>
+                        )}
+                    </Form>
+                )}
             </motion.div>
         </div>
     );

@@ -1,6 +1,6 @@
-import {useState, useEffect} from 'react';
-import {motion} from 'framer-motion';
-import {Button, Alert, Avatar, Spin, message, Typography, Modal} from 'antd';
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { Button, Alert, Avatar, Spin, message, Typography, Modal } from 'antd';
 import {
     EditOutlined,
     UserAddOutlined,
@@ -10,20 +10,20 @@ import {
     DeleteOutlined
 } from '@ant-design/icons';
 import Topbar from '../components/TopBar';
-import {useNavigate} from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import AddFriendsToGroupModal from '../components/AddFriendsToGroupModal';
 import CreateGroupModal from '../components/CreateGroupModal';
 import EmailInviteModal from '../components/EmailInviteModal';
 import LinkInviteModal from '../components/LinkInviteModal';
 import useAuthStore from '../stores/authStore';
-import {useGroupDetailStore} from '../stores/groupDetailStore';
-import {useExpenseStore} from '../stores/expenseStore';
-import {recurrenceOptions} from "../util/util.tsx";
+import { useGroupDetailStore } from '../stores/groupDetailStore';
+import { useExpenseStore } from '../stores/expenseStore';
+import { recurrenceOptions } from "../util/util.tsx";
 
 
 const GroupSettingPage = () => {
-    const {currencies} = useAuthStore();
-    const {groupType, id, expenseTypes} = useAuthStore();
+    const { currencies } = useAuthStore();
+    const { groupType, id, expenseTypes } = useAuthStore();
     const navigate = useNavigate();
     const {
         activeGroup,
@@ -38,9 +38,9 @@ const GroupSettingPage = () => {
         cycleExpenses,
         fetchCycleExpenses,
     } = useGroupDetailStore();
-    const {cycleExpenseData, getCycleExpense, setActiveCycleExpense} = useExpenseStore();
+    const { cycleExpenseData, getCycleExpense, setActiveCycleExpense } = useExpenseStore();
 
-    const {Text, Title} = Typography;
+    const { Text, Title } = Typography;
     const [cycleModal, setCycleModal] = useState(false);
 
     const [isLoadingCycleExpense, setIsLoadingCycleExpense] = useState(false);
@@ -62,9 +62,9 @@ const GroupSettingPage = () => {
     if (!activeGroup) {
         return (
             <motion.div
-                initial={{opacity: 0, y: 20}}
-                animate={{opacity: 1, y: 0}}
-                transition={{duration: 0.2, delay: 0.2}}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.2, delay: 0.2 }}
             >
                 <Topbar
                     leftType="back"
@@ -73,7 +73,7 @@ const GroupSettingPage = () => {
                     }}
                     title={"Group settings"}
                 />
-                < Alert message="Something Wrong!" type="error" className="m-4"/>;
+                < Alert message="Something Wrong!" type="error" className="m-4" />;
             </motion.div>
         )
     }
@@ -144,8 +144,8 @@ const GroupSettingPage = () => {
 
     return (
         <motion.div
-            initial={{opacity: 0, y: 20}}
-            animate={{opacity: 1, y: 0}}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
         >
             <Topbar
 
@@ -195,7 +195,7 @@ const GroupSettingPage = () => {
                     </div>
                     <Button
                         type="text"
-                        icon={<EditOutlined className="text-blue-500"/>}
+                        icon={<EditOutlined className="text-blue-500" />}
                         onClick={() => {
                             setisUpdateModalOpen(true)
                         }}
@@ -209,7 +209,7 @@ const GroupSettingPage = () => {
             <div className="px-4 mt-10 pb-16">
                 {isLoading ? (
                     <div className="flex justify-center py-10">
-                        <Spin size="large"/>
+                        <Spin size="large" />
                     </div>
                 ) : error ? (
                     <Alert
@@ -229,7 +229,7 @@ const GroupSettingPage = () => {
                                     className="flex items-center px-5 py-3 w-full text-left text-lg transition active:scale-95"
                                     onClick={() => setAddFriendsToGroupModal(true)}
                                 >
-                                    <UserAddOutlined className="mr-8 text-2xl"/>
+                                    <UserAddOutlined className="mr-8 text-2xl" />
                                     Add friends
                                 </div>
 
@@ -237,7 +237,7 @@ const GroupSettingPage = () => {
                                     className="flex items-center px-5 py-3 w-full text-left text-lg transition active:scale-95"
                                     onClick={() => setisEmailModalOpen(true)}
                                 >
-                                    <MailOutlined className="mr-8 text-2xl"/>
+                                    <MailOutlined className="mr-8 text-2xl" />
                                     Invite via email
                                 </div>
 
@@ -245,7 +245,7 @@ const GroupSettingPage = () => {
                                     className="flex items-center px-5 py-3 w-full text-left text-lg transition active:scale-95"
                                     onClick={() => setisLinkModalOpen(true)}
                                 >
-                                    <LinkOutlined className="mr-8 text-2xl"/>
+                                    <LinkOutlined className="mr-8 text-2xl" />
                                     Invite via link
                                 </div>
                             </div>
@@ -272,9 +272,9 @@ const GroupSettingPage = () => {
                             <h3 className="text-lg font-medium">Cycle expenses</h3>
                             {cycleExpenses.map((expense) => (
                                 <div key={expense.id} className="flex items-center space-x-4 px-4"
-                                     onClick={() => {
-                                         handleOpenModal(expense.id);
-                                     }}
+                                    onClick={() => {
+                                        handleOpenModal(expense.id);
+                                    }}
                                 >
                                     <Avatar
                                         src={expenseTypes[expense.type]}
@@ -293,7 +293,7 @@ const GroupSettingPage = () => {
                         >
                             {isLoadingCycleExpense ? (
                                 <div className="flex justify-center py-10">
-                                    <Spin size="large"/>
+                                    <Spin size="large" />
                                 </div>
                             ) : cycleExpenseError ? (
                                 <Alert
@@ -305,14 +305,14 @@ const GroupSettingPage = () => {
                                     <div className="flex justify-between items-center p-4 ">
                                         <div className="flex items-center space-x-3">
                                             <div className="bg-gray-100 rounded p-2">
-                                                <img src={expenseTypes[cycleExpenseData?.type]}
-                                                     className="rounded w-12 h-12"
-                                                     alt="icon"/>
+                                                <img src={cycleExpenseData?.type && expenseTypes[cycleExpenseData?.type]}
+                                                    className="rounded w-12 h-12"
+                                                    alt="icon" />
                                             </div>
                                             <div>
                                                 <Text className="text-base font-medium">{cycleExpenseData?.title}</Text>
                                                 <Title level={4}
-                                                       className="!m-0 text-xl font-bold">
+                                                    className="!m-0 text-xl font-bold">
 
                                                     {groupData?.currency}{currencies[groupData!.currency]}{cycleExpenseData?.amount.toFixed(2)}
                                                 </Title>
@@ -325,7 +325,7 @@ const GroupSettingPage = () => {
                                     <div className="p-4 max-w-md mx-auto space-y-2">
 
                                         <div className="flex items-center space-x-2 text-xl">
-                                            <Avatar src={cycleExpenseData?.payer.avatar}/>
+                                            <Avatar src={cycleExpenseData?.payer.avatar} />
                                             <Text
                                                 className="text-lg">{cycleExpenseData?.payer.fullName} paid {groupData?.currency + currencies[groupData!.currency] + cycleExpenseData?.amount.toFixed(2)}</Text>
                                         </div>
@@ -343,7 +343,7 @@ const GroupSettingPage = () => {
                                                     return (
                                                         <div key={member.id} className="flex items-center space-x-2">
                                                             <Avatar src={member.avatar}
-                                                                    className="w-6 h-6 rounded-full"/>
+                                                                className="w-6 h-6 rounded-full" />
                                                             <Text className="text-gray-700">
                                                                 {`${member.fullName} owes ${groupData?.currency}${currencies[groupData!.currency]}${sharedAmount.toFixed(2)}`}
                                                             </Text>
@@ -390,7 +390,7 @@ const GroupSettingPage = () => {
                                     className="flex items-center px-5 py-3 w-full text-left text-lg transition active:scale-95"
                                     onClick={handleLeave}
                                 >
-                                    <LogoutOutlined className="mr-8 text-2xl"/>
+                                    <LogoutOutlined className="mr-8 text-2xl" />
                                     {leaving ? 'Leaving...' : 'Leave group'}
                                 </div>
 
@@ -398,7 +398,7 @@ const GroupSettingPage = () => {
                                     className="flex items-center px-5 py-3 w-full text-left text-lg transition active:scale-95"
                                     onClick={handleDelete}
                                 >
-                                    <DeleteOutlined className="mr-8 text-2xl text-red-500"/>
+                                    <DeleteOutlined className="mr-8 text-2xl text-red-500" />
                                     {isDeleting ? 'Deleting...' : 'Delete group'}
                                 </div>
                             </div>

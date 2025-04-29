@@ -1,5 +1,5 @@
 import {Steps, Avatar, Button, Input, Modal, message, Form, Alert, Spin, Row, Col} from 'antd';
-import { LockOutlined, LogoutOutlined, MailOutlined, SafetyOutlined } from '@ant-design/icons';
+import { EditOutlined, LockOutlined, LogoutOutlined, MailOutlined, SafetyOutlined } from '@ant-design/icons';
 import useAuthStore from '../stores/authStore';
 import {useNavigate} from 'react-router-dom';
 import {motion} from 'framer-motion';
@@ -28,9 +28,6 @@ export default function AccountPage() {
     const [token, setToken] = useState('');
     const [errorPassword, setErrorPassword] = useState('');
     const [countdown, setCountdown] = useState(0);
-
-    const [loadingImgUp, setLoadingImgUp] = useState(false);
-
     const {Step} = Steps;
 
     const values1 = Form.useWatch([], inforForm);
@@ -134,13 +131,10 @@ export default function AccountPage() {
             return;
         }
         if (file) {
-            setLoadingImgUp(true);
             try {
                 uploadImg(file);
             } catch (err: any) {
                 message.error('Upload failed!');
-            } finally {
-                setLoadingImgUp(false);
             }
         }
     };
@@ -174,33 +168,21 @@ export default function AccountPage() {
                     <Text className="text-lg text-gray-500 mt-1 text-center">{email || 'Guest User'}</Text>
                 </div>
 
-                <div className="mt-10 px-4">
-
-                    <Button
-                        type="text"
-                        block
-                        className="font-bold text-xl h-auto leading-none py-3"
-                        onClick={() => {
-                            setIsModalOpen(true);
-                        }}
+                <div className="mt-10 px-4 flex flex-col items-center">
+                    <div
+                        className="flex items-center px-5 py-3 text-lg transition active:scale-95"
+                        onClick={() => setIsModalOpen(true)}
                     >
+                        <EditOutlined className="mr-8 text-2xl" />
                         Edit Information
-                    </Button>
-
-
-
-                    <Button
-                        type="text"
-                        block
-                        className="font-bold text-xl h-auto leading-none py-6cd"
-                        onClick={() => {
-                            setIsChangePasswordModalOpen(true);
-                        }}
+                    </div>
+                    <div
+                        className="flex items-center px-5 py-3 text-lg transition active:scale-95"
+                        onClick={() => setIsChangePasswordModalOpen(true)}
                     >
+                        <LockOutlined className="mr-8 text-2xl" />
                         Change Password
-                    </Button>
-
-
+                    </div>
                 </div>
 
                 <Button
@@ -361,7 +343,7 @@ export default function AccountPage() {
                                             <Input.Group compact>
                                                 <Input
                                                     prefix={<MailOutlined />}
-                                                    value={email}
+                                                    value={email!}
                                                     disabled
                                                     size="large"
                                                     style={{ width: 'calc(100% - 30%)' }}
@@ -401,7 +383,7 @@ export default function AccountPage() {
                                         <Form.Item label="Email">
                                             <Input
                                                 prefix={<MailOutlined/>}
-                                                value={email}
+                                                value={email!}
                                                 disabled
                                                 size="large"
                                             />

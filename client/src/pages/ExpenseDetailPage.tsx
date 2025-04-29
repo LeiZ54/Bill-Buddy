@@ -1,4 +1,4 @@
-import { Alert, Avatar, Button, Spin, message } from 'antd';
+import { Alert, Avatar, Button, Modal, Spin, message } from 'antd';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import Topbar from '../components/TopBar';
@@ -110,6 +110,31 @@ export default function ExpenseDetailPage() {
                     setActiveGroup(expenseData!.groupId);
                 }}
             />
+
+            <Modal
+                open={previewOpen}
+                footer={null}
+                onCancel={() => setPreviewOpen(false)}
+                centered
+            >
+                <div className="flex flex-col items-center space-y-4">
+                    <img
+                        alt="Preview"
+                        src={expenseData.picture}
+                        style={{ width: '100%', maxHeight: '60vh', objectFit: 'contain' }}
+                    />
+                    <button
+                        className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+                        onClick={() => {
+                            setPreviewOpen(false);
+                            fileInputRef.current?.click();
+                        }}
+                    >
+                        Reupload
+                    </button>
+                </div>
+            </Modal>
+
             {isLoading ? (
                 <div className="flex justify-center py-10">
                     <Spin size="large" />
@@ -135,11 +160,15 @@ export default function ExpenseDetailPage() {
                             </div>
                         </div>
                         <div
-                            className="bg-gray-100 rounded p-2 w-20 h-20 flex items-center justify-center"
+                            className="bg-gray-100 w-20 h-20 flex items-center justify-center"
                             onClick={handleImageClick}
                         >
                             {expenseData.picture ? (
-                                <img src={expenseData.picture} className="rounded w-20 h-20 object-cover" alt="Expense" />
+                                <img
+                                    src={expenseData.picture}
+                                    className="w-full h-full object-contain"
+                                    alt="Expense"
+                                />
                             ) : (
                                 <UploadOutlined className="text-xl text-gray-500" />
                             )}
@@ -151,6 +180,7 @@ export default function ExpenseDetailPage() {
                                 className="hidden"
                             />
                         </div>
+
 
 
                     </div>
