@@ -137,8 +137,7 @@ public class ExpenseService {
         Expense expense = expenseRepository.findById(expenseId)
                 .orElseThrow(() -> new AppException(ErrorCode.EXPENSE_NOT_FOUND));
 
-        expense.setDeleted(true);
-        expenseRepository.save(expense);
+        expenseRepository.softDeleteById(expenseId);
 
         List<ExpenseShare> shares = expenseShareRepository.findByExpenseIdAndDeletedFalse(expenseId);
         for (ExpenseShare share : shares) {

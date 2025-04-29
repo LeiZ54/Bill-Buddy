@@ -42,7 +42,16 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long>, JpaSpec
             """)
     void softDeleteExpensesByGroupId(@Param("groupId") Long groupId);
 
-    Optional<Expense> findExpenseByIdAndDeletedFalse(Long id);
+    @Modifying
+    @Query("""
+                UPDATE Expense e
+                SET e.deleted = true
+                WHERE e.id = :id
+                AND e.deleted = false
+            """)
+    void softDeleteById(Long id);
+
+    Optional<Expense> findExpenseByIdAndDeletedFalse(@Param("id") Long id);
 
     @Query("""
                 SELECT e.id

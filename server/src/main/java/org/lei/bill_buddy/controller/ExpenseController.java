@@ -108,9 +108,11 @@ public class ExpenseController {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteExpense(@PathVariable Long id) {
         Long currentUserId = userService.getCurrentUser().getId();
+        Expense expense = expenseService.getExpenseById(id);
+        if (expense == null) throw new AppException(ErrorCode.EXPENSE_NOT_FOUND);
 
-        if (!groupService.isMemberOfGroup(currentUserId, id)) {
-            return ResponseEntity.status(403).body("You do not have permission to delete this expense.");
+        if (!groupService.isMemberOfGroup(currentUserId, expense.getGroup().getId())) {
+            throw new AppException(ErrorCode.NOT_A_MEMBER);
         }
 
         expenseService.deleteExpense(id);
