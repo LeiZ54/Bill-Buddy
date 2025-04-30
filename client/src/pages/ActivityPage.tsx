@@ -29,7 +29,6 @@ const ActivityPage = () => {
     }, []);
 
     //touch bottome to load more data;
-
     const isLoadingRef = useRef(false);
     const hasMoreRef = useRef(true);
     const loadMoreRef = useRef(() => { });
@@ -41,12 +40,10 @@ const ActivityPage = () => {
     }, [isLoadingMore, hasMore, loadMoreActivities]);
 
     useEffect(() => {
-        const scrollContainer = document.querySelector('.ant-layout-content');
-
         const handleScroll = () => {
-            if (!scrollContainer) return;
-
-            const { scrollTop, scrollHeight, clientHeight } = scrollContainer;
+            const scrollTop = window.scrollY;
+            const clientHeight = window.innerHeight; 
+            const scrollHeight = document.documentElement.scrollHeight; 
             const isBottom = scrollTop + clientHeight >= scrollHeight - 10;
 
             if (isBottom && !isLoadingRef.current && hasMoreRef.current) {
@@ -54,11 +51,9 @@ const ActivityPage = () => {
             }
         };
 
-        scrollContainer?.addEventListener('scroll', handleScroll);
-        return () => {
-            scrollContainer?.removeEventListener('scroll', handleScroll);
-        };
-    }, []);
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []); 
 
     return (
         <motion.div

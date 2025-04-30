@@ -8,6 +8,6 @@
     "\\src\\stores",
     "\\src\\util"
   ],
-  "SelectedNode": "\\src\\pages\\GroupDetailPage.tsx",
+  "SelectedNode": "\\src\\stores\\expenseStore.ts",
   "PreviewInSolutionExplorer": false
 }

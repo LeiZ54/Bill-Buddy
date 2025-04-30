@@ -32,18 +32,17 @@ export default function ExpenseDetailPage() {
         }
     };
 
+    console.log(expenseData);
     const fetchData = async () => {
         try {
             setIsLoading(true);
             await getExpense();
-            setActiveGroup(expenseData?.groupId!);
         } catch (err) {
             setError("Failed to get Data!");
         } finally {
             setIsLoading(false);
         }
     };
-
     const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
@@ -85,6 +84,7 @@ export default function ExpenseDetailPage() {
         if (isDeleting) return;
         try {
             setIsDeleting(true);
+            setActiveGroup(expenseData?.groupId!);
             await deleteExpense();
             navigate("/groups/detail");
         } catch (err) {
@@ -191,7 +191,7 @@ export default function ExpenseDetailPage() {
                             loading={isDeleting}
                             onClick={handleDelete}
                             className="flex-1 flex items-center justify-center text-lg"
-                            disabled={expenseData?.payer?.id !== id}
+                            disabled={expenseData?.payer?.id !== id || expenseData.settled}
                         >
                             Delete
                         </Button>
@@ -203,7 +203,7 @@ export default function ExpenseDetailPage() {
                             icon={<EditOutlined />}
                             onClick={() => { navigate("edit") }}
                             className="flex-1 flex items-center justify-center text-lg"
-                            disabled={expenseData?.payer?.id !== id}
+                            disabled={expenseData?.payer?.id !== id || expenseData.settled}
                         >
                             Edit
                         </Button>

@@ -9,6 +9,7 @@ import { useExpenseStore } from '../stores/expenseStore';
 import { debounce } from 'lodash';
 import SettleUpModal from '../components/SettleUpModal';
 import { Button } from 'antd/es/radio';
+import Checkbox from 'antd/es/checkbox/Checkbox';
 
 
 export default function GroupDetailPage() {
@@ -57,7 +58,6 @@ export default function GroupDetailPage() {
             fetchData();
         }
     }, []);
-
     //get expense
     useEffect(() => {
         if (activeGroup) {
@@ -108,12 +108,10 @@ export default function GroupDetailPage() {
     }, [isLoadingMore, hasMore, loadMoreExpenses]);
 
     useEffect(() => {
-        const scrollContainer = document.querySelector('.ant-layout-content');
-
         const handleScroll = () => {
-            if (!scrollContainer) return;
-
-            const { scrollTop, scrollHeight, clientHeight } = scrollContainer;
+            const scrollTop = window.scrollY;
+            const clientHeight = window.innerHeight;
+            const scrollHeight = document.documentElement.scrollHeight;
             const isBottom = scrollTop + clientHeight >= scrollHeight - 10;
 
             if (isBottom && !isLoadingRef.current && hasMoreRef.current) {
@@ -121,11 +119,9 @@ export default function GroupDetailPage() {
             }
         };
 
-        scrollContainer?.addEventListener('scroll', handleScroll);
-        return () => {
-            scrollContainer?.removeEventListener('scroll', handleScroll);
-        };
-    }, []);
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []); 
 
 
     const generateMonthsFromLatestExpense = (count: number): string[] => {
@@ -153,7 +149,7 @@ export default function GroupDetailPage() {
 
 
     const handleApplyFilters = () => {
-        const { payer, title, yearMonth, type } = form.getFieldsValue();
+        const { payer, title, yearMonth, type, showAll } = form.getFieldsValue();
         const newFilters: any = {};
 
         if (payer) {
@@ -168,9 +164,9 @@ export default function GroupDetailPage() {
         if (type) {
             newFilters.type = type;
         }
+        newFilters.showAll = showAll ?? false;
         setFilters(newFilters);
     };
-
 
     if (!groupData) {
         return (
@@ -328,6 +324,16 @@ export default function GroupDetailPage() {
                                     </Form.Item>
                                 </div>
 
+                                <Form.Item
+                                    name="showAll"
+                                    valuePropName="checked"
+                                    initialValue={false}
+                                    className="m-0"
+                                >
+                                    <Checkbox onChange={handleApplyFilters}>
+                                        Show settled expenses
+                                    </Checkbox>
+                                </Form.Item>
 
 
                             </div>

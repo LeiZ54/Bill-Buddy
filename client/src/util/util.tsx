@@ -88,6 +88,7 @@ export interface ExpenseData {
     type: string;
     amount: number;
     currency: string;
+    settled: boolean;
     logs: string;
     expenseDate: string;
     debtsAmount: number;
@@ -139,6 +140,7 @@ export interface ExpenseFilter {
     payerId?: string;
     type?: string;
     month?: string;
+    showAll?: boolean;
 }
 
 export interface SettleInfo {

@@ -60,7 +60,6 @@ export default function SettleUpModal({
             onSuccess();
         } catch (err) {
             message.error("Failed to settle up!");
-            console.log(err);
         } finally {
             setIsLoading(false);
         }
