@@ -171,6 +171,10 @@ export const useGroupDetailStore = create<GroupDetailState>()(
                 if (filters.payerId) queryParams.append('payerId', filters.payerId);
                 if (filters.type) queryParams.append('type', filters.type);
                 if (filters.month) queryParams.append('month', filters.month);
+                const showAll = filters.showAll ?? false;
+                if (!showAll) {
+                    queryParams.append('settled', 'false');
+                }
                 queryParams.append('page', String(0));
                 queryParams.append('size', String(10));
 
@@ -198,6 +202,9 @@ export const useGroupDetailStore = create<GroupDetailState>()(
                 if (filters.payerId) queryParams.append('payerId', filters.payerId);
                 if (filters.type) queryParams.append('type', filters.type);
                 if (filters.month) queryParams.append('month', filters.month);
+                if (typeof filters.settled === 'boolean') {
+                    queryParams.append('settled', String(filters.settled));
+                }
                 queryParams.append('page', String(nextPage));
                 queryParams.append('size', String(10));
                 set({ isLoadingMore: true });

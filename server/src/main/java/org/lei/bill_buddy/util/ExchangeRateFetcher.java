@@ -17,7 +17,7 @@ import java.net.URL;
 @Slf4j
 public class ExchangeRateFetcher {
 
-    private static final String API_KEY = "cd78d00051b64abe4803db09";
+    private static final String API_KEY = "4340a3c5b8926ebac687c0c6";
     private static final String API_URL = "https://v6.exchangerate-api.com/v6/" + API_KEY + "/pair";
     private static final Gson GSON = new Gson();
 

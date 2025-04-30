@@ -69,12 +69,10 @@ export default function GroupsPage() {
     }, [isLoadingMore, hasMore, loadMoreGroups]);
 
     useEffect(() => {
-        const scrollContainer = document.querySelector('.ant-layout-content');
-
         const handleScroll = () => {
-            if (!scrollContainer) return;
-
-            const { scrollTop, scrollHeight, clientHeight } = scrollContainer;
+            const scrollTop = window.scrollY;
+            const clientHeight = window.innerHeight;
+            const scrollHeight = document.documentElement.scrollHeight;
             const isBottom = scrollTop + clientHeight >= scrollHeight - 10;
 
             if (isBottom && !isLoadingRef.current && hasMoreRef.current) {
@@ -82,11 +80,9 @@ export default function GroupsPage() {
             }
         };
 
-        scrollContainer?.addEventListener('scroll', handleScroll);
-        return () => {
-            scrollContainer?.removeEventListener('scroll', handleScroll);
-        };
-    }, []);
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []); 
 
 
     return (
