@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.Test;
 import org.lei.bill_buddy.DTO.*;
+import org.lei.bill_buddy.config.exception.AppException;
 import org.lei.bill_buddy.enums.Currency;
 import org.lei.bill_buddy.enums.ErrorCode;
 import org.lei.bill_buddy.model.Expense;
@@ -34,6 +35,7 @@ import java.util.List;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -41,12 +43,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc(addFilters = false)
 class ExpenseControllerTest {
 
-    @Autowired MockMvc mvc;
-    @Autowired ExpenseService expenseService;
-    @Autowired GroupService groupService;
-    @Autowired UserService userService;
-    @Autowired RecurringExpenseService recurringExpenseService;
-    @Autowired DtoConvertorUtil dto;
+    @Autowired
+    MockMvc mvc;
+    @Autowired
+    ExpenseService expenseService;
+    @Autowired
+    GroupService groupService;
+    @Autowired
+    UserService userService;
+    @Autowired
+    RecurringExpenseService recurringExpenseService;
+    @Autowired
+    DtoConvertorUtil dto;
 
     ObjectMapper om = new ObjectMapper()
             .registerModule(new JavaTimeModule())
@@ -54,11 +62,13 @@ class ExpenseControllerTest {
 
     @Test
     void createExpense_ok() throws Exception {
-        User u = new User(); u.setId(1L);
-        Mockito.when(userService.getCurrentUser()).thenReturn(u);
-        Mockito.when(groupService.isMemberOfGroup(1L, 10L)).thenReturn(true);
-        Expense e = new Expense(); e.setId(55L);
-        Mockito.when(expenseService.createExpense(anyLong(), anyLong(), anyString(), anyString(), any(BigDecimal.class),
+        User u = new User();
+        u.setId(1L);
+        when(userService.getCurrentUser()).thenReturn(u);
+        when(groupService.isMemberOfGroup(1L, 10L)).thenReturn(true);
+        Expense e = new Expense();
+        e.setId(55L);
+        when(expenseService.createExpense(anyLong(), anyLong(), anyString(), anyString(), any(BigDecimal.class),
                 anyString(), anyString(), any(LocalDateTime.class), anyBoolean(), anyString(), anyInt(),
                 anyList(), anyList())).thenReturn(e);
 
@@ -83,12 +93,16 @@ class ExpenseControllerTest {
 
     @Test
     void getExpenseById_notMember() throws Exception {
-        User u = new User(); u.setId(2L);
-        Mockito.when(userService.getCurrentUser()).thenReturn(u);
-        Group g = new Group(); g.setId(20L);
-        Expense e = new Expense(); e.setId(88L); e.setGroup(g);
-        Mockito.when(expenseService.getExpenseById(88L)).thenReturn(e);
-        Mockito.when(groupService.isMemberOfGroup(2L, 20L)).thenReturn(false);
+        User u = new User();
+        u.setId(2L);
+        when(userService.getCurrentUser()).thenReturn(u);
+        Group g = new Group();
+        g.setId(20L);
+        Expense e = new Expense();
+        e.setId(88L);
+        e.setGroup(g);
+        when(expenseService.getExpenseById(88L)).thenReturn(e);
+        when(groupService.isMemberOfGroup(2L, 20L)).thenReturn(false);
         mvc.perform(get("/api/expenses/88"))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.error").value("You are not a member of the group."));
@@ -96,12 +110,16 @@ class ExpenseControllerTest {
 
     @Test
     void deleteExpense_ok() throws Exception {
-        User u = new User(); u.setId(3L);
-        Mockito.when(userService.getCurrentUser()).thenReturn(u);
-        Group g = new Group(); g.setId(30L);
-        Expense e = new Expense(); e.setId(99L); e.setGroup(g);
-        Mockito.when(expenseService.getExpenseById(99L)).thenReturn(e);
-        Mockito.when(groupService.isMemberOfGroup(3L, 30L)).thenReturn(true);
+        User u = new User();
+        u.setId(3L);
+        when(userService.getCurrentUser()).thenReturn(u);
+        Group g = new Group();
+        g.setId(30L);
+        Expense e = new Expense();
+        e.setId(99L);
+        e.setGroup(g);
+        when(expenseService.getExpenseById(99L)).thenReturn(e);
+        when(groupService.isMemberOfGroup(3L, 30L)).thenReturn(true);
         mvc.perform(delete("/api/expenses/99"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("99")));
@@ -109,50 +127,66 @@ class ExpenseControllerTest {
 
     @Test
     void settleUp_ok() throws Exception {
-        User u = new User(); u.setId(1L);
-        Mockito.when(userService.getCurrentUser()).thenReturn(u);
-        Mockito.when(groupService.isMemberOfGroup(1L, 10L)).thenReturn(true);
-        SettleUpRequest req = new SettleUpRequest(2L,10L, Currency.USD,new BigDecimal("20"));
+        User u = new User();
+        u.setId(1L);
+        when(userService.getCurrentUser()).thenReturn(u);
+        when(groupService.isMemberOfGroup(1L, 10L)).thenReturn(true);
+        SettleUpRequest req = new SettleUpRequest(2L, 10L, Currency.USD, new BigDecimal("20"));
         mvc.perform(post("/api/expenses/settle-up").contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsString(req)))
                 .andExpect(status().isOk()).andExpect(content().string(containsString("Settled")));
     }
 
     @Test
     void getExpenseById_ok() throws Exception {
-        User u = new User(); u.setId(1L);
-        Group g = new Group(); g.setId(10L);
-        Expense e = new Expense(); e.setId(99L); e.setGroup(g);
+        User u = new User();
+        u.setId(1L);
+        Group g = new Group();
+        g.setId(10L);
+        Expense e = new Expense();
+        e.setId(99L);
+        e.setGroup(g);
         ExpenseDetailsDTO dtoOut = new ExpenseDetailsDTO();
-        Mockito.when(userService.getCurrentUser()).thenReturn(u);
-        Mockito.when(expenseService.getExpenseById(99L)).thenReturn(e);
-        Mockito.when(groupService.isMemberOfGroup(1L, 10L)).thenReturn(true);
-        Mockito.when(dto.convertExpenseToExpenseDetailsDTO(e)).thenReturn(dtoOut);
+        when(userService.getCurrentUser()).thenReturn(u);
+        when(expenseService.getExpenseById(99L)).thenReturn(e);
+        when(groupService.isMemberOfGroup(1L, 10L)).thenReturn(true);
+        when(dto.convertExpenseToExpenseDetailsDTO(e)).thenReturn(dtoOut);
         mvc.perform(get("/api/expenses/99")).andExpect(status().isOk());
     }
 
     @Test
     void updateExpense_ok() throws Exception {
         ExpenseUpdateRequest req = new ExpenseUpdateRequest();
-        req.setPayerId(1L); req.setTitle("t"); req.setType("OTHER"); req.setAmount(new BigDecimal("1")); req.setCurrency("USD"); req.setDescription("d"); req.setExpenseDate(LocalDateTime.now());
+        req.setPayerId(1L);
+        req.setTitle("t");
+        req.setType("OTHER");
+        req.setAmount(new BigDecimal("1"));
+        req.setCurrency("USD");
+        req.setDescription("d");
+        req.setExpenseDate(LocalDateTime.now());
         req.setParticipants(List.of());
         req.setShares(List.of());
-        Expense e = new Expense(); e.setId(77L);
-        Mockito.when(expenseService.updateExpense(
-                        anyLong(), anyLong(), anyString(), anyString(), any(BigDecimal.class),
-                        anyString(), anyString(), any(LocalDateTime.class),
-                        anyList(), anyList()))
-                .thenReturn(e);mvc.perform(put("/api/expenses/77").contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsString(req)))
+        Expense e = new Expense();
+        e.setId(77L);
+        when(expenseService.updateExpense(
+                anyLong(), anyLong(), anyString(), anyString(), any(BigDecimal.class),
+                anyString(), anyString(), any(LocalDateTime.class),
+                anyList(), anyList()))
+                .thenReturn(e);
+        mvc.perform(put("/api/expenses/77").contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsString(req)))
                 .andExpect(status().isOk()).andExpect(content().string(containsString("77")));
     }
 
     @Test
     void updatePicture_ok() throws Exception {
-        User u = new User(); u.setId(1L);
-        Group g = new Group(); g.setId(10L);
-        Expense e = new Expense(); e.setGroup(g);
-        Mockito.when(userService.getCurrentUser()).thenReturn(u);
-        Mockito.when(expenseService.getExpenseById(33L)).thenReturn(e);
-        Mockito.when(groupService.isMemberOfGroup(1L, 10L)).thenReturn(true);
+        User u = new User();
+        u.setId(1L);
+        Group g = new Group();
+        g.setId(10L);
+        Expense e = new Expense();
+        e.setGroup(g);
+        when(userService.getCurrentUser()).thenReturn(u);
+        when(expenseService.getExpenseById(33L)).thenReturn(e);
+        when(groupService.isMemberOfGroup(1L, 10L)).thenReturn(true);
         ExpenseUpdatePictureRequest req = new ExpenseUpdatePictureRequest();
         req.setPicture("pic");
         mvc.perform(put("/api/expenses/33/picture").contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsString(req)))
@@ -162,55 +196,115 @@ class ExpenseControllerTest {
     @Test
     void getExpenses_ok() throws Exception {
         Expense exp = new Expense();
-        Mockito.when(expenseService.getExpenses(eq(10L), any(), any(), any(), any(), any(), any(Pageable.class)))
+        when(expenseService.getExpenses(eq(10L), any(), any(), any(), any(), any(), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(exp), PageRequest.of(0, 10), 1));
-        ExpenseDTO dtoOut = new ExpenseDTO(); dtoOut.setId(1L);
-        Mockito.when(dto.convertExpenseToExpenseDTO(exp)).thenReturn(dtoOut);
+        ExpenseDTO dtoOut = new ExpenseDTO();
+        dtoOut.setId(1L);
+        when(dto.convertExpenseToExpenseDTO(exp)).thenReturn(dtoOut);
         mvc.perform(get("/api/expenses").param("groupId", "10"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.content", hasSize(1)));
     }
 
     @Test
-    void recurringByGroup_ok() throws Exception {
-        User u = new User(); u.setId(1L);
-        Mockito.when(userService.getCurrentUser()).thenReturn(u);
-        Mockito.when(groupService.isMemberOfGroup(1L, 10L)).thenReturn(true);
-        RecurringExpense rec = new RecurringExpense(); RecurringExpenseDTO dtoR = new RecurringExpenseDTO();
-        Mockito.when(recurringExpenseService.getRecurringExpensesByGroup(10L)).thenReturn(List.of(rec));
-        Mockito.when(dto.convertRecurringExpenseToRecurringExpenseDTO(rec)).thenReturn(dtoR);
-        mvc.perform(get("/api/expenses/10/recurring")).andExpect(status().isOk()).andExpect(jsonPath("$", hasSize(1)));
+    void deleteExpense_onlyPayerAllowed() throws Exception {
+        User payer  = new User(); payer.setId(1L);
+        User other  = new User(); other.setId(2L);
+        Group g     = new Group(); g.setId(10L);
+
+        Expense e   = new Expense();
+        e.setId(77L); e.setPayer(payer); e.setGroup(g);
+
+        when(expenseService.getExpenseById(77L)).thenReturn(e);
+        when(groupService.isMemberOfGroup(anyLong(), eq(10L))).thenReturn(true);
+
+        when(userService.getCurrentUser()).thenReturn(other);
+        doThrow(new AppException(ErrorCode.FORBIDDEN))
+                .when(expenseService).deleteExpense(77L);
+
+        mvc.perform(delete("/api/expenses/77"))
+                .andExpect(status().isForbidden());
+
+        reset(expenseService);
+        when(expenseService.getExpenseById(77L)).thenReturn(e);
+        when(userService.getCurrentUser()).thenReturn(payer);
+
+        mvc.perform(delete("/api/expenses/77"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Expense deleted with ID: 77")));
+
+        verify(expenseService).deleteExpense(77L);
     }
 
     @Test
     void recurringById_ok() throws Exception {
-        User u = new User(); u.setId(1L);
-        Group g = new Group(); g.setId(10L);
-        RecurringExpense rec = new RecurringExpense(); rec.setGroup(g);
+        User u = new User();
+        u.setId(1L);
+        Group g = new Group();
+        g.setId(10L);
+        RecurringExpense rec = new RecurringExpense();
+        rec.setGroup(g);
         RecurringExpenseDetailsDTO dtoD = new RecurringExpenseDetailsDTO();
-        Mockito.when(userService.getCurrentUser()).thenReturn(u);
-        Mockito.when(recurringExpenseService.getRecurringExpenseById(5L)).thenReturn(rec);
-        Mockito.when(groupService.isMemberOfGroup(1L, 10L)).thenReturn(true);
-        Mockito.when(dto.convertRecurringExpenseToRecurringExpenseDetailsDTO(rec)).thenReturn(dtoD);
+        when(userService.getCurrentUser()).thenReturn(u);
+        when(recurringExpenseService.getRecurringExpenseById(5L)).thenReturn(rec);
+        when(groupService.isMemberOfGroup(1L, 10L)).thenReturn(true);
+        when(dto.convertRecurringExpenseToRecurringExpenseDetailsDTO(rec)).thenReturn(dtoD);
         mvc.perform(get("/api/expenses/recurring/5")).andExpect(status().isOk());
     }
 
     @Test
     void deleteRecurring_ok() throws Exception {
-        User u = new User(); u.setId(1L);
+        User user = new User(); user.setId(1L);
+        when(userService.getCurrentUser()).thenReturn(user);
+
         Group g = new Group(); g.setId(10L);
-        RecurringExpense rec = new RecurringExpense(); rec.setGroup(g);
-        Mockito.when(userService.getCurrentUser()).thenReturn(u);
-        Mockito.when(recurringExpenseService.getRecurringExpenseById(6L)).thenReturn(rec);
-        Mockito.when(groupService.isMemberOfGroup(1L, 10L)).thenReturn(true);
-        mvc.perform(delete("/api/expenses/recurring/6")).andExpect(status().isOk()).andExpect(content().string(containsString("6")));
+        when(groupService.isMemberOfGroup(user.getId(), g.getId())).thenReturn(true);
+
+        RecurringExpense rec = new RecurringExpense();
+        rec.setId(6L);
+        rec.setGroup(g);
+        rec.setPayer(user);
+
+        when(recurringExpenseService.getRecurringExpenseById(6L))
+                .thenReturn(rec);
+
+        mvc.perform(delete("/api/expenses/recurring/6"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Recurring Expense deleted with ID: 6")));
+
+        verify(recurringExpenseService).deleteRecurringExpense(6L);
     }
+
 
     @TestConfiguration
     static class MockCfg {
-        @Bean @Primary ExpenseService expenseService() { return Mockito.mock(ExpenseService.class); }
-        @Bean @Primary RecurringExpenseService recurringExpenseService() { return Mockito.mock(RecurringExpenseService.class); }
-        @Bean @Primary UserService userService() { return Mockito.mock(UserService.class); }
-        @Bean @Primary GroupService groupService() { return Mockito.mock(GroupService.class); }
-        @Bean @Primary DtoConvertorUtil dto() { return Mockito.mock(DtoConvertorUtil.class); }
+        @Bean
+        @Primary
+        ExpenseService expenseService() {
+            return Mockito.mock(ExpenseService.class);
+        }
+
+        @Bean
+        @Primary
+        RecurringExpenseService recurringExpenseService() {
+            return Mockito.mock(RecurringExpenseService.class);
+        }
+
+        @Bean
+        @Primary
+        UserService userService() {
+            return Mockito.mock(UserService.class);
+        }
+
+        @Bean
+        @Primary
+        GroupService groupService() {
+            return Mockito.mock(GroupService.class);
+        }
+
+        @Bean
+        @Primary
+        DtoConvertorUtil dto() {
+            return Mockito.mock(DtoConvertorUtil.class);
+        }
     }
 }
