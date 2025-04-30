@@ -20,6 +20,8 @@ public class ExpenseDTO {
 
     private String currency;
 
+    private Boolean settled;
+
     private LocalDateTime expenseDate;
 
     private BigDecimal debtsAmount;

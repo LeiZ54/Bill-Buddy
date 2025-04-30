@@ -48,6 +48,7 @@ public class DtoConvertorUtil {
         dto.setExpenseDate(expense.getExpenseDate());
         dto.setType(expense.getType());
         dto.setDebtsAmount(calculateExpenseDebtsAmount(currentUser.getId(), expense));
+        dto.setSettled(expense.getSettled());
         return dto;
     }
 
@@ -82,6 +83,7 @@ public class DtoConvertorUtil {
         dto.setExpenseDate(expense.getExpenseDate());
         dto.setType(expense.getType());
         dto.setLogs(logs.toString());
+        dto.setSettled(expense.getSettled());
         return dto;
     }
 

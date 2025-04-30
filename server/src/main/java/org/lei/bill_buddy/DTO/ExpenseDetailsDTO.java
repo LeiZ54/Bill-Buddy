@@ -27,6 +27,8 @@ public class ExpenseDetailsDTO {
 
     private String currency;
 
+    private Boolean settled;
+
     private String logs;
 
     private LocalDateTime expenseDate;

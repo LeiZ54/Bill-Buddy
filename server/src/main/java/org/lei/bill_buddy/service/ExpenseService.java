@@ -527,6 +527,7 @@ public class ExpenseService {
         Expense expense = getExpenseById(expenseId);
         User currentUser = userService.getCurrentUser();
         if (expense == null) throw new AppException(ErrorCode.EXPENSE_NOT_FOUND);
+        if (expense.getSettled()) throw new AppException(ErrorCode.EXPENSE_ALREADY_SETTLED);
 
         if (!groupService.isMemberOfGroup(currentUser.getId(),
                 expense.getGroup().getId())) {

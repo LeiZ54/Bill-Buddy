@@ -127,6 +127,7 @@ public class ExpenseController {
         Long currentUserId = userService.getCurrentUser().getId();
         Expense expense = expenseService.getExpenseById(id);
         if (expense == null) throw new AppException(ErrorCode.EXPENSE_NOT_FOUND);
+        if (expense.getSettled()) throw new AppException(ErrorCode.EXPENSE_ALREADY_SETTLED);
 
         if (!groupService.isMemberOfGroup(currentUserId, expense.getGroup().getId())) {
             throw new AppException(ErrorCode.NOT_A_MEMBER);

@@ -55,6 +55,8 @@ public enum ErrorCode {
 
     EXPENSE_ALREADY_DELETED(HttpStatus.CONFLICT, "Expense already deleted."),
 
+    EXPENSE_ALREADY_SETTLED(HttpStatus.CONFLICT, "Settled expense can not be modified."),
+
     NOT_PARTICIPANT(HttpStatus.FORBIDDEN, "User is not a valid participant."),
 
     CAN_NOT_SETTLE(HttpStatus.CONFLICT, "You can not settle to this user."),
