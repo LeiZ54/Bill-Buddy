@@ -32,7 +32,6 @@ export default function ExpenseDetailPage() {
         }
     };
 
-    console.log(expenseData);
     const fetchData = async () => {
         try {
             setIsLoading(true);
@@ -210,7 +209,7 @@ export default function ExpenseDetailPage() {
                     </div>
                     {expenseData?.payer?.id !== id && (
                         <p className="text-sm text-gray-500 text-center">
-                            Only the payor can edit or delete this expense.
+                            Only the payer can edit or delete this expense.
                         </p>
                     )}
 
