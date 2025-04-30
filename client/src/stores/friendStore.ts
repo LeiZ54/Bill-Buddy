@@ -115,6 +115,9 @@ export const useFriendStore = create<FriendState>()(
                 friends: state.friends,
                 currentPage: state.currentPage,
                 hasMore: state.hasMore,
+                friendData: state.friendData,
+                filters: state.filters,
+                groupList: state.groupList
             }),
         }
     )

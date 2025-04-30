@@ -2,9 +2,12 @@
   "ExpandedNodes": [
     "",
     "\\src",
-    "\\src\\Test",
+    "\\src\\components",
+    "\\src\\pages",
+    "\\src\\routes",
+    "\\src\\stores",
     "\\src\\util"
   ],
-  "SelectedNode": "\\src\\vite-env.d.ts",
+  "SelectedNode": "\\src\\pages\\GroupDetailPage.tsx",
   "PreviewInSolutionExplorer": false
 }

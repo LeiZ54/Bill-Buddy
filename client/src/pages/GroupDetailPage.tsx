@@ -7,14 +7,15 @@ import useAuthStore from '../stores/authStore';
 import {useGroupDetailStore} from '../stores/groupDetailStore';
 import { useExpenseStore } from '../stores/expenseStore';
 import { debounce } from 'lodash';
+import SettleUpModal from '../components/SettleUpModal';
+import { Button } from 'antd/es/radio';
 
 
 export default function GroupDetailPage() {
-    const {currencies} = useAuthStore();
     const [form] = Form.useForm();
     const {Option} = Select;
     const navigate = useNavigate();
-    const {groupType, expenseTypes} = useAuthStore();
+    const { groupType, expenseTypes, currencies } = useAuthStore();
     const {
         activeGroup,
         groupData,
@@ -28,12 +29,15 @@ export default function GroupDetailPage() {
         filters,
         setFilters,
         members,
-        fetchMember
+        fetchMember,
+        getSettleInfo,
+        settleInfo
     } = useGroupDetailStore();
     const {setActiveExpense} = useExpenseStore();
     const [isLoading, setIsLoading] = useState(false);
     const [isLoadingExpenses, setIsLoadingExpenses] = useState(false);
     const [error, setError] = useState("");
+    const [isSettleUpModalOpen, setIsSettleUpModalOpen] = useState(false);
 
     useEffect(() => {
         if (activeGroup) {
@@ -43,6 +47,7 @@ export default function GroupDetailPage() {
                     setIsLoading(true);
                     await getGroup();
                     await fetchMember(activeGroup);
+                    await getSettleInfo();
                 } catch (err) {
                     setError("Failed to get data!");
                 } finally {
@@ -76,6 +81,19 @@ export default function GroupDetailPage() {
             }
         }, 1000);
     }, [fetchExpenses]);
+
+    const reloadData = async () => {
+        setIsLoading(true);
+        try {
+            await getGroup();
+            await getSettleInfo();
+            await fetchExpenses();
+        } catch (e) {
+            setError("Failed to get data!");
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     //touch bottome to load more data;
 
@@ -196,7 +214,13 @@ export default function GroupDetailPage() {
                     className="text-white"
                 />
                 </div>
-
+                {settleInfo?.debts?.length! > 0 && (
+                    <SettleUpModal
+                        open={isSettleUpModalOpen}
+                        onCancel={() => setIsSettleUpModalOpen(false)}
+                        onSuccess={reloadData}
+                    />
+                )}
 
                 <div className="max-w-2xl mx-auto mt-6">
                     {/* group */}
@@ -254,7 +278,7 @@ export default function GroupDetailPage() {
                                             placeholder="type"
                                             onSelect={() => { handleApplyFilters(); }}
                                         >
-                                            <Option value="">All</Option>
+                                            <Option value="">All Type</Option>
                                             {Object.entries(expenseTypes).map(([key],index) => (
                                                 <Option key={index} value={key}>
                                                     {key}
@@ -268,7 +292,7 @@ export default function GroupDetailPage() {
                                             placeholder="Payer"
                                             onSelect={() => { handleApplyFilters(); }}
                                         >
-                                            <Option value="">All</Option>
+                                            <Option value="">All Payer</Option>
                                             {members.map((payer) => (
                                                 <Option key={payer.id} value={payer.id}>
                                                     {payer.fullName}
@@ -284,7 +308,7 @@ export default function GroupDetailPage() {
                                             onSelect={handleApplyFilters}
                                             allowClear
                                         >
-                                            <Option value="">All</Option>
+                                            <Option value="">All Date</Option>
 
                                             {generateMonthsFromLatestExpense(60).map((yearMonth,index) => (
                                                 <Option key={index} value={yearMonth}>
@@ -301,9 +325,16 @@ export default function GroupDetailPage() {
                         </Form>
                     </div>
 
+                    {settleInfo?.debts?.length! > 0 && (
+                        <div className="flex justify-end px-4 mt-4">
+                            <Button type="primary" onClick={() => setIsSettleUpModalOpen(true)}>
+                                Settle Up
+                            </Button>
+                        </div>
+                    )}
 
                     {/* expense list */}
-                    <div className="mt-6">
+                    <div>
                         {isLoadingExpenses ? (
                             <div className="flex justify-center py-10">
                                 <Spin size="large" />

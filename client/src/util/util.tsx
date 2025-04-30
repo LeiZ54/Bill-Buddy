@@ -140,3 +140,14 @@ export interface ExpenseFilter {
     type?: string;
     month?: string;
 }
+
+export interface SettleInfo {
+    groupId: number;
+    groupCurrency: string;
+    debts: SettleInfoDebts[];
+}
+
+interface SettleInfoDebts {
+    user: Member;
+    debts: Record<string, number>;
+}

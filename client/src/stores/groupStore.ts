@@ -121,6 +121,7 @@ export const useGroupStore = create<GroupState>()(
                 currentPage: state.currentPage,
                 hasMore: state.hasMore,
                 inviteToken: state.inviteToken,
+                filters: state.filters,
             }),
         }
     )
