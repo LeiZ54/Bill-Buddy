@@ -21,6 +21,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 @Slf4j
@@ -53,7 +55,7 @@ public class ExpenseController {
                 request.getAmount(),
                 request.getCurrency(),
                 request.getDescription(),
-                request.getExpenseDate(),
+                LocalDateTime.of(request.getExpenseDate().toLocalDate(), LocalTime.now()),
                 request.getIsRecurring(),
                 request.getRecurrenceUnit(),
                 request.getRecurrenceInterval(),

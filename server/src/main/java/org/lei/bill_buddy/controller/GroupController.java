@@ -48,7 +48,7 @@ public class GroupController {
     private final GroupDeleteService groupDeleteService;
 
     @Value("${bill-buddy.client.url}")
-    private String clientUrl;
+    private List<String> clientUrls;
 
     @PostMapping
     public ResponseEntity<?> createGroup(@Valid @RequestBody GroupCreateRequest request) {
@@ -287,6 +287,6 @@ public class GroupController {
     }
 
     private String generateInvitationLink(Group group) {
-        return clientUrl + "/inviteLink?token=" + jwtUtil.generateInviteToken(group.getId(), group.getName(), group.getType().name());
+        return clientUrls.get(0) + "/inviteLink?token=" + jwtUtil.generateInviteToken(group.getId(), group.getName(), group.getType().name());
     }
 }

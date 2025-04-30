@@ -166,18 +166,22 @@ public class ExpenseService {
         expense.setExpenseDate(LocalDateTime.now());
         Expense saved = expenseRepository.save(expense);
         distributeShares(expense, List.of(to), List.of(paid), paid);
+        String amountStr = groupCurrency.equals(currency) ?
+                String.format("%s %.2f", groupCurrency, paid) :
+                String.format("%s %.2f(%s %.2f)", currency, pay, groupCurrency, paid);
         activityService.log(
                 ActionType.CREATE,
                 ObjectType.EXPENSE,
                 saved.getId(),
                 "user_settled_to_user_in_group",
                 Map.of(
-                        "userAId", from,
-                        "userBId", to,
-                        "amount", groupCurrency + " " + paid,
-                        "groupId", groupId
+                        "userAId", from.toString(),
+                        "userBId", to.toString(),
+                        "amount", amountStr,
+                        "groupId", groupId.toString()
                 )
         );
+        groupService.groupUpdated(groupId);
     }
 
     @Transactional
