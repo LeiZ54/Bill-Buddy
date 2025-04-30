@@ -48,7 +48,7 @@ const GroupSection = ({ id, name, type, items, netBalance, currency }: GroupData
                             <Text
                                 className={`text-lg block ${netBalance > 0 ? 'text-green-600' : 'text-orange-600'}`}
                             >
-                                {currency}{currencies[currency]}{Math.abs(netBalance).toFixed(2)}
+                                {currency} {Math.abs(netBalance).toFixed(2)}
                             </Text>
                         </>
                     )}
@@ -65,7 +65,7 @@ const GroupSection = ({ id, name, type, items, netBalance, currency }: GroupData
                             <Text
                                 className={item.type === 'get' ? 'text-green-600' : 'text-orange-600'}
                             >
-                                {currency}{currencies[currency]}{item.amount.toFixed(2)}
+                                {currency} {item.amount.toFixed(2)}
                             </Text>
                         </Text>
                     </div>

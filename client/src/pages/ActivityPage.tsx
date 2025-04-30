@@ -1,8 +1,8 @@
-import {motion} from 'framer-motion';
-import {useEffect, useRef, useState} from 'react';
-import {useNavigate} from 'react-router-dom';
-import {useActivityStore} from '../stores/activityStore';
-import {Alert, Avatar, Spin, message} from 'antd';
+import { motion } from 'framer-motion';
+import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useActivityStore } from '../stores/activityStore';
+import { Alert, Avatar, Spin, message } from 'antd';
 import { useGroupDetailStore } from '../stores/groupDetailStore';
 import { useExpenseStore } from '../stores/expenseStore';
 
@@ -12,7 +12,7 @@ const ActivityPage = () => {
     const [error, setError] = useState("");
     const { setActiveGroup } = useGroupDetailStore();
     const { setActiveExpense } = useExpenseStore();
-    const {activities, clearData, fetchActivities, loadMoreActivities, isLoadingMore, hasMore} = useActivityStore();
+    const { activities, clearData, fetchActivities, loadMoreActivities, isLoadingMore, hasMore } = useActivityStore();
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -62,12 +62,12 @@ const ActivityPage = () => {
 
     return (
         <motion.div
-            initial={{opacity: 0}}
-            animate={{opacity: 1}}
-            transition={{duration: 0.3, delay: 0.5}}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3, delay: 0.5 }}
         >
             <div className="text-2xl p-4">
-                Recent activity
+                Recent Activities
             </div>
             <>
                 {isLoading ? (
@@ -122,6 +122,13 @@ const ActivityPage = () => {
                                                         __html: activity.descriptionHtml,
                                                     }}
                                                 />
+                                                <div className="text-xs text-gray-500 mt-1">
+                                                    {new Date(activity.createdAt).toLocaleDateString(undefined, {
+                                                        month: '2-digit',
+                                                        day: '2-digit',
+                                                        year: 'numeric',
+                                                    })}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>

@@ -48,7 +48,7 @@ const Topbar = ({
             className="relative flex items-center justify-between h-12 px-1 overflow-hidden"
         >
             {/* left */}
-            <div className="flex z-10">
+            <div className="flex z-10 mt-3 ml-3">
                 <motion.div whileHover={{ scale: 1.05 }}>
                     <div
                         onClick={showSearchInput ? handleBackClick : (leftType === 'back' ? handleBackClick : handleSearchClick)}
@@ -104,7 +104,7 @@ const Topbar = ({
 
             {/* right */}
             {!showSearchInput && (
-                <div className="flex z-10">
+                <div className="flex z-10 mt-3 mr-3">
                     {(rightText || rightOnClick) && (
                         <motion.div whileHover={{ scale: 1.05 }}>
                             {rightText ? (

@@ -1,10 +1,10 @@
-import {Alert, Avatar, Spin, Form, Select, Input} from 'antd';
-import {motion} from 'framer-motion';
-import {useNavigate} from 'react-router-dom';
+import { Alert, Avatar, Spin, Form, Select, Input } from 'antd';
+import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import Topbar from '../components/TopBar';
-import {useEffect, useMemo, useRef, useState} from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import useAuthStore from '../stores/authStore';
-import {useGroupDetailStore} from '../stores/groupDetailStore';
+import { useGroupDetailStore } from '../stores/groupDetailStore';
 import { useExpenseStore } from '../stores/expenseStore';
 import { debounce } from 'lodash';
 import SettleUpModal from '../components/SettleUpModal';
@@ -13,7 +13,7 @@ import { Button } from 'antd/es/radio';
 
 export default function GroupDetailPage() {
     const [form] = Form.useForm();
-    const {Option} = Select;
+    const { Option } = Select;
     const navigate = useNavigate();
     const { groupType, expenseTypes, currencies } = useAuthStore();
     const {
@@ -33,7 +33,7 @@ export default function GroupDetailPage() {
         getSettleInfo,
         settleInfo
     } = useGroupDetailStore();
-    const {setActiveExpense} = useExpenseStore();
+    const { setActiveExpense } = useExpenseStore();
     const [isLoading, setIsLoading] = useState(false);
     const [isLoadingExpenses, setIsLoadingExpenses] = useState(false);
     const [error, setError] = useState("");
@@ -153,7 +153,7 @@ export default function GroupDetailPage() {
 
 
     const handleApplyFilters = () => {
-        const {payer, title, yearMonth,type} = form.getFieldsValue();
+        const { payer, title, yearMonth, type } = form.getFieldsValue();
         const newFilters: any = {};
 
         if (payer) {
@@ -175,9 +175,9 @@ export default function GroupDetailPage() {
     if (!groupData) {
         return (
             <motion.div
-                initial={{opacity: 0}}
-                animate={{opacity: 1}}
-                transition={{duration: 0.2}}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.2 }}
             >
                 <Topbar
                     leftType="back"
@@ -188,31 +188,31 @@ export default function GroupDetailPage() {
                 />
                 {(isLoading || isLoadingExpenses) ? (<></>
                 ) :
-                    <Alert message="Something Wrong!" type="error" className="m-4"/>}
+                    <Alert message="Something Wrong!" type="error" className="m-4" />}
             </motion.div>
         )
     }
     return (
         <motion.div
-            initial={{opacity: 0}}
-            animate={{opacity: 1}}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             transition={{ duration: 0.2, delay: 0.2 }}
 
         >
             <div className="relative pb-16">
                 <div
                     className="w-full h-40 bg-cover bg-center"
-                    style={{backgroundImage: "url('/Account/images.jpg')"}}
+                    style={{ backgroundImage: "url('/Account/images.jpg')" }}
                 ><Topbar
-                    leftType="back"
-                    leftOnClick={() => {
-                        navigate("/groups");
-                    }}
-                    rightOnClick={() => {
-                        navigate("/groups/setting")
-                    }}
-                    className="text-white"
-                />
+                        leftType="back"
+                        leftOnClick={() => {
+                            navigate("/groups");
+                        }}
+                        rightOnClick={() => {
+                            navigate("/groups/setting")
+                        }}
+                        className="text-white"
+                    />
                 </div>
                 {settleInfo?.debts?.length! > 0 && (
                     <SettleUpModal
@@ -232,14 +232,23 @@ export default function GroupDetailPage() {
                         />
                         <div className="ml-[15%]">
                             <h2 className="text-3xl font-semibold mt-3">{groupData.name}</h2>
-                            <p className={`text-lg font-semibold ${groupData.netBalance >= 0
-                                ? 'text-green-600'
-                                : 'text-orange-500'
-                            }`}>
-                                {groupData.netBalance >= 0 ? ' You lent ' : ' You owe '}
-                                {groupData.currency}{currencies[groupData.currency]}
-                                {Math.abs(groupData.netBalance).toFixed(2)}
-                                {' overall'}
+                            <p className={`text-lg font-semibold ${groupData.netBalance === 0
+                                    ? 'text-gray-500'
+                                    : groupData.netBalance > 0
+                                        ? 'text-green-600'
+                                        : 'text-orange-500'
+                                }`}>
+                                {groupData.netBalance === 0 ? (
+                                    'You are all settled up.'
+                                ) : (
+                                    <>
+                                        {groupData.netBalance > 0 ? 'You lent ' : 'You owe '}
+                                        {groupData.currency}
+                                        {currencies[groupData.currency]}
+                                        {Math.abs(groupData.netBalance).toFixed(2)}
+                                        {' overall'}
+                                    </>
+                                )}
                             </p>
                             {groupData.items.map((item, index) => (
                                 <div key={index}>
@@ -249,7 +258,7 @@ export default function GroupDetailPage() {
                                     <span className={`${item.type === 'get'
                                         ? 'text-green-600'
                                         : 'text-orange-500'
-                                    }`}>
+                                        }`}>
                                         {" " + groupData.currency}{currencies[groupData.currency]}
                                         {item.amount.toFixed(2)}
                                     </span>
@@ -268,7 +277,7 @@ export default function GroupDetailPage() {
                                         placeholder="Search Title"
                                         allowClear
                                         className="border p-1 rounded w-full"
-                                        onChange={() =>{ handleApplyFilters();}}
+                                        onChange={() => { handleApplyFilters(); }}
                                     />
                                 </Form.Item>
                                 <div className="flex items-center space-x-2">
@@ -279,7 +288,7 @@ export default function GroupDetailPage() {
                                             onSelect={() => { handleApplyFilters(); }}
                                         >
                                             <Option value="">All Type</Option>
-                                            {Object.entries(expenseTypes).map(([key],index) => (
+                                            {Object.entries(expenseTypes).map(([key], index) => (
                                                 <Option key={index} value={key}>
                                                     {key}
                                                 </Option>
@@ -310,7 +319,7 @@ export default function GroupDetailPage() {
                                         >
                                             <Option value="">All Date</Option>
 
-                                            {generateMonthsFromLatestExpense(60).map((yearMonth,index) => (
+                                            {generateMonthsFromLatestExpense(60).map((yearMonth, index) => (
                                                 <Option key={index} value={yearMonth}>
                                                     {yearMonth}
                                                 </Option>
@@ -386,20 +395,33 @@ export default function GroupDetailPage() {
                                                     </div>
                                                 </div>
 
-                                                <div className="text-right">
-                                                    <p className={`text-xs pb-1 ${expense.debtsAmount >= 0
-                                                        ? 'text-green-600'
-                                                        : 'text-orange-600'
-                                                        }`}>
-                                                        {expense.debtsAmount >= 0 ? ' You lent ' : ' You owe '}
-                                                    </p>
-                                                    <div className={`text-lg leading-none ${expense.debtsAmount >= 0
-                                                        ? 'text-green-600'
-                                                        : 'text-orange-600'
-                                                        }`}>
-                                                        {expense.currency}{currencies[expense.currency]}{Math.abs(expense.debtsAmount).toFixed(2)}
+                                                {expense.type === 'SETTLE_UP' ? null : (
+                                                    <div className="text-right">
+                                                        {expense.debtsAmount === 0 ? (
+                                                            <>
+                                                                <p className="text-xs pb-1 text-gray-500">You are not involved</p>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <p
+                                                                    className={`text-xs pb-1 ${expense.debtsAmount > 0 ? 'text-green-600' : 'text-orange-600'
+                                                                        }`}
+                                                                >
+                                                                    {expense.debtsAmount > 0 ? 'You lent' : 'You owe'}
+                                                                </p>
+                                                                <div
+                                                                    className={`text-lg leading-none ${expense.debtsAmount > 0 ? 'text-green-600' : 'text-orange-600'
+                                                                        }`}
+                                                                >
+                                                                    {expense.currency}
+                                                                    {currencies[expense.currency]}
+                                                                    {Math.abs(expense.debtsAmount).toFixed(2)}
+                                                                </div>
+                                                            </>
+                                                        )}
                                                     </div>
-                                                </div>
+                                                )}
+
                                             </div>
                                         </div>
                                     );

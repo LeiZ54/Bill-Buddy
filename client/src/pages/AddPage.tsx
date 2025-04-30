@@ -23,7 +23,7 @@ const AddPage = () => {
     const [submitting, setSubmitting] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
-
+    const { setActiveGroup } = useGroupDetailStore();
 
     const [step, setStep] = useState(1);
     const [isStep1Valid, setIsStep1Valid] = useState(false);
@@ -108,7 +108,8 @@ const AddPage = () => {
             await api.post('/expenses', payload);
             setSubmitting(false);
             message.success("Add expense successfully!")
-            navigate('/groups');
+            setActiveGroup(allValues.groupId);
+            navigate('/groups/detail');
         } catch (err) {
         } finally {
             setSubmitting(false);

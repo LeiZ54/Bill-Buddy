@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useFriendStore } from '../stores/friendStore';
 import Topbar from '../components/TopBar';
-import {Alert, Avatar, Spin} from 'antd';
+import { Alert, Avatar, Spin } from 'antd';
 import useAuthStore from "../stores/authStore.ts";
 import { FriendData } from '../util/util.tsx';
 import { useNavigate } from 'react-router-dom';
@@ -10,7 +10,7 @@ import { debounce } from 'lodash';
 const FriendsPage = () => {
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
-    const {fetchFriends, isLoadingMore, loadMoreFriends, hasMore, friends, setActiveFriend, clearData, filters, setFilters } = useFriendStore();
+    const { fetchFriends, isLoadingMore, loadMoreFriends, hasMore, friends, setActiveFriend, clearData, filters, setFilters } = useFriendStore();
     const { currencies } = useAuthStore();
     const [error, setError] = useState("");
 
@@ -77,9 +77,9 @@ const FriendsPage = () => {
 
     return (
         <motion.div
-            initial={{opacity: 0}}
-            animate={{opacity: 1}}
-            transition={{duration: 0.3, delay: 0.5}}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3, delay: 0.5 }}
         >
             <Topbar
                 leftType="search"
@@ -102,7 +102,7 @@ const FriendsPage = () => {
                         <div className="mb-16 bg-white mt-4">
                             {friends.length === 0 ? (
                                 <div className="text-center text-gray-500 py-10 text-lg">
-                                    There is no friends.
+                                    You do not have any friend.
                                 </div>
                             ) : (
                                 friends.map((person: FriendData) => (
@@ -133,17 +133,15 @@ const FriendsPage = () => {
                                                                 <div
                                                                     key={index}
                                                                     className={`text-sm ${debt.debtAmount > 0
-                                                                            ? "text-green-600"
-                                                                            : "text-orange-500"
+                                                                        ? "text-green-600"
+                                                                        : "text-orange-500"
                                                                         }`}
                                                                 >
-                                                                    {person.fullName}{" "}
                                                                     {debt.debtAmount > 0 ? "owes you" : "lent you"}{" "}
-                                                                    {
-                                                                        debt.group.defaultCurrency
-                                                                    }{currencies[debt.group.defaultCurrency]}
-                                                                    {Math.abs(debt.debtAmount).toFixed(2)} in{" "}
-                                                                    {debt.group.groupName}
+                                                                    <b>{currencies[debt.group.defaultCurrency]}
+                                                                    {Math.abs(debt.debtAmount).toFixed(2)}</b>
+                                                                    {" in group "}
+                                                                    <b>"{debt.group.groupName}"</b>
                                                                 </div>
                                                             ))}
                                                     </div>

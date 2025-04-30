@@ -14,7 +14,7 @@ import AddFriendsToGroupModal from '../components/AddFriendsToGroupModal.tsx';
 export default function FriendDetailPage() {
     const navigate = useNavigate();
     const { activeFriend, deleteFriend, getGroupList, getFriendData, friendData } = useFriendStore();
-    const { currencies, groupType } = useAuthStore();
+    const { groupType } = useAuthStore();
     const { setActiveGroup } = useGroupDetailStore();
     const [isDeleting, setIsDeleting] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -103,25 +103,6 @@ export default function FriendDetailPage() {
                         />
                         <div className="ml-[15%]">
                             <h2 className="text-3xl font-semibold mt-3">{friendData?.fullName}</h2>
-                            <div className="mt-5">
-                                {friendData?.netDebts
-                                    .filter(debt => debt.debtAmount !== 0)
-                                    .map((debt, index) => (
-                                        <div key={index}>
-                                            <span>
-                                                {friendData?.fullName + " "}
-                                                {debt.debtAmount > 0 ? 'owes you' : 'lent you'}
-                                            </span>
-                                            <span className={`${debt.debtAmount > 0
-                                                ? 'text-green-600'
-                                                : 'text-orange-500'
-                                                }`}>
-                                                {" " + debt.group.defaultCurrency}{currencies[debt.group.defaultCurrency]}
-                                                {debt.debtAmount.toFixed(2)}{" in " + debt.group.groupName}
-                                            </span>
-                                        </div>
-                                    ))}
-                            </div>
                         </div>
 
                     </div>
@@ -141,7 +122,7 @@ export default function FriendDetailPage() {
                     ) : (
                         <>
                             {/* Delete Button */}
-                            <div className="mt-4 px-6 flex gap-4">
+                            <div className="mt-6 px-6 flex gap-4">
                                 <Button
                                     type="primary"
                                     danger
@@ -159,7 +140,7 @@ export default function FriendDetailPage() {
                                     onClick={() => setAddFriendsToGroupModal(true)}
                                     className="flex-1 flex items-center justify-center text-lg"
                                 >
-                                    Invite to groups
+                                    Invite to a group
                                 </Button>
                             </div>
 
@@ -168,7 +149,7 @@ export default function FriendDetailPage() {
                             <div className="mt-4 px-2">
                                 <div className="text-black font-semibold px-4">Shared groups</div>
                                 {friendData?.netDebts.length === 0 ? (
-                                            <div className="text-center text-gray-500 py-6">You don't have the same group!</div>
+                                    <div className="text-center text-gray-500 py-6">You don't have the same group!</div>
                                 ) : (
                                     friendData?.netDebts.map((debt, index) => (
                                         <div
@@ -179,21 +160,35 @@ export default function FriendDetailPage() {
                                                 navigate('/groups/detail');
                                             }}
                                         >
-                                            <div>
-                                                <Avatar
-                                                    shape="square"
-                                                    src={groupType[debt.group.type]}
-                                                    className="w-12 h-12"
-                                                />
-                                            </div>
+                                            <Avatar
+                                                shape="square"
+                                                src={groupType[debt.group.type]}
+                                                className="w-12 h-12"
+                                            />
 
                                             <div className="flex-1 mx-4">
-                                                <div className="text-lg leading-none">
-                                                    {debt.group.groupName}
-                                                </div>
+                                                <div className="text-lg leading-none">{debt.group.groupName}</div>
+                                            </div>
+
+                                            <div
+                                                className={`text-sm font-medium text-right ${debt.debtAmount === 0
+                                                        ? 'text-gray-500'
+                                                        : debt.debtAmount > 0
+                                                            ? 'text-green-600'
+                                                            : 'text-orange-500'
+                                                    }`}
+                                            >
+                                                {debt.debtAmount === 0 ? (
+                                                    'no debts'
+                                                ) : debt.debtAmount > 0 ? (
+                                                    <>owes you <b>{debt.group.defaultCurrency} {debt.debtAmount.toFixed(2)}</b></>
+                                                ) : (
+                                                    <>you owe <b>{debt.group.defaultCurrency} {Math.abs(debt.debtAmount).toFixed(2)}</b></>
+                                                )}
                                             </div>
                                         </div>
                                     ))
+
                                 )}
 
                             </div>

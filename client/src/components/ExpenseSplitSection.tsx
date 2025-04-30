@@ -117,7 +117,8 @@ const ExpenseSplitSection: React.FC<ExpenseSplitSectionProps> = ({
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">{currencies[currency] }</span>
                     <input
                         type="text"
-                        value={amount}
+                        value={amount === "0.00" ? "" : amount}
+                        placeholder="0.00"
                         onChange={(e) => {
                             const value = e.target.value;
                             if (/^\d*\.?\d{0,2}$/.test(value)) {

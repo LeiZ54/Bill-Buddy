@@ -191,6 +191,7 @@ export default function ExpenseDetailPage() {
                             loading={isDeleting}
                             onClick={handleDelete}
                             className="flex-1 flex items-center justify-center text-lg"
+                            disabled={expenseData?.payer?.id !== id}
                         >
                             Delete
                         </Button>
@@ -209,7 +210,7 @@ export default function ExpenseDetailPage() {
                     </div>
                     {expenseData?.payer?.id !== id && (
                         <p className="text-sm text-gray-500 text-center">
-                            Only the creator can edit this expense.
+                            Only the payor can edit or delete this expense.
                         </p>
                     )}
 

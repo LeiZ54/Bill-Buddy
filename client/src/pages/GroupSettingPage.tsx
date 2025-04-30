@@ -230,7 +230,7 @@ const GroupSettingPage = () => {
                                     onClick={() => setAddFriendsToGroupModal(true)}
                                 >
                                     <UserAddOutlined className="mr-8 text-2xl" />
-                                    Add friends
+                                    Invite friends
                                 </div>
 
                                 <div

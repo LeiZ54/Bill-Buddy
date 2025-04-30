@@ -100,7 +100,7 @@ export default function GroupsPage() {
                 searchFunction={(value) => {
                     setFilters(value);
                 }}
-                rightText="Create group"
+                rightText="Create"
                 rightOnClick={() => setShowCreateModal(true)}
             />
             <>

@@ -162,7 +162,7 @@ export default function AccountPage() {
                     </div>
                 </Upload>
                 <div className="mt-10 text-center">
-                    <Text className="text-4xl font-bold text-gray-800">{familyName+" "+givenName || 'Guest User'}</Text>
+                    <Text className="text-4xl font-bold text-gray-800">{givenName+" "+familyName || 'Guest User'}</Text>
                 </div>
                 <div className="mt-1 text-center">
                     <Text className="text-lg text-gray-500 mt-1 text-center">{email || 'Guest User'}</Text>
