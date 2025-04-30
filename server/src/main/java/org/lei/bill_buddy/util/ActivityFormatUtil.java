@@ -43,6 +43,7 @@ public class ActivityFormatUtil {
                 case "user_joined_group" -> formatUserJoinedGroup(params);
                 case "user_leaved_group" -> formatUserLeavedGroup(params);
                 case "user_added_expense_to_group" -> formatUserAddedExpense(params);
+                case "user_settled_to_user_in_group" -> formatUserSettledToUserInGroup(params);
                 case "user_updated_expense" -> formatUserUpdatedExpense(params);
                 case "user_deleted_expense" -> formatUserDeletedExpense(params);
                 default -> "Unknown Activity";
@@ -98,6 +99,14 @@ public class ActivityFormatUtil {
         String expenseTitle = formatExpenseTitle(getLong(params, "expenseId"));
         String groupName = formatGroupName(getLong(params, "groupId"));
         return String.format("<b>%s</b> added expense <i>\"%s\"</i> to group <b>%s</b>", userName, expenseTitle, groupName);
+    }
+
+    private String formatUserSettledToUserInGroup(Map<String, Object> params) {
+        String userAName = formatUserName(getLong(params, "userAId"));
+        String userBName = formatUserName(getLong(params, "userBId"));
+        String amount = params.get("amount").toString();
+        String groupName = formatGroupName(getLong(params, "groupId"));
+        return String.format("<b>%s</b> settled %s to <b>%s</b> in group <b>%s</b>", userAName, amount, userBName, groupName);
     }
 
     private String formatUserUpdatedExpense(Map<String, Object> params) {

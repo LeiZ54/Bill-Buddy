@@ -57,6 +57,10 @@ public enum ErrorCode {
 
     NOT_PARTICIPANT(HttpStatus.FORBIDDEN, "User is not a valid participant."),
 
+    CAN_NOT_SETTLE(HttpStatus.CONFLICT, "You can not settle to this user."),
+
+    OVER_PAYMENT(HttpStatus.CONFLICT, "You paid an over amount."),
+
     // === Currency ===
     UNSUPPORTED_CURRENCY(HttpStatus.BAD_REQUEST, "Currency not supported."),
 

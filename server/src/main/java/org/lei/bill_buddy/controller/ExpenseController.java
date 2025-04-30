@@ -44,6 +44,7 @@ public class ExpenseController {
             log.warn("User {} is not a member of group {}", userService.getCurrentUser().getId(), request.getGroupId());
             throw new AppException(ErrorCode.NOT_A_MEMBER);
         }
+        System.out.println(request.getPayerId());
         Expense expense = expenseService.createExpense(
                 request.getGroupId(),
                 request.getPayerId() != null ? request.getPayerId() : currentUserId,
@@ -63,6 +64,20 @@ public class ExpenseController {
         return ResponseEntity.ok("Expense created with ID: " + expense.getId());
     }
 
+    @PostMapping("settle-up")
+    public ResponseEntity<?> settleUp(@Valid @RequestBody SettleUpRequest request) {
+        if (!groupService.isMemberOfGroup(userService.getCurrentUser().getId(), request.getGroupId())) {
+            throw new AppException(ErrorCode.NOT_A_MEMBER);
+        }
+        expenseService.settle(
+                request.getGroupId(),
+                userService.getCurrentUser().getId(),
+                request.getTo(),
+                request.getCurrency(),
+                request.getAmount()
+        );
+        return ResponseEntity.ok("Settled successfully.");
+    }
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getExpenseById(@PathVariable Long id) {

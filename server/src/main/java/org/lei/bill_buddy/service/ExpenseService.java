@@ -36,6 +36,8 @@ public class ExpenseService {
     private final ExchangeRateService exchangeRateService;
     private final ActivityService activityService;
 
+    private static final BigDecimal EPS = new BigDecimal("0.01");
+
     @Transactional
     public Expense createExpense(Long groupId,
                                  Long payerId,
@@ -129,6 +131,53 @@ public class ExpenseService {
 
         log.info("Expense created successfully: id={}", savedExpense.getId());
         return savedExpense;
+    }
+
+    @Transactional
+    public void settle(
+            Long groupId,
+            Long from,
+            Long to,
+            Currency currency,
+            BigDecimal pay) {
+        User fromUser = userService.getUserById(from);
+        User toUser = userService.getUserById(to);
+        if (fromUser == null || toUser == null) {
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
+        }
+        Group group = groupService.getGroupById(groupId);
+        Currency groupCurrency = group.getDefaultCurrency();
+        Map<Long, BigDecimal> debts = groupDebtService.getDebtsBetweenUsersOfGroup(from, to, groupId);
+        if (debts.get(from) == null || debts.get(from).compareTo(BigDecimal.ZERO) > 0) {
+            throw new AppException(ErrorCode.CAN_NOT_SETTLE);
+        }
+        BigDecimal oweBase = debts.get(from).negate().abs();
+        BigDecimal payBase = exchangeRateService.convert(pay, currency, groupCurrency);
+        if (payBase.compareTo(oweBase.add(EPS)) > 0) throw new AppException(ErrorCode.OVER_PAYMENT);
+
+        BigDecimal remaining = oweBase.subtract(payBase);
+        BigDecimal paid = (remaining.abs().compareTo(EPS) <= 0) ? oweBase : payBase;
+        Expense expense = new Expense();
+        expense.setGroup(group);
+        expense.setPayer(fromUser);
+        expense.setTitle("Settle Up");
+        expense.setType(ExpenseType.SETTLE_UP);
+        expense.setAmount(paid);
+        expense.setExpenseDate(LocalDateTime.now());
+        Expense saved = expenseRepository.save(expense);
+        distributeShares(expense, List.of(to), List.of(paid), paid);
+        activityService.log(
+                ActionType.CREATE,
+                ObjectType.EXPENSE,
+                saved.getId(),
+                "user_settled_to_user_in_group",
+                Map.of(
+                        "userAId", from,
+                        "userBId", to,
+                        "amount", groupCurrency + " " + paid,
+                        "groupId", groupId
+                )
+        );
     }
 
     @Transactional
@@ -229,10 +278,6 @@ public class ExpenseService {
         if (expense == null) throw new AppException(ErrorCode.EXPENSE_NOT_FOUND);
         expense.setPicture(picture);
         expenseRepository.save(expense);
-    }
-
-    public ExpenseShare getExpenseShareByUserIdAndExpenseIdIncludeDeleted(Long userId, Long expenseId) {
-        return expenseShareRepository.findByUserIdAndExpenseId(userId, expenseId).orElse(null);
     }
 
     public Expense getExpenseById(Long id) {
@@ -338,7 +383,6 @@ public class ExpenseService {
             }
         }
     }
-
 
     public List<ExpenseShare> getExpenseSharesByExpenseId(Long expenseId) {
         return expenseShareRepository.findByExpenseIdAndDeletedFalse(expenseId);
@@ -499,6 +543,7 @@ public class ExpenseService {
         boolean currencyChanged = !newCur.equals(baseCur);
 
         BigDecimal newAmount = (amount != null) ? amount : expense.getAmount();
+        boolean amountChanged = !newAmount.equals(expense.getAmount());
 
         List<Long> newParticipantIds = (participantIds != null) ? participantIds :
                 oldShares.stream().map(s -> s.getUser().getId()).toList();
@@ -530,11 +575,10 @@ public class ExpenseService {
         expense.setTitle(newTitle);
 
         expense.setAmount(newAmount);
-
         return new ParsedRequest(
                 newPayer, payerChanged,
                 newParticipantIds, newShareAmounts,
-                newAmount, currencyChanged, !newAmount.equals(expense.getAmount()),
+                newAmount, currencyChanged, amountChanged,
                 oldTitle, newTitle
         );
     }

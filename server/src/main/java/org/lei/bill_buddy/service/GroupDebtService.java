@@ -61,6 +61,20 @@ public class GroupDebtService {
         return formatDebtsMap(userBorrowed, userLent);
     }
 
+    public Map<Long, BigDecimal> getDebtsBetweenUsersOfGroup(Long userAId, Long userBId, Long groupId) {
+        GroupDebt ALentB = groupDebtRepository.findByGroupIdAndLenderIdAndBorrowerIdAndDeletedFalse(groupId, userAId, userBId).orElseThrow(
+                () -> new AppException(ErrorCode.NOT_A_MEMBER)
+        );
+
+        GroupDebt BLentA = groupDebtRepository.findByGroupIdAndLenderIdAndBorrowerIdAndDeletedFalse(groupId, userBId, userAId).orElseThrow(
+                () -> new AppException(ErrorCode.NOT_A_MEMBER)
+        );
+        HashMap<Long, BigDecimal> netDebts = new HashMap<>();
+        netDebts.put(userAId, ALentB.getAmount().subtract(BLentA.getAmount()));
+        netDebts.put(userBId, BLentA.getAmount().subtract(ALentB.getAmount()));
+        return netDebts;
+    }
+
     public Map<Group, BigDecimal> getNetDebtsBetweenUsers(Long userAId, Long userBId) {
         List<GroupDebt> aLentToB = groupDebtRepository
                 .findByLenderIdAndBorrowerIdAndDeletedFalse(userAId, userBId);
