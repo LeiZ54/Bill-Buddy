@@ -171,14 +171,16 @@ const EditPage = () => {
                                     placeholder="Select a type"
                                     optionLabelProp="label"
                                 >
-                                    {Object.entries(expenseTypes).map(([type, url]) => (
-                                        <Select.Option key={type} value={type} label={type}>
-                                            <div className="flex items-center gap-2">
-                                                <Avatar src={url as string} size={20} />
-                                                <span>{type}</span>
-                                            </div>
-                                        </Select.Option>
-                                    ))}
+                                    {Object.entries(expenseTypes)
+                                        .filter(([type]) => type !== 'SETTLE_UP')
+                                        .map(([type, url]) => (
+                                            <Select.Option key={type} value={type} label={type}>
+                                                <div className="flex items-center gap-2">
+                                                    <Avatar src={url as string} size={20} />
+                                                    <span>{type}</span>
+                                                </div>
+                                            </Select.Option>
+                                        ))}
                                 </Select>
                             </Form.Item>
 

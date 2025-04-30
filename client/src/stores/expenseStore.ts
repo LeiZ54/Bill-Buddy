@@ -105,6 +105,10 @@ export const useExpenseStore = create<ExpenseState>()(
             name: 'expense-storage', // localStorage key
             partialize: (state) => ({
                 activeExpense: state.activeExpense,
+                expenseData: state.expenseData,
+                groupList: state.groupList,
+                activeCycleExpense: state.activeCycleExpense,
+                cycleExpenseData: state.cycleExpenseData
             }),
         }
     )

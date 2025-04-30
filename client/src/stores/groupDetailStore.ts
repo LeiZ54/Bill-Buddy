@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import api from '../util/axiosConfig';
-import { GroupData, Group, Member, ExpenseSimpleData, ExpenseFilter, CycleExpenseSimpleData } from '../util/util';
+import { GroupData, Group, Member, ExpenseSimpleData, ExpenseFilter, CycleExpenseSimpleData, SettleInfo } from '../util/util';
 import { persist } from 'zustand/middleware';
 import { message } from 'antd';
 
@@ -24,6 +24,8 @@ interface GroupDetailState {
     ifDelete: boolean;
     friendList: FriendList[];
     cycleExpenses: CycleExpenseSimpleData[];
+    settleInfo: SettleInfo | null;
+
     // public function
     clearData: () => void;
     setActiveGroup: (id: number) => void;
@@ -39,6 +41,8 @@ interface GroupDetailState {
     deleteGroup: () => Promise<void>;
     getFriendList: () => Promise<void>;
     addFriendsToGroup: (selectedIds: number[]) => Promise<void>;
+    getSettleInfo: () => Promise<void>;
+    settleUp: (userId: number, currency: string, amount: number) => Promise<void>;
 
 
     // private function
@@ -60,6 +64,7 @@ export const useGroupDetailStore = create<GroupDetailState>()(
             ifDelete: false,
             friendList: [],
             cycleExpenses: [],
+            settleInfo: null,
 
             clearData: () => {
                 set({ groupData: null, expenses: [], filters: {}, currentPage: 0, hasMore: true });
@@ -93,6 +98,22 @@ export const useGroupDetailStore = create<GroupDetailState>()(
                 const { activeGroup } = get();
                 const response = await api.get(`/groups/${activeGroup}/is-settled`);
                 set({ ifDelete: response.data });
+            },
+
+            getSettleInfo: async () => {
+                const { activeGroup } = get();
+                const response = await api.get(`/groups/${activeGroup}/settle-info`);
+                set({ settleInfo: response.data });
+            },
+
+            settleUp: async (userId: number, currency: string, amount: number) => {
+                const { activeGroup } = get();
+                await api.post(`expenses/settle-up`, {
+                    "groupId": activeGroup,
+                    "to": userId,
+                    "currency": currency,
+                    "amount": amount
+                });
             },
 
             leaveGroup: async (id: number) => {
@@ -199,6 +220,13 @@ export const useGroupDetailStore = create<GroupDetailState>()(
                 currentPage: state.currentPage,
                 hasMore: state.hasMore,
                 activeGroup: state.activeGroup,
+                members: state.members,
+                expenses: state.expenses,
+                filters: state.filters,
+                ifDelete: state.ifDelete,
+                friendList: state.friendList,
+                cycleExpenses: state.cycleExpenses,
+                settleInfo: state.settleInfo,
             }),
         }
     )
