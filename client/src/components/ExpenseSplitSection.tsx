@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import GroupMemberList from './GroupMemberList';
+import useAuthStore from '../stores/authStore';
 
 interface ExpenseSplitSectionProps {
     setIsStep2Valid: (isValid: boolean) => void;
@@ -12,6 +13,7 @@ interface ExpenseSplitSectionProps {
     setSelectedMembers: (members: number[]) => void;
     amountsByMember: Record<number, string>;
     setAmountsByMember: (amounts: Record<number, string>) => void;
+    currency: string;
 }
 
 const ExpenseSplitSection: React.FC<ExpenseSplitSectionProps> = ({
@@ -25,7 +27,9 @@ const ExpenseSplitSection: React.FC<ExpenseSplitSectionProps> = ({
     setSelectedMembers,
     amountsByMember,
     setAmountsByMember,
+    currency
 }) => {
+    const { currencies } = useAuthStore();
     useEffect(() => {
         const validateForm = () => {
             let isValid = true;
@@ -41,7 +45,7 @@ const ExpenseSplitSection: React.FC<ExpenseSplitSectionProps> = ({
         setIsStep2Valid(validateForm());
     }, [amount, selectedMembers]);
 
-    useEffect(() =>{
+    useEffect(() => {
         setAmount(calculateTotal());
 
     }, [selectedMembers, amountsByMember])
@@ -110,7 +114,7 @@ const ExpenseSplitSection: React.FC<ExpenseSplitSectionProps> = ({
                     )}
                 </label>
                 <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">{currencies[currency] }</span>
                     <input
                         type="text"
                         value={amount}
@@ -128,7 +132,7 @@ const ExpenseSplitSection: React.FC<ExpenseSplitSectionProps> = ({
                                 handleAmountChange(value);
                             }
                         }}
-                        className="w-full pl-8 p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        className="w-full pl-8 p-3 border rounded-lg"
                         disabled={splitMethod === 'unequally'}
                     />
                 </div>
@@ -141,10 +145,9 @@ const ExpenseSplitSection: React.FC<ExpenseSplitSectionProps> = ({
                     <div
                         onClick={() => {
                             setSplitMethod('equally');
-                            setAmount('');
                         }}
                         className={`p-3 rounded-lg ${splitMethod === 'equally'
-                            ? 'bg-green-500 text-white'
+                            ? 'bg-blue-500 text-white'
                             : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
                     >
                         Equally
@@ -152,7 +155,7 @@ const ExpenseSplitSection: React.FC<ExpenseSplitSectionProps> = ({
                     <div
                         onClick={() => setSplitMethod('unequally')}
                         className={`p-3 rounded-lg ${splitMethod === 'unequally'
-                            ? 'bg-green-500 text-white'
+                            ? 'bg-blue-500 text-white'
                             : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
                     >
                         Unequally
@@ -170,6 +173,7 @@ const ExpenseSplitSection: React.FC<ExpenseSplitSectionProps> = ({
                     amountsByMember={amountsByMember}
                     onSelect={handleMemberSelect}
                     onAmountChange={handleAmountChangeForMember}
+                    currency={currency}
                 />
             </div>
         </>

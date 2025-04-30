@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useGroupDetailStore } from '../stores/groupDetailStore';
+import useAuthStore from '../stores/authStore';
 interface GroupMemberListProps {
     selectedGroup: number;
     splitMethod: 'equally' | 'unequally';
@@ -7,20 +8,21 @@ interface GroupMemberListProps {
     amountsByMember?: Record<number, string>;
     onSelect?: (memberId: number) => void;
     onAmountChange?: (memberId: number, value: string) => void;
+    currency: string;
 }
-
 const GroupMemberList = ({
     selectedGroup,
     splitMethod,
     selectedMembers = [],
     amountsByMember = {},
     onSelect,
-    onAmountChange
+    onAmountChange,
+    currency
 }: GroupMemberListProps) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const { fetchMember, members } = useGroupDetailStore();
-
+    const { currencies } = useAuthStore();
     useEffect(() => {
         if (selectedGroup) {
             try {
@@ -43,32 +45,35 @@ const GroupMemberList = ({
             {members.map(member => (
                 <div key={member.id} className="flex items-center justify-between p-3">
                     {/* select */}
-                        <div className="flex items-center gap-4 flex-1">
-                            <button
-                                onClick={() => onSelect?.(member.id)}
-                                className={`w-6 h-6 border-2 rounded-full flex items-center justify-center 
-                                    ${selectedMembers?.includes(member.id)
-                                        ? 'bg-green-500 border-green-500'
-                                        : 'border-gray-300'}`}
-                            >
-                                {selectedMembers?.includes(member.id) && (
-                                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                                    </svg>
-                                )}
-                            </button>
+                    <div className="flex items-center gap-4 flex-1">
+                        <button
+                            type="button"
+                            onClick={() => onSelect?.(member.id)}
+                            className={`w-6 h-6 border-2 rounded-full flex items-center justify-center 
+        ${selectedMembers?.includes(member.id)
+                                    ? 'bg-blue-500 border-blue-500'
+                                    : 'border-gray-300'}`}
+                        >
+                            {selectedMembers?.includes(member.id) && (
+                                <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                            )}
+                        </button>
 
-                            {/* group member */}
-                            <div className="flex-1">
-                                <div className="font-medium">{member.fullName}</div>
-                                <div className="text-sm text-gray-500">{member.email}</div>
-                            </div>
+
+
+                        {/* group member */}
+                        <div className="flex-1">
+                            <div className="font-medium">{member.fullName}</div>
+                            <div className="text-sm text-gray-500">{member.email}</div>
                         </div>
+                    </div>
 
                     {/* amount */}
                     {splitMethod === 'unequally' && (
                         <div className="ml-4 w-24 relative">
-                            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500">{currencies[currency]}</span>
                             <input
                                 type="text"
                                 value={amountsByMember?.[member.id] || ''}

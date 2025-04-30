@@ -2,13 +2,12 @@ import { motion } from 'framer-motion';
 import Topbar from '../components/TopBar';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { Form, Input, Avatar, Button, DatePicker, message, Select, Spin } from 'antd';
+import { Form, Input, Avatar, Button, DatePicker, message, Select } from 'antd';
 import useAuthStore from '../stores/authStore';
 import { useExpenseStore } from '../stores/expenseStore';
 import ExpenseSplitSection from '../components/ExpenseSplitSection';
 import api from '../util/axiosConfig';
 import dayjs from 'dayjs';
-import Alert from 'antd/es/alert/Alert';
 
 const EditPage = () => {
     const navigate = useNavigate();
@@ -18,19 +17,16 @@ const EditPage = () => {
     const [form] = Form.useForm();
     const { id, currencies } = useAuthStore();
     const [submitting, setSubmitting] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState("");
 
     const [step, setStep] = useState(1);
     const [isStep1Valid, setIsStep1Valid] = useState(false);
     const [isStep2Valid, setIsStep2Valid] = useState(false);
 
-
+    const [currency, setCurrency] = useState("USD");
     const [splitMethod, setSplitMethod] = useState<'equally' | 'unequally'>('equally');
     const [amount, setAmount] = useState("");
     const [selectedMembers, setSelectedMembers] = useState<number[]>([]);
     const [amountsByMember, setAmountsByMember] = useState<Record<number, string>>({});
-
     const handleSubmit = async () => {
         try {
             const allValues = form.getFieldsValue(true);
@@ -106,20 +102,31 @@ const EditPage = () => {
             currency: expenseData?.currency,
             title: expenseData?.title,
             type: expenseData?.type,
-            date: dayjs(expenseData?.expenseDate)
+            date: dayjs(expenseData?.expenseDate),
+            description: expenseData?.description || "",
         });
-        const fetchData = async () => {
-            try {
-                setLoading(true);
-            } catch (error) {
-                setError("Something Wrong!");
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchData();
-    }, []);
+        setAmount(String(expenseData?.amount || "0.00"));
+        setCurrency(expenseData?.currency || "USD");
+        const shares = expenseData?.shares || [];
 
+        const allAmounts = shares.map(share => share.shareAmount);
+        const allEqual = allAmounts.every(a => a === allAmounts[0]);
+        if (allEqual) {
+            setSplitMethod("equally");
+        } else {
+            setSplitMethod("unequally");
+        }
+        const amounts: Record<number, string> = {};
+        const ids: number[] = [];
+
+        for (const share of shares) {
+            ids.push(share.user.id);
+            amounts[share.user.id] = String(share.shareAmount);
+        }
+
+        setSelectedMembers(ids);
+        setAmountsByMember(amounts);
+    }, []);
     return (
         <div className="relative w-full h-full min-h-screen overflow-hidden bg-white">
             {!hideMask && (
@@ -150,122 +157,113 @@ const EditPage = () => {
                     title="Edit expense"
                 />
 
-                {loading ? (
-                    <div className="flex justify-center items-center h-64">
-                        <Spin size="large" />
-                    </div>
-                ) : error ? (
-                    <Alert
-                        message="Error"
-                        description={error}
-                        type="error"
-                        showIcon
-                        className="max-w-2xl mx-auto my-4"
-                    />
-                ) : (
-                    <Form form={form} className="p-4 max-w-2xl mx-auto" layout="vertical">
-                        {step === 1 && (
-                            <>
+                <Form form={form} className="p-4 max-w-2xl mx-auto" layout="vertical">
+                    {step === 1 && (
+                        <>
 
-                                {/* Expense Type */}
-                                <Form.Item
-                                    label="Expense Type"
-                                    name="type"
-                                    rules={[{ required: true, message: 'Please select a type!' }]}
+                            {/* Expense Type */}
+                            <Form.Item
+                                label="Expense Type"
+                                name="type"
+                                rules={[{ required: true, message: 'Please select a type!' }]}
+                            >
+                                <Select
+                                    placeholder="Select a type"
+                                    optionLabelProp="label"
                                 >
-                                    <Select
-                                        placeholder="Select a type"
-                                        optionLabelProp="label"
-                                    >
-                                        {Object.entries(expenseTypes).map(([type, url]) => (
-                                            <Select.Option key={type} value={type} label={type}>
-                                                <div className="flex items-center gap-2">
-                                                    <Avatar src={url as string} size={20} />
-                                                    <span>{type}</span>
-                                                </div>
-                                            </Select.Option>
-                                        ))}
-                                    </Select>
-                                </Form.Item>
+                                    {Object.entries(expenseTypes).map(([type, url]) => (
+                                        <Select.Option key={type} value={type} label={type}>
+                                            <div className="flex items-center gap-2">
+                                                <Avatar src={url as string} size={20} />
+                                                <span>{type}</span>
+                                            </div>
+                                        </Select.Option>
+                                    ))}
+                                </Select>
+                            </Form.Item>
 
-                                {/* Date */}
-                                <Form.Item
-                                    label="Date"
-                                    name="date"
-                                    rules={[{ required: true, message: 'Please select a date!' }]}
+                            {/* Date */}
+                            <Form.Item
+                                label="Date"
+                                name="date"
+                                rules={[{ required: true, message: 'Please select a date!' }]}
+                            >
+                                <DatePicker className="w-full" />
+                            </Form.Item>
+
+                            {/* Currency */}
+                            <Form.Item
+                                label="Currency"
+                                name="currency"
+                                rules={[{ required: true, message: 'Please select a currency!' }]}
+                            >
+                                <Select placeholder="Select a currency"
+                                    onChange={(value) => {
+                                        setCurrency(value);
+                                    }}
                                 >
-                                    <DatePicker className="w-full" />
-                                </Form.Item>
+                                    {Object.entries(currencies).map(([code, symbol]) => (
+                                        <Select.Option key={code} value={code}>
+                                            {code} ({symbol})
+                                        </Select.Option>
+                                    ))}
+                                </Select>
+                            </Form.Item>
 
-                                {/* Currency */}
-                                <Form.Item
-                                    label="Currency"
-                                    name="currency"
-                                    rules={[{ required: true, message: 'Please select a currency!' }]}
+                            {/* Title */}
+                            <Form.Item
+                                label="Title"
+                                name="title"
+                                rules={[{ required: true, message: 'Please input title!' }]}
+                            >
+                                <Input />
+                            </Form.Item>
+
+                            {/* Description */}
+                            <Form.Item label="Description" name="description">
+                                <Input.TextArea rows={3} placeholder="Add description (optional)" />
+                            </Form.Item>
+
+
+                            {/* Next */}
+                            <Form.Item>
+                                <Button type="primary" block onClick={onNext} disabled={!isStep1Valid}>
+                                    Next
+                                </Button>
+                            </Form.Item>
+                        </>
+                    )}
+
+                    {step === 2 && (
+                        <>
+                            <ExpenseSplitSection
+                                setIsStep2Valid={setIsStep2Valid}
+                                selectedGroup={expenseData?.groupId!}
+                                splitMethod={splitMethod}
+                                setSplitMethod={setSplitMethod}
+                                amount={amount}
+                                setAmount={setAmount}
+                                selectedMembers={selectedMembers}
+                                setSelectedMembers={setSelectedMembers}
+                                amountsByMember={amountsByMember}
+                                setAmountsByMember={setAmountsByMember}
+                                currency={currency}
+                            />
+                            {/* Submit */}
+                            <Form.Item className="mt-6">
+                                <Button
+                                    type="primary"
+                                    block
+                                    loading={submitting}
+                                    disabled={!isStep2Valid}
+                                    onClick={handleSubmit}
                                 >
-                                    <Select placeholder="Select a currency">
-                                        {Object.entries(currencies).map(([code, symbol]) => (
-                                            <Select.Option key={code} value={code}>
-                                                {code} ({symbol})
-                                            </Select.Option>
-                                        ))}
-                                    </Select>
-                                </Form.Item>
-
-                                {/* Title */}
-                                <Form.Item
-                                    label="Title"
-                                    name="title"
-                                    rules={[{ required: true, message: 'Please input title!' }]}
-                                >
-                                    <Input />
-                                </Form.Item>
-
-                                {/* Description */}
-                                <Form.Item label="Description" name="description">
-                                    <Input.TextArea rows={3} placeholder="Add description (optional)" />
-                                </Form.Item>
-
-
-                                {/* Next */}
-                                <Form.Item>
-                                    <Button type="primary" block onClick={onNext} disabled={!isStep1Valid}>
-                                        Next
-                                    </Button>
-                                </Form.Item>
-                            </>
-                        )}
-
-                        {step === 2 && (
-                            <>
-                                <ExpenseSplitSection
-                                    setIsStep2Valid={setIsStep2Valid}
-                                    selectedGroup={expenseData?.groupId!}
-                                    splitMethod={splitMethod}
-                                    setSplitMethod={setSplitMethod}
-                                    amount={amount}
-                                    setAmount={setAmount}
-                                    selectedMembers={selectedMembers}
-                                    setSelectedMembers={setSelectedMembers}
-                                    amountsByMember={amountsByMember}
-                                    setAmountsByMember={setAmountsByMember}
-                                />
-                                {/* Submit */}
-                                <Form.Item className="mt-6">
-                                    <Button
-                                        type="primary"
-                                        block
-                                        loading={submitting}
-                                        disabled={!isStep2Valid}
-                                        onClick={handleSubmit}
-                                    >
-                                        Submit
-                                    </Button>
-                                </Form.Item>
-                            </>
-                        )}
-                    </Form>
-                )}
+                                    Submit
+                                </Button>
+                            </Form.Item>
+                        </>
+                    )}
+                </Form>
             </motion.div>
         </div>
     );

@@ -12,9 +12,9 @@ import { useGroupDetailStore } from '../stores/groupDetailStore.ts';
 import { DeleteOutlined, EditOutlined, UploadOutlined } from '@ant-design/icons';
 
 export default function ExpenseDetailPage() {
-    const { currencies, expenseTypes } = useAuthStore();
+    const { currencies, expenseTypes, id } = useAuthStore();
     const { activeExpense, expenseData, getExpense, deleteExpense, uploadImg } = useExpenseStore();
-    const { setActiveGroup} = useGroupDetailStore();
+    const { setActiveGroup } = useGroupDetailStore();
     const { Title, Text } = Typography;
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
@@ -122,7 +122,7 @@ export default function ExpenseDetailPage() {
                         style={{ width: '100%', maxHeight: '60vh', objectFit: 'contain' }}
                     />
                     <button
-                        className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+                        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
                         onClick={() => {
                             setPreviewOpen(false);
                             fileInputRef.current?.click();
@@ -194,18 +194,24 @@ export default function ExpenseDetailPage() {
                         >
                             Delete
                         </Button>
-                            </div>
+                    </div>
 
-                            <div className="my-4 px-6 flex gap-4">
-                                <Button
-                                    type="primary"
-                                    icon={<EditOutlined />}
-                                    onClick={() => { navigate("edit") }}
-                                    className="flex-1 flex items-center justify-center text-lg"
-                                >
-                                    Edit
-                                </Button>
-                            </div>
+                    <div className="my-4 px-6 flex gap-4">
+                        <Button
+                            type="primary"
+                            icon={<EditOutlined />}
+                            onClick={() => { navigate("edit") }}
+                            className="flex-1 flex items-center justify-center text-lg"
+                            disabled={expenseData?.payer?.id !== id}
+                        >
+                            Edit
+                        </Button>
+                    </div>
+                    {expenseData?.payer?.id !== id && (
+                        <p className="text-sm text-gray-500 text-center">
+                            Only the creator can edit this expense.
+                        </p>
+                    )}
 
                     <div className="pt-4 pl-6 space-y-2">
                         <div className="flex items-center text-xl">
@@ -214,16 +220,17 @@ export default function ExpenseDetailPage() {
                         </div>
 
                         <div className="ml-6 pl-4 space-y-2">
-                            {Object.entries(expenseData.shares)
-                                .filter(([name]) => name !== expenseData.payer.fullName)
-                                .map(([name, value]) => (
-                                    <div key={name} className="flex items-center space-x-2">
-                                        {/*<Avatar src={expenseData.payer.avatar}/>*/}
+                            {expenseData.shares
+                                .filter(share => share.user.id !== expenseData.payer.id)
+                                .map(share => (
+                                    <div key={share.user.id} className="flex items-center space-x-2">
+                                        <Avatar src={share.user.avatar} />
                                         <Text className="text-gray-700">
-                                            {`${name} owes ${expenseData.currency + currencies[expenseData.currency]}${value.toFixed(2)}`}
+                                            {`${share.user.fullName} owes ${expenseData.currency}${currencies[expenseData.currency]}${share.shareAmount.toFixed(2)}`}
                                         </Text>
                                     </div>
                                 ))}
+
                         </div>
 
                     </div>

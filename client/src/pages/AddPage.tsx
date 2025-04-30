@@ -30,6 +30,7 @@ const AddPage = () => {
     const [isStep2Valid, setIsStep2Valid] = useState(false);
 
     const [selectedGroup, setSelectedGroup] = useState<number>();
+    const [currency, setCurrency] = useState("USD");
 
     const [splitMethod, setSplitMethod] = useState<'equally' | 'unequally'>('equally');
     const [amount, setAmount] = useState("");
@@ -154,6 +155,7 @@ const AddPage = () => {
         if (location.state?.ifInGroup) {
             setSelectedGroup(groupData?.id);
             form.setFieldsValue({ groupId: groupData?.id, currency: groupData?.currency });
+            setCurrency(groupData?.currency || "USD");
         }
         form.setFieldsValue({
             type: 'OTHER',
@@ -285,7 +287,11 @@ const AddPage = () => {
                                     name="currency"
                                     rules={[{ required: true, message: 'Please select a currency!' }]}
                                 >
-                                    <Select placeholder="Select a currency">
+                                    <Select placeholder="Select a currency"
+                                        onChange={(value) => {
+                                            setCurrency(value);
+                                        }}
+                                    >
                                         {Object.entries(currencies).map(([code, symbol]) => (
                                             <Select.Option key={code} value={code}>
                                                 {code} ({symbol})
@@ -383,6 +389,7 @@ const AddPage = () => {
                                     setSelectedMembers={setSelectedMembers}
                                     amountsByMember={amountsByMember}
                                     setAmountsByMember={setAmountsByMember}
+                                    currency={currency}
                                 />
                                 {/* Submit */}
                                 <Form.Item className="mt-6">
