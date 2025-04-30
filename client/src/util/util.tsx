@@ -91,7 +91,12 @@ export interface ExpenseData {
     logs: string;
     expenseDate: string;
     debtsAmount: number;
-    shares: Record<string, number>;
+    shares: ExpenseDataShare[];
+}
+
+interface ExpenseDataShare {
+    user: Member;
+    shareAmount: number;
 }
 
 export interface CycleExpenseSimpleData {
