@@ -9,6 +9,7 @@ import org.lei.bill_buddy.config.exception.AppException;
 import org.lei.bill_buddy.enums.ErrorCode;
 import org.lei.bill_buddy.model.Expense;
 import org.lei.bill_buddy.model.RecurringExpense;
+import org.lei.bill_buddy.model.User;
 import org.lei.bill_buddy.service.ExpenseService;
 import org.lei.bill_buddy.service.GroupService;
 import org.lei.bill_buddy.service.RecurringExpenseService;
@@ -190,10 +191,12 @@ public class ExpenseController {
     @DeleteMapping("/recurring/{id}")
     public ResponseEntity<?> deleteRecurringExpense(@PathVariable Long id) {
         RecurringExpense recurring = recurringExpenseService.getRecurringExpenseById(id);
+        User user = userService.getCurrentUser();
 
         if (!groupService.isMemberOfGroup(userService.getCurrentUser().getId(), recurring.getGroup().getId())) {
             throw new AppException(ErrorCode.NOT_A_MEMBER);
         }
+        if(!recurring.getPayer().getId().equals(user.getId())) { throw new AppException(ErrorCode.FORBIDDEN,"Only the payer can delete recurring expenses"); }
         recurringExpenseService.deleteRecurringExpense(id);
 
         return ResponseEntity.ok("Recurring Expense deleted with ID: " + id);
