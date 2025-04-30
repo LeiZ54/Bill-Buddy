@@ -10,7 +10,7 @@ const { Text } = Typography;
 
 const GroupSection = ({ id, name, type, items, netBalance, currency }: GroupData) => {
     const navigate = useNavigate();
-    const { groupType, currencies } = useAuthStore();
+    const { groupType } = useAuthStore();
     const { setActiveGroup } = useGroupDetailStore();
     return (
         <motion.section
