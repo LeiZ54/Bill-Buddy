@@ -126,12 +126,12 @@ export interface CycleExpenseData {
 }
 
 export const recurrenceOptions = [
-    { label: 'Day', unit: 'DAY', interval: 1 },
-    { label: 'Week', unit: 'WEEK', interval: 1 },
-    { label: 'Month', unit: 'MONTH', interval: 1 },
-    { label: 'Season', unit: 'MONTH', interval: 3 },
+    { label: 'Every Day', unit: 'DAY', interval: 1 },
+    { label: 'Every Week', unit: 'WEEK', interval: 1 },
+    { label: 'Every Month', unit: 'MONTH', interval: 1 },
+    { label: 'Every Season', unit: 'MONTH', interval: 3 },
     { label: 'Half Year', unit: 'MONTH', interval: 6 },
-    { label: 'Year', unit: 'YEAR', interval: 1 },
+    { label: 'Every Year', unit: 'YEAR', interval: 1 },
     { label: 'Custom', unit: null, interval: null },
 ];
 

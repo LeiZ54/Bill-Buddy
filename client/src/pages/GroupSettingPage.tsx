@@ -38,7 +38,7 @@ const GroupSettingPage = () => {
         cycleExpenses,
         fetchCycleExpenses,
     } = useGroupDetailStore();
-    const { cycleExpenseData, getCycleExpense, setActiveCycleExpense } = useExpenseStore();
+    const { cycleExpenseData, getCycleExpense, setActiveCycleExpense, deleteCycleExpense } = useExpenseStore();
 
     const { Text, Title } = Typography;
     const [cycleModal, setCycleModal] = useState(false);
@@ -86,21 +86,24 @@ const GroupSettingPage = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [leaving, setLeaving] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [isDeletingCycle, setIsDeletingCycle] = useState(false);
+
+    const fetchData = async () => {
+        try {
+            setIsLoading(true);
+            await fetchMember(activeGroup);
+            await getIfDelete();
+            await getFriendList();
+            await fetchCycleExpenses();
+        } catch (err) {
+            setError("Failed to get data!");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     useEffect(() => {
         if (activeGroup) {
-            const fetchData = async () => {
-                try {
-                    setIsLoading(true);
-                    await fetchMember(activeGroup);
-                    await getIfDelete();
-                    await getFriendList();
-                    await fetchCycleExpenses();
-                } catch (err) {
-                    setError("Failed to get data!");
-                } finally {
-                    setIsLoading(false);
-                }
-            };
             fetchData();
         }
     }, []);
@@ -138,8 +141,7 @@ const GroupSettingPage = () => {
         const option = recurrenceOptions.find(
             (opt) => opt.unit === unit && opt.interval === interval
         );
-
-        return option?.label ?? 'Custom';
+        return option?.label ?? interval + " " + unit.toLowerCase() + "s";
     }
 
     return (
@@ -319,6 +321,7 @@ const GroupSettingPage = () => {
                                                     alt="icon" />
                                             </div>
                                             <div>
+
                                                 <Text className="text-base font-medium">{cycleExpenseData?.title}</Text>
                                                 <Title level={4}
                                                     className="!m-0 text-xl font-bold">
@@ -376,8 +379,29 @@ const GroupSettingPage = () => {
                                     ) : (
                                         <></>
                                     )}
+                                    <div className="absolute bottom-4 left-0 w-full flex justify-center">
+                                        <Button
+                                            type="primary"
+                                            danger
+                                            disabled={cycleExpenseData?.payer.id !== id || isDeletingCycle}
+                                            loading={isDeletingCycle}
+                                            onClick={async () => {
+                                                try {
+                                                    setIsDeletingCycle(true);
+                                                    await deleteCycleExpense();
+                                                    setCycleModal(false);
+                                                    await fetchData();
+                                                } catch (err) {
+                                                    message.error("Failed to delete cycle expense!");
+                                                } finally {
+                                                    setIsDeletingCycle(false);
+                                                }
 
-
+                                            }}
+                                        >
+                                            Delete
+                                        </Button>
+                                    </div>
 
                                 </div>
                             )}

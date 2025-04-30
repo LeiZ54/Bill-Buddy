@@ -15,6 +15,7 @@ interface ExpenseState {
     setActiveCycleExpense: (id: number) => void;
     getExpense: () => Promise<void>;
     deleteExpense: () => Promise<void>;
+    deleteCycleExpense: () => Promise<void>;
     getCycleExpense: () => Promise<void>;
     fetchAllGroups: () => Promise<void>;
     getRecurrenceLabel: (time?: { recurrenceUnit: string; recurrenceInterval: number }) => string;
@@ -63,6 +64,11 @@ export const useExpenseStore = create<ExpenseState>()(
             deleteExpense: async () => {
                 const { activeExpense } = get();
                 await api.delete(`/expenses/${activeExpense}`);
+            },
+
+            deleteCycleExpense: async () => {
+                const { activeCycleExpense } = get();
+                await api.delete(`/expenses/recurring/${activeCycleExpense}`);
             },
 
             getCycleExpense: async () => {
