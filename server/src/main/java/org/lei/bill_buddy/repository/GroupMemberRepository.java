@@ -33,4 +33,11 @@ public interface GroupMemberRepository extends JpaRepository<GroupMember, Long> 
                   AND gm.deleted = false
             """)
     List<Long> findGroupIdsByUserIdAndDeletedFalse(Long userId);
+
+    @Query("""
+                SELECT gm.group.id
+                FROM GroupMember gm
+                WHERE gm.user.id = :userId
+            """)
+    List<Long> findGroupIdsByUserId(Long userId);
 }

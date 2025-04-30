@@ -182,6 +182,7 @@ public class ExpenseService {
                 )
         );
         groupService.groupUpdated(groupId);
+        settleGroupIfNeeded(groupId);
     }
 
     @Transactional
@@ -190,6 +191,9 @@ public class ExpenseService {
         Expense expense = expenseRepository.findById(expenseId)
                 .orElseThrow(() -> new AppException(ErrorCode.EXPENSE_NOT_FOUND));
 
+        if (!userService.getCurrentUser().getId().equals(expense.getPayer().getId())) {
+            throw new AppException(ErrorCode.FORBIDDEN, "You do not have permission to delete this expense");
+        }
         expenseRepository.softDeleteById(expenseId);
 
         List<ExpenseShare> shares = expenseShareRepository.findByExpenseIdAndDeletedFalse(expenseId);
@@ -240,6 +244,9 @@ public class ExpenseService {
         log.info("Updating expense: id={}", expenseId);
 
         Expense expense = validateAndGetExpense(expenseId);
+        if (!userService.getCurrentUser().getId().equals(expense.getPayer().getId())) {
+            throw new AppException(ErrorCode.FORBIDDEN, "You do not have permission to update this expense");
+        }
         User oldPayer = expense.getPayer();
         BigDecimal oldAmount = expense.getAmount();
         Currency baseCur = expense.getGroup().getDefaultCurrency();
@@ -545,9 +552,16 @@ public class ExpenseService {
         Currency newCur = (currency != null && !currency.isBlank())
                 ? parseCurrency(currency) : baseCur;
         boolean currencyChanged = !newCur.equals(baseCur);
+        BigDecimal newAmount;
+        boolean amountChanged = false;
+        if (amount != null) {
+            newAmount = amount;
+            amountChanged = !newAmount.equals(expense.getAmount());
+        } else {
+            newAmount = expense.getAmount();
+        }
 
-        BigDecimal newAmount = (amount != null) ? amount : expense.getAmount();
-        boolean amountChanged = !newAmount.equals(expense.getAmount());
+        BigDecimal initialAmount = BigDecimal.ZERO;
 
         List<Long> newParticipantIds = (participantIds != null) ? participantIds :
                 oldShares.stream().map(s -> s.getUser().getId()).toList();
@@ -560,6 +574,7 @@ public class ExpenseService {
                 BigDecimal sumBase = BigDecimal.ZERO;
                 for (int i = 0; i < newShareAmounts.size(); i++) {
                     BigDecimal shareBase = exchangeRateService.convert(newShareAmounts.get(i), newCur, baseCur);
+                    initialAmount = initialAmount.add(newShareAmounts.get(i));
                     sumBase = sumBase.add(shareBase);
                     newShareAmounts.set(i, shareBase);
                 }
@@ -567,6 +582,9 @@ public class ExpenseService {
             } else {
                 newAmount = newShareAmounts.stream().reduce(BigDecimal.ZERO, BigDecimal::add);
             }
+        } else if (currencyChanged) {
+            initialAmount = newAmount;
+            newAmount = exchangeRateService.convert(newAmount, newCur, baseCur);
         }
 
         if (payerId != null) expense.setPayer(newPayer);
@@ -581,8 +599,8 @@ public class ExpenseService {
         expense.setAmount(newAmount);
         return new ParsedRequest(
                 newPayer, payerChanged,
-                newParticipantIds, newShareAmounts,
-                newAmount, currencyChanged, amountChanged,
+                newParticipantIds, newShareAmounts, newCur, newAmount, initialAmount,
+                currencyChanged, amountChanged,
                 oldTitle, newTitle
         );
     }
@@ -591,7 +609,9 @@ public class ExpenseService {
             User newPayer, boolean payerChanged,
             List<Long> newParticipantIds,
             List<BigDecimal> newShareAmounts,
+            Currency initialCurrency,
             BigDecimal newAmount,
+            BigDecimal initialAmount,
             boolean currencyChanged,
             boolean amountChanged,
             String oldTitle,
@@ -626,7 +646,11 @@ public class ExpenseService {
         if (pr.currencyChanged || pr.amountChanged) {
             changes.add(Map.of("field", "amount",
                     "before", formatCurrencyAmount(expense.getGroup().getDefaultCurrency(), oldAmount),
-                    "after", formatCurrencyAmount(expense.getGroup().getDefaultCurrency(), pr.newAmount)));
+                    "after", !pr.currencyChanged ?
+                            formatCurrencyAmount(expense.getGroup().getDefaultCurrency(), pr.newAmount) :
+                            formatCurrencyAmount(pr.initialCurrency, pr.initialAmount) +
+                                    "(" + formatCurrencyAmount(expense.getGroup().getDefaultCurrency(), pr.newAmount) + ")"
+            ));
         }
 
         changes.addAll(detectParticipantChanges(oldParticipantIds, pr.newParticipantIds));
